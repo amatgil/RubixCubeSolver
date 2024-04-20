@@ -14,7 +14,7 @@ impl Piece {
     }
 
     pub fn rotate(&mut self, mov @ Move { side, prime }: &Move) {
-	let mut current_colors = self.to_color_sequence();
+	let mut colors = self.to_color_sequence();
 
 	let mut seq = match side {
 	    MoveSide::R => COLOR_RIGHT_SEQ,
@@ -27,11 +27,9 @@ impl Piece {
 
 	if *prime { seq = reverse_seq(seq) }
 	
-	cycle_items(&mut current_colors, seq);
+	cycle_items(&mut colors, seq);
 
-	let [_, front, top, _, _, _] = current_colors;
-
-	let new_vec_directors = PieceRotation::from_color_pair(top, front);
+	self.rotation = PieceRotation::from_color_pair(colors[2], colors[1]);
 	
     }
 }
