@@ -42,13 +42,21 @@ fn main() {
         pieces: [piece; 8],
     };
 
+    let scramble = vec![
+	Move::new("L"),
+	Move::new("U"),
+	Move::new("U"),
+	Move::new("B"),
+    ];
+
     //cube.make_move(&Move::new("R"));
-    cube.make_move(&Move::new("L"));
+    for m in &scramble { cube.make_move(m) }
 
     let r = solve(cube);
 
-    for m in r {
-        print!("{m}");
-    }
-    println!();
+    print!("The solution to scramble \"");
+    for m in scramble { print!("{m}") }
+    print!("\" is \"");
+    for m in r { print!("{m}") }
+    println!("\"");
 }

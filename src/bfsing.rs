@@ -3,9 +3,9 @@ use std::collections::VecDeque;
 use std::collections::HashSet;
 
 pub fn is_solved(c: &Cube) -> bool {
-    //c.pieces.iter().fold((true, &c.pieces[0]), |(acc_b, acc_c), x| (acc_b && &acc_c == &x, x) ).0
-    let p = &c.pieces;
-    p[0] == p[1] && p[1] == p[2] && p[2] == p[3] && p[3] == p[4] && p[4] == p[5] && p[5] == p[6] && p[6] == p[7]
+    c.pieces.iter().fold((true, &c.pieces[0]), |(acc_b, acc_c), x| (acc_b && &acc_c == &x, x) ).0
+    //let p = &c.pieces;
+    //p[0] == p[1] && p[1] == p[2] && p[2] == p[3] && p[3] == p[4] && p[4] == p[5] && p[5] == p[6] && p[6] == p[7]
 }
 
 #[test]
@@ -30,15 +30,15 @@ pub fn solve(cube: Cube) -> Vec<Move> {
     let mut queue: VecDeque<State> = VecDeque::from([first_state]);
 
     let mut i = 0;
-    while let Some(State { mut past_moves, cube: x }) = queue.pop_front() {
+    while let Some(State { past_moves, cube: x }) = queue.pop_front() {
         if i % 1 == 0 { println!("Iteration is: {i}"); }
         i += 1;
 
         if is_solved(&x) { return past_moves; }
         for (m, y) in find_adjacents(&x) {
-            past_moves.push(m);
+	    let new_moves = append_move(&past_moves, m);
             let new_state = State {
-                past_moves: past_moves.clone(),
+                past_moves: new_moves.clone(),
                 cube: y,
             };
             if !have_we_seen_this_state_before(&w, &new_state) {
@@ -49,6 +49,11 @@ pub fn solve(cube: Cube) -> Vec<Move> {
     }
 
     panic!("Entire tree was explored, no solved state was found. A corner must've been twisted or smth");
+}
+fn append_move(old: &Vec<Move>, m: Move) -> Vec<Move> {
+    let mut new = old.clone();
+    new.push(m);
+    new
 }
 
 impl std::cmp::PartialEq for State {
