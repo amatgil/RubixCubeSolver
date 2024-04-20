@@ -162,7 +162,7 @@ pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
     [d, c, b, a]
 }
 
-pub fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mov @ Move { side, prime }: &Move) {
+pub fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mov @ Move { side: _, prime }: &Move) {
     if *prime { face_seq = reverse_seq(face_seq); }
 
     // Move the pieces

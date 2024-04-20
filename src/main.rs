@@ -2,19 +2,17 @@ use tubaitu::*;
 
 fn main() {
     use Color as C;
-    //let mut s = Stickers::default();
-    //s.front  = StickerFace([C::Orange, C::Yellow, C::Green, C::Red]);
-    //s.right  = StickerFace([C::Green, C::Orange, C::White, C::Red]);
-    //s.left   = StickerFace([C::Orange, C::Green, C::Blue, C::Yellow]);
-    //s.top    = StickerFace([C::White, C::Blue, C::Yellow, C::Green]);
-    //s.down   = StickerFace([C::Red, C::Yellow, C::Red, C::White]);
-    //s.back   = StickerFace([C::Orange, C::Blue, C::White, C::Blue]);
+    let mut s = Stickers::default();
 
-    //let mut cube = cube_from_stickers(s);
-    let mut cube = Cube::default();
-    println!("{cube}");
+    s.front  = StickerFace([C::Yellow, C::Green, C::Yellow, C::Blue]);
+    s.right  = StickerFace([C::White, C::Red, C::Orange, C::Blue]);
+    s.left   = StickerFace([C::Green, C::Red, C::Yellow, C::Orange]);
+    s.top    = StickerFace([C::White, C::Green, C::Red, C::Orange]);
+    s.down   = StickerFace([C::Red, C::Green, C::White, C::Blue]);
+    s.back   = StickerFace([C::White, C::Orange, C::Yellow, C::Blue]);
 
-    cube.make_move(&Move::new("RLU"));
+    let cube = cube_from_stickers(s);
+    //println!("{cube}");
 
     //println!("{cube}");
     let r = solve(cube);

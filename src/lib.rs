@@ -36,9 +36,9 @@ const FACE_BACK_SEQ_PRINT: [usize; 4]  = [1, 2, 5, 6];
 
 
 pub fn print_solution(moves: &Vec<Move>) {
-    print!("Solution is:  ");
+    print!("Solution is:  [");
     for m in moves {
     	print!("{m} ");
     }
-    println!()
+    println!("]")
 }
