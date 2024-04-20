@@ -127,7 +127,7 @@ impl PieceRotation {
 	    (C::Orange, C::Blue)   => PR::OB,
 	    (C::Orange, C::Yellow) => PR::OY,
 	    (C::Orange, C::Green)  => PR::OG,
-	    (C::Green,  C::White)  => PR::GR,
+	    (C::Green,  C::White)  => PR::GW,
 	    (C::Green,  C::Red)    => PR::GR,
 	    (C::Green,  C::Yellow) => PR::GY,
 	    (C::Green,  C::Orange) => PR::GO,
