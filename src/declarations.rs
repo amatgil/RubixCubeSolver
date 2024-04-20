@@ -1,13 +1,25 @@
 use crate::*;
 
-#[derive(Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Copy, Hash, Default)]
 pub struct Cube {
     pub pieces: [Piece; 8],
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Piece {
-    pub cols: [Color; 6],
+    pub rotation: PieceRotation,
+}
+
+/// Stored as [top color][front color], which uniquely defines a rotation (because the cross product isn't commutative!)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum PieceRotation {
+    WR, WO, WG,
+    RW, BW, OW, GW,
+    YR, YB, YO, YG,
+    RY, BY, OY, GY,
+    OG, GO, OB, BO,
+    RG, GR, RB, BR,
+    #[default] WB,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -41,52 +53,18 @@ impl Move {
     }
 }
 
-impl Piece {
-    pub fn new(inp: [char; 6]) -> Piece {
-        let cols = inp.into_iter().map(|c| Color::new(c)).collect::<Vec<_>>().try_into().unwrap();
-        Piece { cols }
-    }
-}
-
 impl Cube {
     pub fn make_move(&mut self, m: &Move) {
         match m.side {
-            MoveSide::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, COLOR_RIGHT_SEQ , m.prime),
-            MoveSide::L => cycle_face(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , COLOR_LEFT_SEQ , m.prime),
-            MoveSide::U => cycle_face(&mut self.pieces, FACE_UP_SEQ_CYCLE   , COLOR_UP_SEQ   , m.prime),
-            MoveSide::B => cycle_face(&mut self.pieces, FACE_BACK_SEQ_CYCLE , COLOR_BACK_SEQ , m.prime),
-            MoveSide::F => cycle_face(&mut self.pieces, FACE_FRONT_SEQ_CYCLE, COLOR_FRONT_SEQ, m.prime),
-            MoveSide::D => cycle_face(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , COLOR_DOWN_SEQ , m.prime),
+            MoveSide::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
+            MoveSide::L => cycle_face(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),
+            MoveSide::U => cycle_face(&mut self.pieces, FACE_UP_SEQ_CYCLE   , m),
+            MoveSide::B => cycle_face(&mut self.pieces, FACE_BACK_SEQ_CYCLE , m),
+            MoveSide::F => cycle_face(&mut self.pieces, FACE_FRONT_SEQ_CYCLE, m),
+            MoveSide::D => cycle_face(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , m),
         };
     }
 }
-
-impl Color {
-    pub fn new(c: char) -> Color {
-        use Color as C;
-        match c.to_ascii_uppercase() {
-            'W' => C::White,
-            'R' => C::Red,
-            'B' => C::Blue,
-            'Y' => C::Yellow,
-            'O' => C::Orange,
-            'G' => C::Green,
-            _ => panic!("Char {c} is not a valid color"),
-        }
-    }
-    pub fn opposite(&self) -> Self {
-	use Color as C;
-	match self {
-	    C::White  => C::Yellow,
-	    C::Red    => C::Orange,
-	    C::Blue   => C::Green,
-	    C::Yellow => C::White,
-	    C::Orange => C::Red,
-	    C::Green  => C::Blue,
-	}
-    }
-}
-
 impl std::cmp::PartialEq for Cube {
     fn eq(&self, other: &Self) -> bool {
         let orientation_generators = [
@@ -169,22 +147,34 @@ fn print_add_face(out: &mut String, p: &[Piece; 8], s: &str, n: usize, seq: [usi
     out.push_str(&format!("{s}: \n"));
     for (i, v) in seq.into_iter().enumerate() {
         if i == 2 { out.push('\n') }
-        out.push_str(&p[v].cols[n].to_string());
+	let cols = p[v].to_color_sequence();
+        out.push_str(&cols[n].to_string());
     }
     out.push_str("\n---\n");
 
 }
 
-fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
+pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
     [d, c, b, a]
 }
-fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mut col_seq: [usize; 4], prime: bool) {
-    if prime {
-        face_seq = reverse_seq(face_seq);
-        col_seq = reverse_seq(col_seq);
-    }
-    cycle_items(face, face_seq);
+
+pub fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mov @ Move { side, prime }: &Move) {
+    if *prime { face_seq = reverse_seq(face_seq); }
+
+    // Move the pieces
+    cycle_items(face, face_seq); 
+
+    // Rotate the pieces
     for i in face_seq {
-        cycle_items(&mut face[i].cols, col_seq);
+	face[i].rotate(mov)
     }
+}
+
+pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], nums: [usize; 4]) {
+    let e = v[nums[3]].clone();
+
+    v[nums[3]] = v[nums[2]].clone();
+    v[nums[2]] = v[nums[1]].clone();
+    v[nums[1]] = v[nums[0]].clone();
+    v[nums[0]] = e;
 }

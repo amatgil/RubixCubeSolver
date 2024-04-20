@@ -7,6 +7,9 @@ pub use bfsing::*;
 pub mod input;
 pub use input::*;
 
+pub mod colors;
+pub use colors::*;
+
 
 
 // Rotation constants
@@ -32,11 +35,3 @@ const FACE_FRONT_SEQ_PRINT: [usize; 4] = [3, 0, 7, 4];
 const FACE_BACK_SEQ_PRINT: [usize; 4]  = [1, 2, 5, 6];
 
 
-fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], nums: [usize; 4]) {
-    let e = v[nums[3]].clone();
-
-    v[nums[3]] = v[nums[2]].clone();
-    v[nums[2]] = v[nums[1]].clone();
-    v[nums[1]] = v[nums[0]].clone();
-    v[nums[0]] = e;
-}
