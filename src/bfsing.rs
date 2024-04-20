@@ -10,7 +10,7 @@ pub fn is_solved(c: &Cube) -> bool {
 
 #[test]
 fn basic_is_solved_test() {
-    let solved_piece = Piece::new(['G', 'O', 'W', 'B', 'R', 'Y']);
+    let solved_piece = Piece { rotation: PieceRotation::WO };
     let mut cube: Cube = Cube { pieces: [solved_piece; 8] };
 
     assert!(is_solved(&cube));
@@ -84,7 +84,7 @@ fn have_we_seen_this_state_before(seen: &HashSet<State>, new: &State) -> bool {
 
 #[test]
 fn adjacent_test() {
-    let solved_piece = Piece::new(['G', 'O', 'W', 'B', 'R', 'Y']);
+    let solved_piece = Piece { rotation: PieceRotation::OW };
     let solved_cube: Cube = Cube { pieces: [solved_piece; 8] };
     let mut t = Vec::new();
 

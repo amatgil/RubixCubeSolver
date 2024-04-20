@@ -38,56 +38,48 @@ pub fn cube_from_stickers(s: Stickers) -> Cube {
 
     let p_000: Piece = {
 	let down = s.down[0];
-	let left = s.left[2]; 
 	let front = s.front[1];
-	Piece { cols: [ left.opposite(), front, down.opposite(), left, front.opposite(), down ]}
+	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
     };
     let p_001: Piece = { 
 	let down = s.down[1];
-	let left = s.left[1];
 	let back = s.back[0];
-	Piece { cols: [ left.opposite(), back.opposite(), down.opposite(), left, back, down ] }
+	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
     };
     let p_010: Piece = {
 	let top = s.top[1];
-	let left = s.left[3];
 	let front = s.front[0];
-	Piece { cols: [ left.opposite(), front, top, left, front.opposite(), top.opposite() ]}
+	Piece { rotation: PieceRotation::from_color_pair(top, front) }
     };
 
     let p_011: Piece = {
 	let top = s.top[0];
-	let left = s.left[0];
 	let back = s.back[1];
-	Piece { cols: [ left.opposite(), back.opposite(), top, left, back, top.opposite() ]}
+	Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
     };
 
     let p_110: Piece = { 
 	let top = s.top[2];
-	let right = s.right[0];
 	let front = s.front[3];
-	Piece { cols: [ right, front, top, right.opposite(), front.opposite(), top.opposite() ] }
+	Piece { rotation: PieceRotation::from_color_pair(top, front) }
     };
 
     let p_100: Piece = { 
 	let down = s.down[3];
-	let right = s.right[1];
 	let front = s.front[2];
-	Piece { cols: [ right, front, down.opposite(), right.opposite(), front.opposite(), down ] }
+	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
     };
 
     let p_101: Piece = { 
 	let down = s.down[2];
-	let right = s.right[2];
 	let back = s.back[3];
-	Piece { cols: [ right, back.opposite(), down.opposite(), right.opposite(), back, down ] }
+	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
     };
 
     let p_111: Piece = { 
 	let top = s.top[3];
-	let right = s.right[3];
 	let back = s.back[2];
-	Piece { cols: [ right, back.opposite(), top, right.opposite(), back, top.opposite() ] }
+	Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
     };
 
     Cube { pieces: [ p_110, p_111, p_011, p_010, p_100, p_101, p_001, p_000 ] }
@@ -106,7 +98,8 @@ fn stickers_solved_input() {
     s.back   = StickerFace([C::Blue, C::Blue, C::Blue, C::Blue]);
 
     let test_cube = cube_from_stickers(s);
-    let solved_cube = Cube { pieces: [Piece::new(['G', 'O', 'W', 'B', 'R', 'Y']); 8] };
+    let solved_cube = Cube { pieces: [Piece { rotation: PieceRotation::WO }; 8] };
+    dbg!(test_cube, solved_cube);
     assert!(test_cube == solved_cube)
 }
 
@@ -123,8 +116,9 @@ fn stickers_afterright_input() {
     s.back   = StickerFace([C::Blue, C::Blue, C::Yellow, C::Yellow]);
 
     let test_cube = cube_from_stickers(s);
-    let mut righted_cube = Cube { pieces: [Piece::new(['O', 'G', 'Y', 'R', 'B', 'W']); 8] };
+    let mut righted_cube = Cube { pieces: [Piece { rotation: PieceRotation::YG }; 8] };
     righted_cube.make_move(&Move::new("R"));
+    dbg!(righted_cube);
 
     assert!(test_cube == righted_cube)
 }
