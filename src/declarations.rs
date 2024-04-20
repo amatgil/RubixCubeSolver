@@ -36,8 +36,12 @@ pub enum MoveSide { R, F, U, L, B, D }
 
 impl Move {
     pub fn new(s: &str) -> Move {
+	if s.len() > 2 { panic!("{s} no és un moviment legal"); } 
         let ms = s.chars().nth(0).unwrap();
-        let k = s.chars().nth(1).is_some();
+        let k = s.chars().nth(1);
+	if let Some(prima) = k {
+	    if prima != '\'' { panic!("{s} té un segon char que no és una prima") }
+	}
 
         let m = match ms {
             'R' => MoveSide::R,
@@ -49,7 +53,7 @@ impl Move {
             _ => panic!("{ms} is not a valid face move"),
         };
 
-        Move { side: m, prime: k }
+        Move { side: m, prime: k.is_some() }
     }
 }
 
