@@ -10,8 +10,8 @@ pub struct Piece {
     pub cols: [Color; 6],
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Color { White, Red, Blue, Yellow, Orange, Green }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum Color { #[default] White, Red, Blue, Yellow, Orange, Green }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move {
@@ -73,6 +73,17 @@ impl Color {
             'G' => C::Green,
             _ => panic!("Char {c} is not a valid color"),
         }
+    }
+    pub fn opposite(&self) -> Self {
+	use Color as C;
+	match self {
+	    C::White  => C::Yellow,
+	    C::Red    => C::Orange,
+	    C::Blue   => C::Green,
+	    C::Yellow => C::White,
+	    C::Orange => C::Red,
+	    C::Green  => C::Blue,
+	}
     }
 }
 

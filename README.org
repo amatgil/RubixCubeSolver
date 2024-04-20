@@ -1,0 +1,50 @@
+#+TITLE: Rubix Cube Solver
+
+* Internal representation
+
+Each 2x2 cube is represented by eight pieces, each of which has six color (three of them are visible at any one time). This makes rotations easier to compute.
+
+These eight pieces with their corresponding six colors are represented by an array of eight and six elements respectively. The position of each element in the array has been (arbitrarily) decided
+to be this one:
+
+** Cube (8 pieces)
+
+TODO: Add ASCII diagram (I'm not sure how to draw eight boxes, especially when some hide parts of others)
+
+As in:
+- 0: Top right front
+- 1: Top right back
+- 2: Top left back
+- 3: Top left front
+- 4: Bottom right front
+- 5: Bottom right back
+- 6: Bottom left back
+- 7: Bottom left front
+
+** Piece (6 colors)
+#+BEGIN_SRC txt
+         +--------+   
+        /        /|     
+       /    2   / |  < -- 4  (the back)  
+      +--------+  |     
+      |        | 0|     
+      |        |  +     
+3 ->  |   1    | /      
+      |        |/  ^      
+      +--------+   |-- 5     
+#+END_SRC
+
+As in:
+- 0: Right
+- 1: Front
+- 2: Top
+- 3: Left
+- 4: Back
+- 5: Bottom
+
+* Solving
+Solving is done by brute force: we generate a graph where the vertexes are a unique (modulo symmetry) cube state and each edge is the corresponding move. We may then traverse the graph via BFS until we encounter the solved state, at which point we're done.
+
+
+* TODO
+Rewrite the arbitrary representation indexes as constants/enums
