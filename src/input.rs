@@ -5,12 +5,12 @@ use crate::*;
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct Stickers {
-    right: StickerFace,
-    left: StickerFace,
-    front: StickerFace,
-    back: StickerFace,
-    top: StickerFace,
-    down: StickerFace,
+    pub right: StickerFace,
+    pub left: StickerFace,
+    pub front: StickerFace,
+    pub back: StickerFace,
+    pub top: StickerFace,
+    pub down: StickerFace,
 }
 
 /// Represents the four colors on a face. The ordering of the array is: counterclockwise, starting from the "top left", where the top left is the sticker that's at the top left when the cube is rotated the least. For example:
@@ -24,7 +24,7 @@ pub struct Stickers {
 /// | Right: | U  | 0 | 0 |
 /// | Left:  | U' | 2 | 3 |
 #[derive(Default, Debug, Clone, Copy)]
-pub struct StickerFace ([Color; 4]);
+pub struct StickerFace (pub [Color; 4]);
 
 impl Index<usize> for StickerFace {
     type Output = Color;
