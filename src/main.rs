@@ -21,6 +21,12 @@ fn main() {
 	Move::new("U"),
 	Move::new("U"),
 	Move::new("D"),
+	Move::new("U"),
+	Move::new("D"),
+	Move::new("R"),
+	Move::new("R"),
+	Move::new("U"),
+	Move::new("U"),
     ]);
 
     let r = solve(cube);

@@ -4,8 +4,6 @@ use std::collections::HashSet;
 
 pub fn is_solved(c: &Cube) -> bool {
     c.pieces.iter().fold((true, &c.pieces[0]), |(acc_b, acc_c), x| (acc_b && &acc_c == &x, x) ).0
-    //let p = &c.pieces;
-    //p[0] == p[1] && p[1] == p[2] && p[2] == p[3] && p[3] == p[4] && p[4] == p[5] && p[5] == p[6] && p[6] == p[7]
 }
 
 #[test]
