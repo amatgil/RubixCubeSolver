@@ -68,6 +68,13 @@ impl Cube {
             MoveSide::D => cycle_face(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , m),
         };
     }
+    pub fn scramble(scramble: &Vec<Move>) -> Self {
+	let mut c = Cube::default();
+	for m in scramble {
+	    c.make_move(m);
+	}
+	c
+    }
 }
 impl std::cmp::PartialEq for Cube {
     fn eq(&self, other: &Self) -> bool {

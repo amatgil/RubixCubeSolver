@@ -3,7 +3,7 @@ use std::ops::Index;
 use crate::*;
 
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Stickers {
     pub right: StickerFace,
     pub left: StickerFace,
