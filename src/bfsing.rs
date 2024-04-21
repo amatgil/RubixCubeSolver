@@ -63,7 +63,7 @@ pub fn solve(cube: Cube) -> Vec<Move> {
 
     let mut i = 0;
     while w_from_solved.is_disjoint(&w_from_unsolved) {
-	if i % 1000 == 0 { println!("We're at: {i}; Steps taken: Un {} and S {}",
+	if i % 1000 == 0 { println!("[INFO]: We're at: {i}; Steps taken: Un {} and S {}",
 				    queue_from_unsolved[queue_from_unsolved.len() - 1].past_moves.len(),
 				    queue_from_solved[queue_from_solved.len() - 1].past_moves.len());
 	}
@@ -72,7 +72,7 @@ pub fn solve(cube: Cube) -> Vec<Move> {
 	i += 2;
     }
 
-    println!("Found solution after exploring: {} from unsolved and {} from solved many states",
+    println!("[INFO]: Found solution after exploring: {} from unsolved and {} from solved many states",
 	     w_from_unsolved.len(),
 	     w_from_solved.len(),
     );
@@ -81,7 +81,7 @@ pub fn solve(cube: Cube) -> Vec<Move> {
     let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(&schrodinger_state).unwrap().past_moves.clone();
     let path_from_solved: Vec<Move> = w_from_solved.get(&schrodinger_state).unwrap().past_moves.clone();
 
-    println!("Found halves of the math: merging...");
+    println!("[INFO]: Found halves of the math: merging...");
 
     let mut reorient_a = cube.clone();
     let mut reorient_b = Cube::default();
@@ -90,7 +90,6 @@ pub fn solve(cube: Cube) -> Vec<Move> {
 
     // Adjust for rotational symmetry
     let linking_moves = reorient_together(&reorient_a, &reorient_b).expect("This comes from two sets being non-disjoint, this case should never be reached");
-    dbg!(&linking_moves);
     for m in linking_moves { path_from_unsolved.push(m) }
 
     for m in path_from_solved.into_iter().rev() {

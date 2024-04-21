@@ -15,30 +15,18 @@ fn main() {
 	Move::new("U"),
 	Move::new("R'"),
 	Move::new("U'"),
-	Move::new("R'"),
-	Move::new("F"),
-	Move::new("R"),
-	Move::new("R"),
-	Move::new("U'"),
-	Move::new("R'"),
-	Move::new("U'"),
-	Move::new("R"),
-	Move::new("U"),
-	Move::new("R'"),
-	Move::new("F'"),
     ];
 
     let cube = Cube::scramble(scrambling_moves);
 
-    //println!("{cube}");
-
     let r = solve(cube);
 
-    println!("Comprovant correctesa");
+    println!("[INFO]: Checking correctness...");
     let mut checking_cube = Cube::scramble(scrambling_moves);
     for m in &r { checking_cube.make_move(&m) }
-    println!("Final cube: {checking_cube}");
+
+    println!("Starting cube:\n{cube}\n");
+    println!("Final cube:\n{checking_cube}");
 
     print_solution(&r);
-    println!("And its pieces are: {:?}", checking_cube.pieces.map(|p| p.rotation));
 }

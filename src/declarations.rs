@@ -129,18 +129,27 @@ impl std::cmp::PartialEq for Cube {
  }
 impl std::cmp::Eq for Cube { }
 
+
+pub const CUBE_PRINT_WIDTH: usize = 16 + 1;
+pub const CUBE_PRINT_HEIGHT: usize = 6;
 impl std::fmt::Display for Cube {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let mut out = String::new();
+	let mut buffer: [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT] =
+	    [' ' as u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT];
 
-        print_add_face(&mut out, &self.pieces, "RIGHT", 0, FACE_RIGHT_SEQ_PRINT);
-        print_add_face(&mut out, &self.pieces, "FRONT", 1, FACE_FRONT_SEQ_PRINT);
-        print_add_face(&mut out, &self.pieces, "UP",    2, FACE_UP_SEQ_PRINT);
-        print_add_face(&mut out, &self.pieces, "LEFT",  3, FACE_LEFT_SEQ_PRINT);
-        print_add_face(&mut out, &self.pieces, "BACK",  4, FACE_BACK_SEQ_PRINT);
-        print_add_face(&mut out, &self.pieces, "DOWN",  5, FACE_DOWN_SEQ_PRINT);
+	for y in 0..CUBE_PRINT_HEIGHT - 1 {
+	    buffer[y*CUBE_PRINT_WIDTH + CUBE_PRINT_WIDTH - 1] = '\n' as u8;
+	}
 
-        write!(f, "{}\n\n", out)
+        print_add_face(&mut buffer, &self.pieces, 5, FACE_DOWN_SEQ_PRINT,  2, 4);
+        print_add_face(&mut buffer, &self.pieces, 4, FACE_BACK_SEQ_PRINT,  6, 2);
+        print_add_face(&mut buffer, &self.pieces, 0, FACE_RIGHT_SEQ_PRINT, 4, 2);
+        print_add_face(&mut buffer, &self.pieces, 1, FACE_FRONT_SEQ_PRINT, 2, 2);
+        print_add_face(&mut buffer, &self.pieces, 3, FACE_LEFT_SEQ_PRINT,  0, 2);
+        print_add_face(&mut buffer, &self.pieces, 2, FACE_UP_SEQ_PRINT,    2, 0);
+
+	let s = std::str::from_utf8(&buffer).expect("invalid utf-8 sequence (should be impossible)");
+        write!(f, "{}", s)
     }
 
 }
@@ -178,16 +187,27 @@ impl std::fmt::Display for Move {
 }
 
 
-fn print_add_face(out: &mut String, p: &[Piece; 8], s: &str, n: usize, seq: [usize; 4]) {
-    out.push_str("\n---\n");
-    out.push_str(&format!("{s}: \n"));
-    for (i, v) in seq.into_iter().enumerate() {
-        if i == 2 { out.push('\n') }
-	let cols = p[v].to_color_sequence();
-        out.push_str(&cols[n].to_string());
-    }
-    out.push_str("\n---\n");
+fn print_add_face(
+    buffer: &mut [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT],
+    p: &[Piece; 8],
+    n: usize,
+    seq: [usize; 4],
+    start_x: usize,
+    start_y: usize,
+) {
+    let (mut x, mut y) = (start_x, start_y);
 
+    for (i, v) in seq.into_iter().enumerate() {
+	let cols = p[v].to_color_sequence();
+	let buffer_idx = y*CUBE_PRINT_WIDTH + x;
+	buffer[buffer_idx] = cols[n].to_string().bytes().next().unwrap();
+
+	x += 1;
+	if i == 1 {
+	    x = start_x;
+	    y += 1;
+	}
+    }
 }
 
 pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
