@@ -31,7 +31,7 @@ pub fn solve(cube: Cube) -> Vec<Move> {
 
     let mut i = 0;
     while let Some(State { past_moves, cube: x }) = queue.pop_front() {
-        if i % 10000 == 0 { println!("Iteration is: {i}"); }
+        if i % 10000 == 0 { println!("Iteration is: {i}. Steps taken is: {}", past_moves.len()); }
         i += 1;
 
         if is_solved(&x) { return past_moves; }
