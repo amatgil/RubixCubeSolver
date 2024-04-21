@@ -26,46 +26,46 @@ pub enum PieceRotation {
 pub enum Color { #[default] White, Red, Blue, Yellow, Orange, Green }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Move {
-    pub side: MoveSide,
-    pub prime: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum MoveSide { R, F, U, L, B, D }
+pub enum Move { R, F, U, L, B, D }
 
 impl Move {
-    pub fn new(s: &str) -> Move {
-	if s.len() > 2 { panic!("{s} no és un moviment legal"); } 
-        let ms = s.chars().nth(0).unwrap();
-        let k = s.chars().nth(1);
-	if let Some(prima) = k {
-	    if prima != '\'' { panic!("{s} té un segon char que no és una prima") }
-	}
+    pub const fn new(s: char, prime: bool) -> Move {
 
-        let m = match ms {
-            'R' => MoveSide::R,
-            'F' => MoveSide::F,
-            'U' => MoveSide::U,
-            'L' => MoveSide::L,
-            'B' => MoveSide::B,
-            'D' => MoveSide::D,
-            _ => panic!("{ms} is not a valid face move"),
+        let mut m = match s {
+            'R' => Move::R,
+            'F' => Move::F,
+            'U' => Move::U,
+            'L' => Move::L,
+            'B' => Move::B,
+            'D' => Move::D,
+	    _ => todo!(),
         };
 
-        Move { side: m, prime: k.is_some() }
+	if prime { m = m.opposite(); }
+
+	m
+    }
+    pub const fn opposite(&self) -> Self {
+	match self {
+	    Move::R => Move::F,
+	    Move::F => Move::F,
+	    Move::U => Move::L,
+	    Move::L => Move::U,
+	    Move::B => Move::D,
+	    Move::D => Move::B,
+	}
     }
 }
 
 impl Cube {
     pub fn make_move(&mut self, m: &Move) {
-        match m.side {
-            MoveSide::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
-            MoveSide::L => cycle_face(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),
-            MoveSide::U => cycle_face(&mut self.pieces, FACE_UP_SEQ_CYCLE   , m),
-            MoveSide::B => cycle_face(&mut self.pieces, FACE_BACK_SEQ_CYCLE , m),
-            MoveSide::F => cycle_face(&mut self.pieces, FACE_FRONT_SEQ_CYCLE, m),
-            MoveSide::D => cycle_face(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , m),
+        match m {
+            Move::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
+            Move::L => cycle_face(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),
+            Move::U => cycle_face(&mut self.pieces, FACE_UP_SEQ_CYCLE   , m),
+            Move::B => cycle_face(&mut self.pieces, FACE_BACK_SEQ_CYCLE , m),
+            Move::F => cycle_face(&mut self.pieces, FACE_FRONT_SEQ_CYCLE, m),
+            Move::D => cycle_face(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , m),
         };
     }
     pub fn scramble(scramble: &Vec<Move>) -> Self {
@@ -80,14 +80,18 @@ impl std::cmp::PartialEq for Cube {
     fn eq(&self, other: &Self) -> bool {
         let orientation_generators = [
             vec![],
-            vec![Move::new("F") , Move::new("B")], vec![Move::new("R"), Move::new("L'")],
-            vec![Move::new("F"), Move::new("B'")], vec![Move::new("R'"), Move::new("L'")],
-            vec![Move::new("F'"), Move::new("B"), Move::new("F'"), Move::new("B")],];
+            vec![Move::new('F', false), Move::new('B', true)],
+            vec![Move::new('F', true),  Move::new('B', false)],
+	    vec![Move::new('R', false), Move::new('L', true)],
+	    vec![Move::new('R', true),  Move::new('L', false)],
+            vec![Move::new('F', false),  Move::new('F', false), Move::new('B', false), Move::new('B', false)],
+	];
 
         let rotation_generators = [
             vec![],
-            vec![Move::new("U"), Move::new("D'")], vec![Move::new("D"), Move::new("U'")],
-            vec![Move::new("U"), Move::new("D'"), Move::new("U"), Move::new("D'")],
+            vec![Move::new('U', false), Move::new('D', true)],
+            vec![Move::new('D', false), Move::new('U', true)],
+            vec![Move::new('U', false),  Move::new('U', false), Move::new('D', false), Move::new('D', false)],
         ];
 
         for o in &orientation_generators {
@@ -138,16 +142,14 @@ impl std::fmt::Display for Color {
 impl std::fmt::Display for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         let mut out = String::new();
-        out.push(match self.side {
-            MoveSide::R => 'R',
-            MoveSide::F => 'F',
-            MoveSide::U => 'U',
-            MoveSide::L => 'L',
-            MoveSide::B => 'B',
-            MoveSide::D => 'D',
+        out.push(match self {
+            Move::R => 'R',
+            Move::F => 'F',
+            Move::U => 'U',
+            Move::L => 'L',
+            Move::B => 'B',
+            Move::D => 'D',
         });
-        if self.prime { out.push('\'') }
-    
         write!(f, "{out}")
     }
 }
@@ -169,9 +171,7 @@ pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
     [d, c, b, a]
 }
 
-pub fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mov @ Move { side: _, prime }: &Move) {
-    if *prime { face_seq = reverse_seq(face_seq); }
-
+pub fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mov: &Move) {
     // Move the pieces
     cycle_items(face, face_seq); 
 

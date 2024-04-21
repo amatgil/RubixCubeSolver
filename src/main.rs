@@ -11,13 +11,16 @@ fn main() {
     //s.back   = StickerFace([C::White, C::Orange, C::Yellow, C::Blue]);
 
     let cube = Cube::scramble(&vec![
-	Move::new("R"),
-	Move::new("R"),
-	Move::new("U"),
-	Move::new("U"),
-	Move::new("D"),
+	Move::new('R', false),
+	Move::new('R', false),
+	Move::new('U', false),
+	Move::new('U', false),
+	Move::new('D', false),
+	Move::new('R', false),
+	Move::new('R', false),
     ]);
 
+    println!("Solving: ");
     let r = solve(cube);
     print_solution(&r);
 }

@@ -13,20 +13,18 @@ impl Piece {
 	[right, front, top, left, back, down]
     }
 
-    pub fn rotate_wrong(&mut self, Move { side, prime }: &Move) {
+    pub fn rotate_wrong(&mut self, mov: &Move) {
 	let mut colors = self.to_color_sequence();
 
-	let mut seq = match side {
-	    MoveSide::R => COLOR_RIGHT_SEQ,
-	    MoveSide::L => COLOR_LEFT_SEQ,
-	    MoveSide::U => COLOR_UP_SEQ,
-	    MoveSide::D => COLOR_DOWN_SEQ,
-	    MoveSide::F => COLOR_FRONT_SEQ,
-	    MoveSide::B => COLOR_BACK_SEQ,
+	let mut seq = match mov {
+	    Move::R => COLOR_RIGHT_SEQ,
+	    Move::L => COLOR_LEFT_SEQ,
+	    Move::U => COLOR_UP_SEQ,
+	    Move::D => COLOR_DOWN_SEQ,
+	    Move::F => COLOR_FRONT_SEQ,
+	    Move::B => COLOR_BACK_SEQ,
 	};
 
-	if *prime { seq = reverse_seq(seq) }
-	
 	cycle_items(&mut colors, seq);
 
 	self.rotation = PieceRotation::from_color_pair(colors[2], colors[1]);
@@ -35,24 +33,12 @@ impl Piece {
     pub fn rotate(&mut self, mov: &Move) {
 	let [right, front, top, left, back, down] = self.to_color_sequence();
 	let new_colors: [Color; 6] = match mov {
-	    &Move { side: MoveSide::R, prime: false }
-	    | &Move { side: MoveSide::L, prime: true }
-	    => [right, down, front, left, top, back],
-	    &Move { side: MoveSide::L, prime: false }
-	    | &Move { side: MoveSide::R, prime: true }
-	    => [right, top, back, left, down, front],
-	    &Move { side: MoveSide::U, prime: false }
-	    | &Move { side: MoveSide::D, prime: true }
-	    => [back, right, top, front, left, down],
-	    &Move { side: MoveSide::D, prime: false }
-	    | &Move { side: MoveSide::U, prime: true }
-	    => [front, left, top, back, right, down],
-	    &Move { side: MoveSide::F, prime: false }
-	    | &Move { side: MoveSide::B, prime: true }
-	    => [top, front, left, down, back, right],
-	    &Move { side: MoveSide::B, prime: false }
-	    | &Move { side: MoveSide::F, prime: true }
-	    => [down, front, right, top, back, left],
+	    Move::R => [right, down, front, left, top, back],
+	    Move::L => [right, top, back, left, down, front],
+	    Move::U => [back, right, top, front, left, down],
+	    Move::D => [front, left, top, back, right, down],
+	    Move::F => [top, front, left, down, back, right],
+	    Move::B => [down, front, right, top, back, left],
 	};
 
 	self.rotation = PieceRotation::from_color_pair(new_colors[2], new_colors[1]);
