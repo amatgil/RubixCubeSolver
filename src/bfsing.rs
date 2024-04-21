@@ -64,9 +64,9 @@ impl std::cmp::PartialEq for State {
 impl Eq for State {}
 
 fn find_adjacents(x: &Cube) -> Vec<(Move, Cube)>{
-    let moviments: [Move; 12] = [
-        Move::new("R"), Move::new("R'"), Move::new("L"), Move::new("L'"), Move::new("U"), Move::new("U'"),
-        Move::new("D"), Move::new("D'"), Move::new("F"), Move::new("F'"), Move::new("B"), Move::new("B'"),
+    let moviments: [Move; 6] = [
+        Move::new("R"), Move::new("L"), Move::new("U"),
+        Move::new("D"), Move::new("F"), Move::new("B"),
     ];
 
     let mut t = Vec::new();
@@ -88,9 +88,9 @@ fn adjacent_test() {
     let solved_cube: Cube = Cube { pieces: [solved_piece; 8] };
     let mut t = Vec::new();
 
-    let moviments: [Move; 12] = [
-        Move::new("R"), Move::new("R'"), Move::new("L"), Move::new("L'"), Move::new("U"), Move::new("U'"),
-        Move::new("D"), Move::new("D'"), Move::new("F"), Move::new("F'"), Move::new("B"), Move::new("B'"),
+    let moviments: [Move; 6] = [
+        Move::new("R"), Move::new("L"), Move::new("U"),
+        Move::new("D"), Move::new("F"), Move::new("B"),
     ];
     for mov in moviments {
         let mut alt = solved_cube.clone();
