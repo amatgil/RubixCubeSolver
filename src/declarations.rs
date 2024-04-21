@@ -55,6 +55,10 @@ impl Move {
 
         Move { side: m, prime: k.is_some() }
     }
+    pub fn opposite(&self) -> Self {
+	Self { prime: !self.prime, ..*self }
+
+    }
 }
 
 impl Cube {
