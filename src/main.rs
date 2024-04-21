@@ -27,7 +27,6 @@ fn main() {
 	Move::new("R'"),
 	Move::new("F'"),
     ];
-//R U R' U R U R' U 
 
     let cube = Cube::scramble(scrambling_moves);
 

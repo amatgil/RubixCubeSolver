@@ -207,14 +207,23 @@ pub fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mov @ Move { 
 }
 
 
+
+pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
+    cycle_items_unchecked(v, idxs);
+}
+
 pub fn cycle_items_safe<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
     v.swap(idxs[0], idxs[1]);
     v.swap(idxs[0], idxs[2]);
     v.swap(idxs[0], idxs[3]);
 }
+pub fn cycle_items_old<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
+    let e = v[idxs[3]].clone();
 
-pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
-    cycle_items_unchecked(v, idxs);
+    v[idxs[3]] = v[idxs[2]].clone();
+    v[idxs[2]] = v[idxs[1]].clone();
+    v[idxs[1]] = v[idxs[0]].clone();
+    v[idxs[0]] = e;
 }
 
 pub fn cycle_items_unchecked<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
@@ -235,14 +244,6 @@ pub fn cycle_items_unchecked<T: Clone, const N: usize>(v: &mut [T; N], idxs: [us
 
 #[test]
 fn cycling_test() {
-    pub fn cycle_items_old<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
-	let e = v[idxs[3]].clone();
-
-	v[idxs[3]] = v[idxs[2]].clone();
-	v[idxs[2]] = v[idxs[1]].clone();
-	v[idxs[1]] = v[idxs[0]].clone();
-	v[idxs[0]] = e;
-    }
     let t1 = [1, 2, 3, 4, 5];
     let idx = [0, 1, 2, 3];
 
