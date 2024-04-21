@@ -11,53 +11,35 @@ fn main() {
     //s.back   = StickerFace([C::White, C::Orange, C::Yellow, C::Blue]);
 
     let scrambling_moves = &vec![
-	//Move::new("R"),
-	//Move::new("U"),
-	//Move::new("R'"),
-	//Move::new("U'"),
-	//Move::new("R"),
-	//Move::new("F"),
-	//Move::new("F"),
-	//Move::new("U"),
-
-	//Move::new("U"),
-	//Move::new("D"),
-	//Move::new("R"),
-	//Move::new("R"),
-	//Move::new("U"),
-	//Move::new("U"),
-	//Move::new("D"),
-	//Move::new("U"),
-	//Move::new("D"),
-	//Move::new("R"),
-	//Move::new("R"),
-	//Move::new("U"),
-
-	//Move::new("R"),
-	//Move::new("U"),
-	//Move::new("R'"),
-	//Move::new("U"),
-	//Move::new("R"),
-	//Move::new("U"),
-	//Move::new("R'"),
-	//Move::new("U"),
 	Move::new("R"),
 	Move::new("U"),
+	Move::new("R'"),
+	Move::new("U'"),
+	Move::new("R'"),
+	Move::new("F"),
+	Move::new("R"),
+	Move::new("R"),
+	Move::new("U'"),
+	Move::new("R'"),
+	Move::new("U'"),
+	Move::new("R"),
 	Move::new("U"),
-	Move::new("U"),
-	Move::new("U"),
+	Move::new("R'"),
+	Move::new("F'"),
     ];
 //R U R' U R U R' U 
 
     let cube = Cube::scramble(scrambling_moves);
 
+    //println!("{cube}");
+
     let r = solve(cube);
-    print_solution(&r);
 
     println!("Comprovant correctesa");
     let mut checking_cube = Cube::scramble(scrambling_moves);
-    for m in r { checking_cube.make_move(&m) }
+    for m in &r { checking_cube.make_move(&m) }
     println!("Final cube: {checking_cube}");
 
+    print_solution(&r);
     println!("And its pieces are: {:?}", checking_cube.pieces.map(|p| p.rotation));
 }
