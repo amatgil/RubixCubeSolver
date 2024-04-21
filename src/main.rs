@@ -12,6 +12,9 @@ fn main() {
 
     let cube = Cube::scramble(&vec![
 	Move::new("R"),
+	Move::new("U"),
+	Move::new("R'"),
+	Move::new("U'"),
 	//Move::new("R"),
 	//Move::new("U"),
 	//Move::new("U"),
