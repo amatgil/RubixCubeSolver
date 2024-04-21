@@ -61,10 +61,21 @@ pub fn solve(cube: Cube) -> Vec<Move> {
     let mut queue_from_solved = VecDeque::from([first_state_solved]);
 
 
+    let mut i = 0;
     while w_from_solved.is_disjoint(&w_from_unsolved) {
+	if i % 1000 == 0 { println!("We're at: {i}; Steps taken: Un {} and S {}",
+				    queue_from_unsolved[queue_from_unsolved.len() - 1].past_moves.len(),
+				    queue_from_solved[queue_from_solved.len() - 1].past_moves.len());
+	}
 	advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
 	advance_bfs(&mut w_from_solved, &mut queue_from_solved);
+	i += 2;
     }
+
+    println!("Found solution after exploring: {} from unsolved and {} from solved many states",
+	     w_from_unsolved.len(),
+	     w_from_solved.len(),
+    );
 
     let schrodinger_state: State = (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref().clone();
     let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(&schrodinger_state).unwrap().past_moves.clone();
@@ -93,31 +104,20 @@ pub fn solve(cube: Cube) -> Vec<Move> {
 /// Takes in two cubes. Returns a sequence of moves that will turn the left one into the right one
 /// Not optimized for efficiency
 fn reorient_together(a: &Cube, b: &Cube) -> Option<Vec<Move>> {
-    let orientation_generators = [
-	vec![],
-	vec![Move::new("F") , Move::new("B")], vec![Move::new("R"), Move::new("L'")],
-	vec![Move::new("F"), Move::new("B'")], vec![Move::new("R'"), Move::new("L'")],
-	vec![Move::new("F'"), Move::new("B"), Move::new("F'"), Move::new("B")],];
-
-    let rotation_generators = [
-        vec![],
-        vec![Move::new("U"), Move::new("D'")], vec![Move::new("D"), Move::new("U'")],
-        vec![Move::new("U"), Move::new("D'"), Move::new("U"), Move::new("D'")],
-    ];
-
-    for mut o in orientation_generators {
-        for mut r in rotation_generators.clone() {
-            let mut alternate_cube = a.clone();
-            for m1 in &mut *o { alternate_cube.make_move(m1) }
-            for m2 in &r { alternate_cube.make_move(&m2) }
-            if alternate_cube.pieces == b.pieces {
+    for mut o in get_orientation_generators() {
+	for mut r in get_rotation_generators() {
+	    let mut alternate_cube = a.clone();
+	    for m1 in &mut *o { alternate_cube.make_move(m1) }
+	    for m2 in &r { alternate_cube.make_move(&m2) }
+	    if alternate_cube.pieces == b.pieces {
 		o.append(&mut r);
 		return Some(o);
 	    }
-        }
+	}
     }
     None
 }
+
 fn append_move(old: &Vec<Move>, m: Move) -> Vec<Move> {
     let mut new = old.clone();
     new.push(m);
@@ -157,8 +157,8 @@ fn adjacent_test() {
     let mut t = Vec::new();
 
     let moviments: [Move; 6] = [
-        Move::new("R"), Move::new("L"), Move::new("U"),
-        Move::new("D"), Move::new("F"), Move::new("B"),
+        Move::new("R"), Move::new("F"), Move::new("U"),
+        Move::new("L'"), Move::new("B'"), Move::new("D'"),
     ];
     for mov in moviments {
         let mut alt = solved_cube.clone();
@@ -189,7 +189,10 @@ fn only_left_solve() {
 
 #[test]
 fn double_up_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("UU")]);
+    let mut cube = Cube::scramble(&vec![
+	Move::new("U"),
+	Move::new("U"),
+    ]);
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -197,7 +200,10 @@ fn double_up_solve() {
 
 #[test]
 fn back_up_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("BU")]);
+    let mut cube = Cube::scramble(&vec![
+	Move::new("B"),
+	Move::new("U"),
+    ]);
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -205,7 +211,11 @@ fn back_up_solve() {
 
 #[test]
 fn redundant_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("UUU")]);
+    let mut cube = Cube::scramble(&vec![
+	Move::new("U"),
+	Move::new("U"),
+	Move::new("U"),
+    ]);
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -213,7 +223,10 @@ fn redundant_solve() {
 
 #[test]
 fn opposite_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("LR")]);
+    let mut cube = Cube::scramble(&vec![
+	Move::new("L"),
+	Move::new("R"),
+    ]);
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -221,7 +234,13 @@ fn opposite_solve() {
 
 #[test]
 fn complicated_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("RULDF")]);
+    let mut cube = Cube::scramble(&vec![
+	Move::new("R"),
+	Move::new("U"),
+	Move::new("L"),
+	Move::new("D"),
+	Move::new("F"),
+    ]);
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -247,6 +266,6 @@ fn reorientation2() {
     b.make_move(&Move::new("D'"));
     b.make_move(&Move::new("D'"));
 
-    let answer = vec![Move::new("U"), Move::new("D'"), Move::new("U"), Move::new("D'")];
+    let answer = vec![Move::new("U"), Move::new("'"), Move::new("U"), Move::new("D")];
     assert_eq!(answer, reorient_together(&a, &b).unwrap());
 }

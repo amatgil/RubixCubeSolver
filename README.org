@@ -40,7 +40,7 @@ As in:
 - 2: Top
 - 3: Left
 - 4: Back
-- 5: Bottom
+- 5: Down
 
 * Solving
 Solving is done by brute force: we generate a graph where the vertexes are a unique (modulo symmetry) cube state and each edge is the corresponding move. We may then traverse the graph via BFS until we encounter the solved state, at which point we're done.

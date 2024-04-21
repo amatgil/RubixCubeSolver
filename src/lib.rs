@@ -34,6 +34,25 @@ const FACE_DOWN_SEQ_PRINT: [usize; 4]  = [5, 6, 4, 7];
 const FACE_FRONT_SEQ_PRINT: [usize; 4] = [3, 0, 7, 4];
 const FACE_BACK_SEQ_PRINT: [usize; 4]  = [1, 2, 5, 6];
 
+fn get_orientation_generators() -> [Vec<Move>; 6] {
+    [
+	vec![],
+	vec![Move::new("F") , Move::new("B'")],
+	vec![Move::new("R"), Move::new("L'")],
+	vec![Move::new("F'"), Move::new("B")],
+	vec![Move::new("R'"), Move::new("L'")],
+	vec![Move::new("F"), Move::new("B"), Move::new("F"), Move::new("B")],
+    ]
+}
+fn get_rotation_generators() -> [Vec<Move>; 4] {
+    [
+	vec![],
+	vec![Move::new("U"), Move::new("D'")],
+	vec![Move::new("D"), Move::new("U'")],
+	vec![Move::new("U"), Move::new("D"), Move::new("U"), Move::new("D")],
+    ]
+}
+
 
 pub fn print_solution(moves: &Vec<Move>) {
     print!("Solution is:  [");

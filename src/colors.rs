@@ -184,10 +184,10 @@ impl Color {
 	use Color as C;
 	match self {
 	    C::White  => C::Yellow,
-	    C::Red    => C::Orange,
-	    C::Blue   => C::Green,
 	    C::Yellow => C::White,
+	    C::Red    => C::Orange,
 	    C::Orange => C::Red,
+	    C::Blue   => C::Green,
 	    C::Green  => C::Blue,
 	}
     }

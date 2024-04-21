@@ -80,22 +80,42 @@ impl Cube {
 	c
     }
 }
+
+#[test]
+fn redundant_move_right() {
+    let mut cube = Cube::default();
+    cube.make_move(&Move::new("R"));
+    cube.make_move(&Move::new("R"));
+    cube.make_move(&Move::new("R"));
+    cube.make_move(&Move::new("R"));
+    assert_eq!(cube, Cube::default());
+}
+
+#[test]
+fn redundant_move_up() {
+    let mut cube = Cube::default();
+    cube.make_move(&Move::new("U"));
+    cube.make_move(&Move::new("U"));
+    cube.make_move(&Move::new("U"));
+    cube.make_move(&Move::new("U"));
+    assert_eq!(cube, Cube::default());
+}
+
+#[test]
+fn redundant_move_double_up() {
+    let mut cube = Cube::default();
+    cube.make_move(&Move::new("U"));
+    cube.make_move(&Move::new("U"));
+    cube.make_move(&Move::new("U'"));
+    cube.make_move(&Move::new("U'"));
+    assert_eq!(cube, Cube::default());
+}
+
 impl std::cmp::PartialEq for Cube {
     fn eq(&self, other: &Self) -> bool {
-        let orientation_generators = [
-            vec![],
-            vec![Move::new("F") , Move::new("B")], vec![Move::new("R"), Move::new("L'")],
-            vec![Move::new("F"), Move::new("B'")], vec![Move::new("R'"), Move::new("L'")],
-            vec![Move::new("F'"), Move::new("B"), Move::new("F'"), Move::new("B")],];
 
-        let rotation_generators = [
-            vec![],
-            vec![Move::new("U"), Move::new("D'")], vec![Move::new("D"), Move::new("U'")],
-            vec![Move::new("U"), Move::new("D'"), Move::new("U"), Move::new("D'")],
-        ];
-
-        for o in &orientation_generators {
-            for r in &rotation_generators {
+        for o in &get_orientation_generators() {
+            for r in &get_rotation_generators() {
                 let mut alternate_cube = self.clone();
                 for m1 in o { alternate_cube.make_move(m1) }
                 for m2 in r { alternate_cube.make_move(m2) }
