@@ -8,7 +8,6 @@
     let
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-      pkgsFor = system: (import nixpkgs { inherit system; });
     in
     {
       devShells = forAllSystems (
@@ -16,7 +15,7 @@
         let
           pkgs = import nixpkgs {
             inherit system;
-            overlays = [ rust-overlay.overlay];
+            overlays = [ rust-overlay.overlay ];
           };
         in
         {
