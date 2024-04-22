@@ -72,9 +72,17 @@ fn get_rotation_generators() -> [Vec<Move>; 4] {
 
 
 pub fn print_solution(moves: &Vec<Move>) {
-    print!("Solution is:  [");
+    print!("Solution is:  [ ");
     for m in moves {
     	print!("{m} ");
+    }
+    println!("]")
+}
+
+pub fn print_reverse_solution(moves: &Vec<Move>) {
+    print!("Reverse of solution: [ ");
+    for m in moves.into_iter().rev() {
+    	print!("{} ", m.opposite());
     }
     println!("]")
 }

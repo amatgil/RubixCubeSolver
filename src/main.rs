@@ -32,6 +32,7 @@ fn main() {
 	    println!("Starting cube:\n{cube}\n");
 	    println!("Final cube:\n{checking_cube}");
 	    print_solution(&r);
+	    print_reverse_solution(&r);
 	}
 	o => {
 	    println!("[ERROR]: option `{o} not recognized. Please use `gen` or `solve`");

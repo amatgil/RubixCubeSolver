@@ -2,6 +2,8 @@ use crate::*;
 use std::collections::VecDeque;
 use std::collections::HashSet;
 use std::hash::Hash;
+use std::io;
+use std::io::Write;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -63,14 +65,16 @@ pub fn solve(cube: Cube) -> Vec<Move> {
 
     let mut i = 0;
     while w_from_solved.is_disjoint(&w_from_unsolved) {
-	if i % 1000 == 0 { println!("[INFO]: We're at: {i}; Steps taken: Un {} and S {}",
+	if i % 1000 == 0 { print!("\r[INFO]: We're at: {i}; Steps taken: {} from unsolved {}",
 				    queue_from_unsolved[queue_from_unsolved.len() - 1].past_moves.len(),
 				    queue_from_solved[queue_from_solved.len() - 1].past_moves.len());
+			   io::stdout().flush().unwrap();
 	}
 	advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
 	advance_bfs(&mut w_from_solved, &mut queue_from_solved);
 	i += 2;
     }
+    println!();
 
     println!("[INFO]: Found solution after exploring: {} from unsolved and {} from solved many states",
 	     w_from_unsolved.len(),
