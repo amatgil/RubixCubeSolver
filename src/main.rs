@@ -27,6 +27,5 @@ fn main() {
 
     println!("Starting cube:\n{cube}\n");
     println!("Final cube:\n{checking_cube}");
-
     print_solution(&r);
 }

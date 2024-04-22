@@ -130,25 +130,94 @@ impl std::cmp::PartialEq for Cube {
 impl std::cmp::Eq for Cube { }
 
 
-pub const CUBE_PRINT_WIDTH: usize = 16 + 1;
-pub const CUBE_PRINT_HEIGHT: usize = 6;
+// If you touch these, remember to change the magic numbers in Cube's Display impl!
+pub const CUBE_PRINT_WIDTH: usize = 2*4 + 5 + 1;
+pub const CUBE_PRINT_HEIGHT: usize = 2*3 + 3 + 1;
+const CUBE_PRINT_HORIZ_DIVIDER_TMP: u8 = '-' as u8;
+const CUBE_PRINT_VERTI_DIVIDER_TMP: u8 = '|' as u8;
+const CUBE_PRINT_CROSS_DIVIDER_TMP: u8 = '+' as u8;
+const CUBE_PRINT_TOP_L_DIVIDER_TMP: u8 = '1' as u8;
+const CUBE_PRINT_TOP_R_DIVIDER_TMP: u8 = '2' as u8;
+const CUBE_PRINT_BOT_L_DIVIDER_TMP: u8 = '3' as u8;
+const CUBE_PRINT_BOT_R_DIVIDER_TMP: u8 = '4' as u8;
+const CUBE_PRINT_NORMT_DIVIDER_TMP: u8 = '5' as u8;
+const CUBE_PRINT_UPSDT_DIVIDER_TMP: u8 = '6' as u8;
+
+const CUBE_PRINT_HORIZ_DIVIDER: char = '━';
+const CUBE_PRINT_VERTI_DIVIDER: char = '┃';
+const CUBE_PRINT_CROSS_DIVIDER: char = '╋';
+const CUBE_PRINT_TOP_L_DIVIDER: char = '┏';
+const CUBE_PRINT_TOP_R_DIVIDER: char = '┓';
+const CUBE_PRINT_BOT_L_DIVIDER: char = '┗';
+const CUBE_PRINT_BOT_R_DIVIDER: char = '┛';
+const CUBE_PRINT_NORMT_DIVIDER: char = '┳';
+const CUBE_PRINT_UPSDT_DIVIDER: char = '┻';
+fn xy_to_idx(x: usize, y: usize) -> usize { y*CUBE_PRINT_WIDTH + x }
+
 impl std::fmt::Display for Cube {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 	let mut buffer: [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT] =
 	    [' ' as u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT];
 
-	for y in 0..CUBE_PRINT_HEIGHT - 1 {
-	    buffer[y*CUBE_PRINT_WIDTH + CUBE_PRINT_WIDTH - 1] = '\n' as u8;
+	// Newlines
+	for y in 0..CUBE_PRINT_HEIGHT - 1 { buffer[xy_to_idx(CUBE_PRINT_WIDTH - 1, y)] = '\n' as u8 }
+
+	// Horizontals
+	for y in [3, 6] {
+	    for x in 0..CUBE_PRINT_WIDTH - 1 { buffer[xy_to_idx(x, y)] = CUBE_PRINT_HORIZ_DIVIDER_TMP } 
+	}
+	for y in [0, CUBE_PRINT_HEIGHT - 1] {
+	    for x in 4..=6 - 1 { buffer[xy_to_idx(x, y)] = CUBE_PRINT_HORIZ_DIVIDER_TMP } 
 	}
 
-        print_add_face(&mut buffer, &self.pieces, 5, FACE_DOWN_SEQ_PRINT,  2, 4);
-        print_add_face(&mut buffer, &self.pieces, 4, FACE_BACK_SEQ_PRINT,  6, 2);
-        print_add_face(&mut buffer, &self.pieces, 0, FACE_RIGHT_SEQ_PRINT, 4, 2);
-        print_add_face(&mut buffer, &self.pieces, 1, FACE_FRONT_SEQ_PRINT, 2, 2);
-        print_add_face(&mut buffer, &self.pieces, 3, FACE_LEFT_SEQ_PRINT,  0, 2);
-        print_add_face(&mut buffer, &self.pieces, 2, FACE_UP_SEQ_PRINT,    2, 0);
+	// Verticals
+	for x in [0, 3, 6, 9, 12] {
+	    for y in 3..6 { buffer[xy_to_idx(x, y)] = CUBE_PRINT_VERTI_DIVIDER_TMP; }
+	}
+
+	for x in [3, 6] {
+	    for y in 1..CUBE_PRINT_HEIGHT - 1 {
+		buffer[xy_to_idx(x, y)] = CUBE_PRINT_VERTI_DIVIDER_TMP;
+	    }
+	}
+
+	for (x, y) in [(0, 3), (3, 0)]  { buffer[xy_to_idx(x, y)] = CUBE_PRINT_TOP_L_DIVIDER_TMP; }
+	for (x, y) in [(12, 3), (6, 0)] { buffer[xy_to_idx(x, y)] = CUBE_PRINT_TOP_R_DIVIDER_TMP; }
+	for (x, y) in [(0, 6), (3, 9)]  { buffer[xy_to_idx(x, y)] = CUBE_PRINT_BOT_L_DIVIDER_TMP; }
+	for (x, y) in [(6, 9), (12, 6)] { buffer[xy_to_idx(x, y)] = CUBE_PRINT_BOT_R_DIVIDER_TMP; }
+
+	
+	buffer[xy_to_idx(9, 3)] = CUBE_PRINT_NORMT_DIVIDER_TMP; 
+	buffer[xy_to_idx(9, 6)] = CUBE_PRINT_UPSDT_DIVIDER_TMP;
+
+	for x in [3, 6] {
+	    for y in [3, 6] { buffer[xy_to_idx(x, y)] = CUBE_PRINT_CROSS_DIVIDER_TMP; }
+	}
+
+        print_add_face(&mut buffer, &self.pieces, 2, FACE_UP_SEQ_PRINT,    4,  1);
+        print_add_face(&mut buffer, &self.pieces, 3, FACE_LEFT_SEQ_PRINT,  1,  4);
+        print_add_face(&mut buffer, &self.pieces, 1, FACE_FRONT_SEQ_PRINT, 4,  4);
+        print_add_face(&mut buffer, &self.pieces, 0, FACE_RIGHT_SEQ_PRINT, 7,  4);
+        print_add_face(&mut buffer, &self.pieces, 4, FACE_BACK_SEQ_PRINT,  10, 4);
+        print_add_face(&mut buffer, &self.pieces, 5, FACE_DOWN_SEQ_PRINT,  4,  7);
 
 	let s = std::str::from_utf8(&buffer).expect("invalid utf-8 sequence (should be impossible)");
+
+	let s: String = s.chars().map(|c| {
+	    match c as u8 {
+		CUBE_PRINT_VERTI_DIVIDER_TMP => CUBE_PRINT_VERTI_DIVIDER,
+		CUBE_PRINT_HORIZ_DIVIDER_TMP => CUBE_PRINT_HORIZ_DIVIDER,
+		CUBE_PRINT_CROSS_DIVIDER_TMP => CUBE_PRINT_CROSS_DIVIDER,
+		CUBE_PRINT_TOP_L_DIVIDER_TMP => CUBE_PRINT_TOP_L_DIVIDER,
+		CUBE_PRINT_TOP_R_DIVIDER_TMP => CUBE_PRINT_TOP_R_DIVIDER,
+		CUBE_PRINT_BOT_L_DIVIDER_TMP => CUBE_PRINT_BOT_L_DIVIDER,
+		CUBE_PRINT_BOT_R_DIVIDER_TMP => CUBE_PRINT_BOT_R_DIVIDER,
+		CUBE_PRINT_NORMT_DIVIDER_TMP => CUBE_PRINT_NORMT_DIVIDER,
+		CUBE_PRINT_UPSDT_DIVIDER_TMP => CUBE_PRINT_UPSDT_DIVIDER,
+		_ => c
+	    }
+	}).collect();
+
         write!(f, "{}", s)
     }
 
