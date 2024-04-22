@@ -124,7 +124,6 @@ fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> 
 pub fn read_from_input_file() -> Result<Cube, Box<dyn Error>> {
     let error_s: Cow<str> = format!("File {INPUT_FILE_NAME} does not represent a cube (valid or non-valid)").into();
     let mut input = fs::read_to_string(INPUT_FILE_NAME)?;
-    dbg!(&input);
 
     let mut s = Stickers::default();
 
@@ -139,83 +138,71 @@ pub fn read_from_input_file() -> Result<Cube, Box<dyn Error>> {
 
     skip_n_chars(&mut input, 6, error_s.to_string())?;
 
-    dbg!("");
     let bottom_left  = get_next_color(&mut input, error_s.to_string())?;
     let bottom_right = get_next_color(&mut input, error_s.to_string())?;
-    s.top.0 = [top_left, bottom_left, top_right, bottom_right];
+    s.top.0 = [top_left, bottom_left, bottom_right, top_right];
 
-    dbg!("");
     skip_n_chars(&mut input, 17, error_s.to_string())?;
 
 
     // Tops
     let left_top_left  = get_next_color(&mut input, error_s.to_string())?;
     let left_top_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!("");
 
     skip_n_chars(&mut input, 1, error_s.to_string())?;
 
     let front_top_left  = get_next_color(&mut input, error_s.to_string())?;
     let front_top_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!("");
 
     skip_n_chars(&mut input, 1, error_s.to_string())?;
 
     let right_top_left  = get_next_color(&mut input, error_s.to_string())?;
     let right_top_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!("");
 
     skip_n_chars(&mut input, 1, error_s.to_string())?;
 
-    let back_bottom_right  = get_next_color(&mut input, error_s.to_string())?;
-    let back_bottom_left = get_next_color(&mut input, error_s.to_string())?;
-    dbg!("");
+    let back_top_left  = get_next_color(&mut input, error_s.to_string())?;
+    let back_top_right = get_next_color(&mut input, error_s.to_string())?;
 
     // Bottoms
     skip_n_chars(&mut input, 3, error_s.to_string())?;
 
     let left_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
     let left_bottom_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!();
 
     skip_n_chars(&mut input, 1, error_s.to_string())?;
 
     let front_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
     let front_bottom_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!();
 
     skip_n_chars(&mut input, 1, error_s.to_string())?;
 
     let right_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
     let right_bottom_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!();
 
     skip_n_chars(&mut input, 1, error_s.to_string())?;
 
-    let back_top_right  = get_next_color(&mut input, error_s.to_string())?;
-    let back_top_left = get_next_color(&mut input, error_s.to_string())?;
-    dbg!();
+    let back_bottom_right  = get_next_color(&mut input, error_s.to_string())?;
+    let back_bottom_left = get_next_color(&mut input, error_s.to_string())?;
 
-    s.left.0 = [left_top_left, left_bottom_left, left_top_right, left_bottom_right];
-    s.right.0 = [right_top_left, right_bottom_left, right_top_right, right_bottom_right];
-    s.front.0 = [front_top_left, front_bottom_left, front_top_right, front_bottom_right];
-    s.back.0 = [back_top_left, back_bottom_left, back_top_right, back_bottom_right];
+    s.left.0 = [left_top_left, left_bottom_left, left_bottom_right, left_top_right];
+    s.right.0 = [right_top_left, right_bottom_left, right_bottom_right, right_top_right];
+    s.front.0 = [front_top_left, front_bottom_left, front_bottom_right, front_top_right];
+    s.back.0 = [back_bottom_right, back_top_right, back_top_left, back_bottom_left];
 
     skip_n_chars(&mut input, 20, error_s.to_string())?;
 
     let down_top_left  = get_next_color(&mut input, error_s.to_string())?;
     let down_top_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!();
 
     skip_n_chars(&mut input, 6, error_s.to_string())?;
 
     let down_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
     let down_bottom_right = get_next_color(&mut input, error_s.to_string())?;
-    dbg!();
 
-    s.down.0 = [down_top_left, down_bottom_left, down_top_right, down_bottom_right];
-
+    s.down.0 = [down_top_left, down_bottom_left, down_bottom_right, down_top_right];
     dbg!(&s);
+
     Ok(Cube::from_stickers(s))
 }
 
@@ -232,7 +219,7 @@ fn stickers_solved_input() {
     s.front  = StickerFace([C::Green, C::Green, C::Green, C::Green]);
     s.back   = StickerFace([C::Blue, C::Blue, C::Blue, C::Blue]);
 
-    let test_cube = cube_from_stickers(s);
+    let test_cube = Cube::from_stickers(s);
     let solved_cube = Cube { pieces: [Piece { rotation: PieceRotation::WO }; 8] };
     dbg!(test_cube, solved_cube);
     assert!(test_cube == solved_cube)
@@ -250,7 +237,7 @@ fn stickers_afterright_input() {
     s.front  = StickerFace([C::Green, C::Green, C::White, C::White]);
     s.back   = StickerFace([C::Blue, C::Blue, C::Yellow, C::Yellow]);
 
-    let test_cube = cube_from_stickers(s);
+    let test_cube = Cube::from_stickers(s);
     let mut righted_cube = Cube { pieces: [Piece { rotation: PieceRotation::YG }; 8] };
     righted_cube.make_move(&Move::new("R"));
     dbg!(righted_cube);
