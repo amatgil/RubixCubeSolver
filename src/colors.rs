@@ -99,14 +99,14 @@ impl PieceRotation {
 		| (C::Orange, C::Orange)
 		| (C::Green, C::Green)
 		| (C::Yellow, C::Yellow)
-		=> panic!("Cannot have repeated colors in a cube"),
+		=> panic!("Cannot have repeated colors in a cube ({top} is repeated)"),
 	    (C::White, C::Yellow)
 		| (C::Yellow, C::White)
 		| (C::Blue, C::Green)
 		| (C::Green, C::Blue)
 		| (C::Orange, C::Red)
 		| (C::Red, C::Orange)
-		=> panic!("Front and top may not be opposite eachother"),
+		=> panic!("Front and top may not be opposite eachother ({top}, {front})"),
 	    (C::White,  C::Red)    => PR::WR,
 	    (C::White,  C::Blue)   => PR::WB,
 	    (C::White,  C::Orange) => PR::WO,

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error, fs::{self, File}, io::{Read, Write}, ops::Index};
+use std::{borrow::Cow, error::Error, fs::{self, File}, io::{self, Read, Write}, ops::Index};
 
 use crate::*;
 
@@ -38,52 +38,47 @@ impl Cube {
 	// Piece seq is: right, front, top, left, back, down
 
 	let p_000: Piece = {
-	    let down = s.down[0];
-	    let front = s.front[1];
-	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
-	};
-	let p_001: Piece = { 
-	    let down = s.down[1];
-	    let back = s.back[0];
-	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
-	};
-	let p_010: Piece = {
-	    let top = s.top[1];
-	    let front = s.front[0];
-	    Piece { rotation: PieceRotation::from_color_pair(top, front) }
-	};
-
-	let p_011: Piece = {
-	    let top = s.top[0];
-	    let back = s.back[1];
-	    Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
-	};
-
-	let p_110: Piece = { 
 	    let top = s.top[2];
 	    let front = s.front[3];
 	    Piece { rotation: PieceRotation::from_color_pair(top, front) }
 	};
-
+	let p_001: Piece = { 
+	    let top = s.top[3];
+	    let back = s.back[2];
+	    Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
+	};
+	let p_010: Piece = {
+	    let top = s.top[0];
+	    let back = s.back[1];
+	    Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
+	};
+	let p_011: Piece = {
+	    let top = s.top[1];
+	    let front = s.front[0];
+	    Piece { rotation: PieceRotation::from_color_pair(top, front) }
+	};
 	let p_100: Piece = { 
 	    let down = s.down[3];
 	    let front = s.front[2];
 	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
 	};
-
 	let p_101: Piece = { 
 	    let down = s.down[2];
 	    let back = s.back[3];
 	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
 	};
-
+	let p_110: Piece = { 
+	    let down = s.down[1];
+	    let back = s.back[0];
+	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
+	};
 	let p_111: Piece = { 
-	    let top = s.top[3];
-	    let back = s.back[2];
-	    Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
+	    let down = s.down[0];
+	    let front = s.front[1];
+	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
 	};
 
-	Cube { pieces: [ p_110, p_111, p_011, p_010, p_100, p_101, p_001, p_000 ] }
+	Cube { pieces: [ p_000, p_001, p_010, p_011, p_100, p_101, p_110, p_111  ] }
     }
 }
 
@@ -122,8 +117,11 @@ fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> 
 }
 
 pub fn read_from_input_file() -> Result<Cube, Box<dyn Error>> {
+    let input = fs::read_to_string(INPUT_FILE_NAME)?;
+    read_from_string(&input)
+}
+fn read_from_string(input: &str) -> Result<Cube, Box<dyn Error>> {
     let error_s: Cow<str> = format!("File {INPUT_FILE_NAME} does not represent a cube (valid or non-valid)").into();
-    let mut input = fs::read_to_string(INPUT_FILE_NAME)?;
 
     let mut s = Stickers::default();
 
@@ -182,8 +180,8 @@ pub fn read_from_input_file() -> Result<Cube, Box<dyn Error>> {
 
     skip_n_chars(&mut input, 1, error_s.to_string())?;
 
-    let back_bottom_right  = get_next_color(&mut input, error_s.to_string())?;
     let back_bottom_left = get_next_color(&mut input, error_s.to_string())?;
+    let back_bottom_right  = get_next_color(&mut input, error_s.to_string())?;
 
     s.left.0 = [left_top_left, left_bottom_left, left_bottom_right, left_top_right];
     s.right.0 = [right_top_left, right_bottom_left, right_bottom_right, right_top_right];
@@ -242,4 +240,26 @@ fn stickers_afterright_input() {
     dbg!(righted_cube);
 
     assert!(test_cube == righted_cube)
+}
+
+
+#[test]
+fn from_string_right() {
+    let input = 
+"   ┏━━┓
+   ┃WB┃
+   ┃WB┃
+┏━━╋━━╋━━┳━━┓
+┃RR┃BY┃OO┃WG┃
+┃RR┃BY┃OO┃WG┃
+┗━━╋━━╋━━┻━━┛
+   ┃YG┃
+   ┃YG┃
+   ┗━━┛";
+
+    let correct_cube = Cube::scramble(&vec![Move::new("R")]);
+    let r = read_from_string(input).unwrap();
+    println!("Comparing: gotten:\n{r}");
+    println!("vs expected:\n{correct_cube}");
+    assert!(r == correct_cube);
 }
