@@ -429,6 +429,7 @@ name = "tubaitu"
 version = "1.0.0"
 dependencies = [
  "criterion",
+ "rayon",
 ]
 
 [[package]]

@@ -11,3 +11,6 @@ criterion = "0.5.1"
 [[bench]]
 name = "cycling_benchmark"
 harness = false
+
+[dependencies]
+rayon = "1.10.0"

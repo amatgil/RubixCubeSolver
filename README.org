@@ -4,11 +4,11 @@
 
 The program has two options: =gen= and =solve=.
 
-To input a specific 2x2 into the program, you must =cargo run -- gen= (or =./tubaitu gen=).
+To input a specific 2x2 into the program, you must =cargo run --release -- gen= (or =./tubaitu gen=).
 
 You should now have a file called =tubaitu_input_file=. Input your state into it, replacing all =X= with any of =W=, =Y=, =R=, =O=, =B=, =G= as appropriate.
 
-Now, to get a solve, run =cargo run -- solve= (or =./tubaitu solve=)
+Now, to get a solve, run =cargo run --release -- solve= (or =./tubaitu solve=)
 
 * Internal representation
 
@@ -54,7 +54,3 @@ As in:
 
 * Solving
 Solving is done by brute force: we generate a graph where the vertexes are a unique (modulo symmetry) cube state and each edge is the corresponding move. We may then traverse the graph via two BFS (starting from the solved state and the unsolved state) until they both encounter the same state. Having reached this point, getting the path is trivial.
-
-
-* TODO
-Rewrite the arbitrary representation indexes as constants/enums
