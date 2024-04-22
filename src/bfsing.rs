@@ -53,7 +53,7 @@ fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>
     } 
 }
 
-pub fn solve(cube: Cube) -> Vec<Move> {
+pub fn solve(cube: Cube) -> MoveSeq {
     let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube });
     let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
     let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
@@ -94,7 +94,7 @@ pub fn solve(cube: Cube) -> Vec<Move> {
 	path_from_unsolved.push(m.opposite());
     }
 
-    path_from_unsolved
+    path_from_unsolved.into()
 
 }
 

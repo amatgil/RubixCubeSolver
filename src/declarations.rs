@@ -75,14 +75,14 @@ impl Cube {
         };
     }
 
-    pub fn scramble(scramble: &Vec<Move>) -> Self {
+    pub fn scramble(scramble: &MoveSeq) -> Self {
 	let mut c = Cube::default();
-	for m in scramble {
-	    c.make_move(m);
+	for m in &scramble.0 {
+	    c.make_move(&m);
 	}
 	c
     }
-    pub fn random_scramble(length: usize) -> (Self, Vec<Move>) {
+    pub fn random_scramble(length: usize) -> (Self, MoveSeq) {
 	use rand::Rng;
 	fn get_move_from_n(n: usize) -> Move {
 	    match n {
@@ -102,7 +102,7 @@ impl Cube {
 	    c.make_move(&mov);
 	}
 
-	(c, scramble)
+	(c, scramble.into())
     }
  
 }
@@ -200,8 +200,7 @@ impl Display for MoveSeq {
 		Move { side: MoveSide::D , prime } => ExpandedMove::D { prime: *prime },
 	    };
 	    stack.push(ext);
-	    let mut running = true;
-	    while stack.len() > 1 && running {
+	    while stack.len() > 1 {
 		if let Some(c) = ExpandedMove::compress(
 		    stack[stack.len() - 2],
 		    stack[stack.len() - 1],
@@ -217,7 +216,7 @@ impl Display for MoveSeq {
 	    if m != ExpandedMove::Nothing { o.push_str(&format!("{} ", m)) };
 	}
 
-	write!(f, "{o}")
+	write!(f, "[ {o} ]")
     }
 }
 

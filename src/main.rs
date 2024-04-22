@@ -17,17 +17,23 @@ fn main() {
 	    let (mut cube, scramble) = Cube::random_scramble(scramble_length);
 	    println!("[INFO]: Generated cube:");
 
-	    print!("[INFO]: Scramble is: [");
-	    for m in scramble { print!("{m} "); }
-	    println!("]");
+	    print!("[INFO]: Scramble is: ");
+	    println!("{scramble}");
+	    print!("[INFO]: (Uncompressed: [ "); for m in &scramble.0 { print!("{m} "); } println!("])");
 
 	    println!("[INFO]: Solving...");
 	    println!("Scramble to solve:\n{cube}");
 	    let r = solve(cube);
-	    for m in &r { cube.make_move(m) }
+	    for m in &r.0 { cube.make_move(m) }
 	    println!("Final state:\n{cube}");
-	    print_solution(&r);
-	    print_reverse_solution(&r);
+
+	    println!("[RESULT]: Final solution is: {r}");
+	    print!("[INFO]: Uncompressed solution: [ "); for m in &r.0 { print!("{m} "); } println!("]");
+
+	    println!();
+	    
+	    println!("[RESULT]: Reverse of solution: {}", MoveSeq(r.0.clone().into_iter().rev().collect()));
+	    print!("[INFO]: Uncompressed reverse: [ "); for m in r.0.iter().rev() { print!("{} ", m.opposite()); } println!("]");
 	},
 	"gen" => {
 	    println!("[INFO]: Generating `{INPUT_FILE_NAME}`...");
@@ -37,7 +43,13 @@ fn main() {
 	},
 	"solve" => {
 	    println!("[INFO]: Reading from `{INPUT_FILE_NAME}`...");
-	    let cube = read_from_input_file().unwrap();
+	    let cube: Cube = match read_from_input_file() {
+		Ok(c) => c,
+		Err(e) => {
+		    println!("[ERROR]: Could not parse `{INPUT_FILE_NAME}`:'{e}'. Please double check `{INPUT_FILE_NAME}`");
+		    exit(2);
+		},
+	    };
 	    println!("[INFO]: `{INPUT_FILE_NAME}` has been read");
 	    println!("[INFO]: Interpreted cube is:\n{cube}");
 	    println!("[INFO]: Starting the solve...");
@@ -45,7 +57,7 @@ fn main() {
 
 	    println!("[INFO]: Checking correctness...");
 	    let mut checking_cube = cube;
-	    for m in &r { checking_cube.make_move(&m) }
+	    for m in &r.0 { checking_cube.make_move(&m) }
 
 	    println!("Starting cube:\n{cube}\n");
 	    println!("Final cube:\n{checking_cube}");
