@@ -201,7 +201,6 @@ pub fn read_from_input_file() -> Result<Cube, Box<dyn Error>> {
     let down_bottom_right = get_next_color(&mut input, error_s.to_string())?;
 
     s.down.0 = [down_top_left, down_bottom_left, down_bottom_right, down_top_right];
-    dbg!(&s);
 
     Ok(Cube::from_stickers(s))
 }
