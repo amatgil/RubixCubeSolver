@@ -10,22 +10,26 @@ fn main() {
     //s.down   = StickerFace([C::Red, C::Green, C::White, C::Blue]);
     //s.back   = StickerFace([C::White, C::Orange, C::Yellow, C::Blue]);
 
-    let scrambling_moves = &vec![
-	Move::new("R"),
-	Move::new("U"),
-	Move::new("R'"),
-	Move::new("U'"),
-    ];
+    //let scrambling_moves = &vec![
+    //	Move::new("R"),
+    //	Move::new("U"),
+    //	Move::new("R'"),
+    //	Move::new("U'"),
+    //];
 
-    let cube = Cube::scramble(scrambling_moves);
+    //let cube = Cube::scramble(scrambling_moves);
 
+    let cube = read_from_input_file().unwrap();
     let r = solve(cube);
 
     println!("[INFO]: Checking correctness...");
-    let mut checking_cube = Cube::scramble(scrambling_moves);
+    let mut checking_cube = cube;
     for m in &r { checking_cube.make_move(&m) }
 
     println!("Starting cube:\n{cube}\n");
     println!("Final cube:\n{checking_cube}");
     print_solution(&r);
+
+    write_blank_slate().unwrap();
+
 }

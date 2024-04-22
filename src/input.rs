@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::{borrow::Cow, error::Error, fs::{self, File}, io::{Read, Write}, ops::Index};
 
 use crate::*;
 
@@ -33,57 +33,192 @@ impl Index<usize> for StickerFace {
     }
 }
 
-pub fn cube_from_stickers(s: Stickers) -> Cube {
-    // Piece seq is: right, front, top, left, back, down
+impl Cube {
+    pub fn from_stickers(s: Stickers) -> Cube {
+	// Piece seq is: right, front, top, left, back, down
 
-    let p_000: Piece = {
-	let down = s.down[0];
-	let front = s.front[1];
-	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
-    };
-    let p_001: Piece = { 
-	let down = s.down[1];
-	let back = s.back[0];
-	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
-    };
-    let p_010: Piece = {
-	let top = s.top[1];
-	let front = s.front[0];
-	Piece { rotation: PieceRotation::from_color_pair(top, front) }
-    };
+	let p_000: Piece = {
+	    let down = s.down[0];
+	    let front = s.front[1];
+	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
+	};
+	let p_001: Piece = { 
+	    let down = s.down[1];
+	    let back = s.back[0];
+	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
+	};
+	let p_010: Piece = {
+	    let top = s.top[1];
+	    let front = s.front[0];
+	    Piece { rotation: PieceRotation::from_color_pair(top, front) }
+	};
 
-    let p_011: Piece = {
-	let top = s.top[0];
-	let back = s.back[1];
-	Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
-    };
+	let p_011: Piece = {
+	    let top = s.top[0];
+	    let back = s.back[1];
+	    Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
+	};
 
-    let p_110: Piece = { 
-	let top = s.top[2];
-	let front = s.front[3];
-	Piece { rotation: PieceRotation::from_color_pair(top, front) }
-    };
+	let p_110: Piece = { 
+	    let top = s.top[2];
+	    let front = s.front[3];
+	    Piece { rotation: PieceRotation::from_color_pair(top, front) }
+	};
 
-    let p_100: Piece = { 
-	let down = s.down[3];
-	let front = s.front[2];
-	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
-    };
+	let p_100: Piece = { 
+	    let down = s.down[3];
+	    let front = s.front[2];
+	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
+	};
 
-    let p_101: Piece = { 
-	let down = s.down[2];
-	let back = s.back[3];
-	Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
-    };
+	let p_101: Piece = { 
+	    let down = s.down[2];
+	    let back = s.back[3];
+	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), back.opposite()) }
+	};
 
-    let p_111: Piece = { 
-	let top = s.top[3];
-	let back = s.back[2];
-	Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
-    };
+	let p_111: Piece = { 
+	    let top = s.top[3];
+	    let back = s.back[2];
+	    Piece { rotation: PieceRotation::from_color_pair(top, back.opposite()) }
+	};
 
-    Cube { pieces: [ p_110, p_111, p_011, p_010, p_100, p_101, p_001, p_000 ] }
+	Cube { pieces: [ p_110, p_111, p_011, p_010, p_100, p_101, p_001, p_000 ] }
+    }
 }
+
+pub const INPUT_FILE_NAME: &str = "tubaitu_input_file";
+pub fn write_blank_slate() -> Result<(), Box<dyn Error>> {
+    let template =
+"   ┏━━┓
+   ┃XX┃
+   ┃XX┃
+┏━━╋━━╋━━┳━━┓
+┃XX┃XX┃XX┃XX┃
+┃XX┃XX┃XX┃XX┃
+┗━━╋━━╋━━┻━━┛
+   ┃XX┃
+   ┃XX┃
+   ┗━━┛";
+
+    let mut file = File::create(INPUT_FILE_NAME)?;
+    file.write(template.as_bytes())?;
+
+    Ok(())
+
+}
+
+
+fn get_next_color(input: &mut impl Iterator<Item = char>, error_s: String) -> Result<Color, Box<dyn Error>> {
+    let c = input.next().ok_or(error_s.clone())?;
+
+    let col = Color::from(c);
+    col.ok_or(format!("{c} is not a valid color").into())
+}
+
+fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> Result<(), String>{
+    for _ in 0..n { input.next().ok_or(e.clone())?; }
+    Ok(())
+}
+
+pub fn read_from_input_file() -> Result<Cube, Box<dyn Error>> {
+    let error_s: Cow<str> = format!("File {INPUT_FILE_NAME} does not represent a cube (valid or non-valid)").into();
+    let mut input = fs::read_to_string(INPUT_FILE_NAME)?;
+    dbg!(&input);
+
+    let mut s = Stickers::default();
+
+    let mut input = input.chars();
+
+    skip_n_chars(&mut input, 8, error_s.to_string())?;
+    skip_n_chars(&mut input, 4, error_s.to_string())?;
+
+    // TOP FACE
+    let top_left  = get_next_color(&mut input, error_s.to_string())?;
+    let top_right = get_next_color(&mut input, error_s.to_string())?;
+
+    skip_n_chars(&mut input, 6, error_s.to_string())?;
+
+    dbg!("");
+    let bottom_left  = get_next_color(&mut input, error_s.to_string())?;
+    let bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    s.top.0 = [top_left, bottom_left, top_right, bottom_right];
+
+    dbg!("");
+    skip_n_chars(&mut input, 17, error_s.to_string())?;
+
+
+    // Tops
+    let left_top_left  = get_next_color(&mut input, error_s.to_string())?;
+    let left_top_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!("");
+
+    skip_n_chars(&mut input, 1, error_s.to_string())?;
+
+    let front_top_left  = get_next_color(&mut input, error_s.to_string())?;
+    let front_top_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!("");
+
+    skip_n_chars(&mut input, 1, error_s.to_string())?;
+
+    let right_top_left  = get_next_color(&mut input, error_s.to_string())?;
+    let right_top_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!("");
+
+    skip_n_chars(&mut input, 1, error_s.to_string())?;
+
+    let back_bottom_right  = get_next_color(&mut input, error_s.to_string())?;
+    let back_bottom_left = get_next_color(&mut input, error_s.to_string())?;
+    dbg!("");
+
+    // Bottoms
+    skip_n_chars(&mut input, 3, error_s.to_string())?;
+
+    let left_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
+    let left_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!();
+
+    skip_n_chars(&mut input, 1, error_s.to_string())?;
+
+    let front_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
+    let front_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!();
+
+    skip_n_chars(&mut input, 1, error_s.to_string())?;
+
+    let right_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
+    let right_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!();
+
+    skip_n_chars(&mut input, 1, error_s.to_string())?;
+
+    let back_top_right  = get_next_color(&mut input, error_s.to_string())?;
+    let back_top_left = get_next_color(&mut input, error_s.to_string())?;
+    dbg!();
+
+    s.left.0 = [left_top_left, left_bottom_left, left_top_right, left_bottom_right];
+    s.right.0 = [right_top_left, right_bottom_left, right_top_right, right_bottom_right];
+    s.front.0 = [front_top_left, front_bottom_left, front_top_right, front_bottom_right];
+    s.back.0 = [back_top_left, back_bottom_left, back_top_right, back_bottom_right];
+
+    skip_n_chars(&mut input, 20, error_s.to_string())?;
+
+    let down_top_left  = get_next_color(&mut input, error_s.to_string())?;
+    let down_top_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!();
+
+    skip_n_chars(&mut input, 6, error_s.to_string())?;
+
+    let down_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
+    let down_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    dbg!();
+
+    s.down.0 = [down_top_left, down_bottom_left, down_top_right, down_bottom_right];
+
+    dbg!(&s);
+    Ok(Cube::from_stickers(s))
+}
+
 
 #[test]
 fn stickers_solved_input() {

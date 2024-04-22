@@ -1,3 +1,4 @@
 .direnv
 target/
 out
+*_input_file

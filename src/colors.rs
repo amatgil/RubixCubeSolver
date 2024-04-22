@@ -168,16 +168,16 @@ impl PieceRotation {
 
 
 impl Color {
-    pub fn new(c: char) -> Color {
+    pub fn from(c: char) -> Option<Color> {
         use Color as C;
         match c.to_ascii_uppercase() {
-            'W' => C::White,
-            'R' => C::Red,
-            'B' => C::Blue,
-            'Y' => C::Yellow,
-            'O' => C::Orange,
-            'G' => C::Green,
-            _ => panic!("Char {c} is not a valid color"),
+            'W' => Some(C::White),
+            'R' => Some(C::Red),
+            'B' => Some(C::Blue),
+            'Y' => Some(C::Yellow),
+            'O' => Some(C::Orange),
+            'G' => Some(C::Green),
+            _ => None,
         }
     }
     pub fn opposite(&self) -> Self {
