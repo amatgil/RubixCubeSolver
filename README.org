@@ -1,5 +1,15 @@
 #+TITLE: Rubix Cube Solver
 
+* Usage
+
+The program has two options: =gen= and =solve=.
+
+To input a specific 2x2 into the program, you must =cargo run -- gen= (or =./tubaitu gen=).
+
+You should now have a file called =tubaitu_input_file=. Input your state into it, replacing all =X= with any of =W=, =Y=, =R=, =O=, =B=, =G= as appropriate.
+
+Now, to get a solve, run =cargo run -- solve= (or =./tubaitu solve=)
+
 * Internal representation
 
 Each 2x2 cube is represented by eight pieces, each of which has six color (three of them are visible at any one time). This makes rotations easier to compute.
