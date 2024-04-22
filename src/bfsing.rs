@@ -34,7 +34,9 @@ impl Hash for State {
 }
 
 fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>) {
-    if let Some(rc_state) = queue.pop_front() {
+    let current_depth = queue.back().unwrap().past_moves.len();
+    while let Some(rc_state) = queue.pop_front() {
+	if rc_state.past_moves.len() > current_depth { return; }
 	let past_moves = &rc_state.past_moves;
 	let x = rc_state.cube;
         for (m, y) in find_adjacents(&x) {
@@ -48,9 +50,7 @@ fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>
                 queue.push_back(new_state);
             }
         }
-    } else {
-	panic!("Graph has been fully explored??");
-    }
+    } 
 }
 
 pub fn solve(cube: Cube) -> Vec<Move> {
