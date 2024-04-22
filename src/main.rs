@@ -11,6 +11,24 @@ fn main() {
     };
 
     match &**option {
+	"rand" => {
+	    let scramble_length = 30;
+	    println!("[INFO]: Generating random cube (n={scramble_length})...");
+	    let (mut cube, scramble) = Cube::random_scramble(scramble_length);
+	    println!("[INFO]: Generated cube:");
+
+	    print!("[INFO]: Scramble is: [");
+	    for m in scramble { print!("{m} "); }
+	    println!("]");
+
+	    println!("[INFO]: Solving...");
+	    println!("Scramble to solve:\n{cube}");
+	    let r = solve(cube);
+	    for m in &r { cube.make_move(m) }
+	    println!("Final state:\n{cube}");
+	    print_solution(&r);
+	    print_reverse_solution(&r);
+	},
 	"gen" => {
 	    println!("[INFO]: Generating `{INPUT_FILE_NAME}`...");
 	    write_blank_slate().unwrap();

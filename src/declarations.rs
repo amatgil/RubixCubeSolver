@@ -80,6 +80,29 @@ impl Cube {
 	}
 	c
     }
+    pub fn random_scramble(length: usize) -> (Self, Vec<Move>) {
+	use rand::Rng;
+	fn get_move_from_n(n: usize) -> Move {
+	    match n {
+		0 => Move::new("R"), 1 => Move::new("L"), 2 => Move::new("R"), 3 => Move::new("B"),
+		4 => Move::new("U"), 5 => Move::new("D"), 6 => Move::new("R'"), 7 => Move::new("L'"),
+		8 => Move::new("R'"), 9 => Move::new("B'"), 10 => Move::new("U'"), 11 => Move::new("D'"),
+		_ => unreachable!("Range reaches 12")
+	    }
+	}
+
+	let mut scramble = vec![];
+
+	let mut c = Cube::default();
+	for _ in 0..length {
+	    let mov = get_move_from_n(rand::thread_rng().gen_range(0..12));
+	    scramble.push(mov);
+	    c.make_move(&mov);
+	}
+
+	(c, scramble)
+    }
+ 
 }
 
 #[test]

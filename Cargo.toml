@@ -13,4 +13,5 @@ name = "cycling_benchmark"
 harness = false
 
 [dependencies]
+rand = { version = "0.8.5", features = ["small_rng"] }
 rayon = "1.10.0"
