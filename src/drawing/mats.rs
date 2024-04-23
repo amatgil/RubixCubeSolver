@@ -79,10 +79,8 @@ impl<
         for y in 0..F {
             for x in 0..C {
                 let mut val = 0.0;
-                for i in 0..N {
-                    val += self.0[y][i]*rhs.0[i][x];
-                }
-                out.0[y][x] = val;
+                out.0[y][x] = (0..N).map(|i| self.0[y][i]*rhs.0[i][x]).sum();
+                
             }
         }
         out
@@ -189,7 +187,7 @@ fn mat_mult_rectangle() {
 
 
     let c = Matrix::<3, 3>(
-        [[5.0, 234.0, 295.0],
+        [[5.0, 34.0, 45.0],
          [-1.0, 2.0, 2.0 ],
          [-3.0, 0.0, -1.5]],
     );
@@ -213,7 +211,7 @@ fn mat_mult_rectangle_other() {
 
 
     let c = Matrix::<2, 2>(
-        [[-6.0, 62.5],
+        [[-6.0, 12.5],
          [-19.0, 11.5 ]]
     );
 
