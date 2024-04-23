@@ -1,8 +1,13 @@
-#+TITLE: Rubix Cube Solver
+#+TITLE: Cubes!
 
-* Usage
+* Progress
+** [X] 2x2
+** [ ] Displaying step-by-step
+** [ ] 3x3
 
-The program has two options: =gen= and =solve=.
+* Usage (`tubaitu`)
+
+The program has three options: =gen=, =solve=, =rand=.
 
 To input a specific 2x2 into the program, you must =cargo run --release -- gen= (or =./tubaitu gen=).
 

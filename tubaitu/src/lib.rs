@@ -10,6 +10,9 @@ pub use input::*;
 pub mod colors;
 pub use colors::*;
 
+pub mod drawing;
+pub use drawing::*;
+
 
 // Position constants
 const P_TOP_RIGHT_FRONT: usize    = 0;
