@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref};
 
 use crate::*;
 
@@ -111,6 +111,18 @@ impl Cube {
 pub struct MoveSeq(pub Vec<Move>);
 
 impl From<Vec<Move>> for MoveSeq { fn from(value: Vec<Move>) -> Self { Self(value) } }
+
+impl Deref for MoveSeq {
+    type Target = Vec<Move>;
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl IntoIterator for MoveSeq {
+    type Item = Move;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ExpandedMove {

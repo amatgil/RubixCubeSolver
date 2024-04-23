@@ -61,8 +61,14 @@ fn main() {
 
 	    println!("Starting cube:\n{cube}\n");
 	    println!("Final cube:\n{checking_cube}");
-	    print_solution(&r);
-	    print_reverse_solution(&r);
+
+	    println!("[RESULT]: Final solution is: {r}");
+	    print!("[INFO]: Uncompressed solution: [ "); for m in &r.0 { print!("{m} "); } println!("]");
+
+	    println!();
+	    
+	    println!("[RESULT]: Reverse of solution: {}", MoveSeq(r.0.clone().into_iter().rev().collect()));
+	    print!("[INFO]: Uncompressed reverse: [ "); for m in r.0.iter().rev() { print!("{} ", m.opposite()); } println!("]");
 	}
 	o => {
 	    println!("[ERROR]: option `{o} not recognized. Please use `gen` or `solve`");

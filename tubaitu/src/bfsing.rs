@@ -170,7 +170,7 @@ fn adjacent_test() {
 
 #[test]
 fn only_right_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("R")]);
+    let mut cube = Cube::scramble(&vec![Move::new("R")].into());
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -178,7 +178,7 @@ fn only_right_solve() {
 
 #[test]
 fn only_left_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("L")]);
+    let mut cube = Cube::scramble(&vec![Move::new("L")].into());
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -189,7 +189,7 @@ fn double_up_solve() {
     let mut cube = Cube::scramble(&vec![
 	Move::new("U"),
 	Move::new("U"),
-    ]);
+    ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -200,7 +200,7 @@ fn back_up_solve() {
     let mut cube = Cube::scramble(&vec![
 	Move::new("B"),
 	Move::new("U"),
-    ]);
+    ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -212,7 +212,7 @@ fn redundant_solve() {
 	Move::new("U"),
 	Move::new("U"),
 	Move::new("U"),
-    ]);
+    ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -223,7 +223,7 @@ fn opposite_solve() {
     let mut cube = Cube::scramble(&vec![
 	Move::new("L"),
 	Move::new("R"),
-    ]);
+    ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
@@ -237,7 +237,7 @@ fn complicated_solve() {
 	Move::new("L"),
 	Move::new("D"),
 	Move::new("F"),
-    ]);
+    ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
     assert_eq!(cube, Cube::default());
