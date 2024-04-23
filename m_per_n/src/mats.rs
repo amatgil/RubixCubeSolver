@@ -173,10 +173,13 @@ impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
 
 
 /// For tests: panics if they're unequal
-fn compare_mats<const NF: usize, const NC: usize>(a: [MatRow<NC>; NF], b: [MatRow<NC>; NF]) {
+/// 
+/// This relies of float equality, so it's not public. It should only be used in controlled ways, when
+/// you already know the result
+fn compare_mats<const NF: usize, const NC: usize>(a: Matrix<NF, NC>, b: Matrix<NF, NC>) {
     for y in 0..NF {
         for x in 0..NC {
-            if a[y][x] != b[y][x] {
+            if a.0[y][x] != b.0[y][x] {
                 panic!("{a:?} is unequal from {b:?} at index ({x}, {y})");
             }
         }
@@ -198,7 +201,7 @@ fn mat_addition() {
         [[6.0, 8.0].into(),
          [0.0, 5.5].into()]
     );
-    compare_mats((a+b).0, c.0);
+    compare_mats(a+b, c);
 }
 
 #[test]
@@ -217,7 +220,7 @@ fn mat_subtraction() {
          [6.0, 2.5].into()]
     );
 
-    compare_mats((a-b).0, c.0);
+    compare_mats(a-b, c);
 }
 
 
@@ -234,8 +237,8 @@ fn mat_mult_by_scalar() {
          [-0.0, -29.6].into()]
     );
     // I hate float equality lmao
-    compare_mats((a * k).0, c.0);
-    compare_mats((k * a).0, c.0);
+    compare_mats(a * k, c);
+    compare_mats(k * a, c);
 }
 
 #[test]
@@ -261,7 +264,7 @@ fn mat_mult_square() {
     );
 
 
-    compare_mats((a * b).0, c.0);
+    compare_mats(a * b, c);
 
 }
 
@@ -285,7 +288,7 @@ fn mat_mult_rectangle() {
          [-3.0, 0.0, -1.5].into()],
     );
 
-    compare_mats((a * b).0, c.0);
+    compare_mats(a * b, c);
 }
 
 
@@ -308,7 +311,7 @@ fn mat_mult_rectangle_other() {
          [-19.0, 11.5 ].into()]
     );
 
-    compare_mats((b * a).0, c.0);
+    compare_mats(b * a, c);
 }
 
 #[test]
@@ -317,9 +320,9 @@ fn zeros() {
     let two = Matrix::<2, 2>::ZERO();
     let three = Matrix::<3, 3>::ZERO();
 
-    compare_mats(one.0, Matrix::<1, 1>([[0.0; 1].into(); 1]).0);
-    compare_mats(two.0, Matrix::<2, 2>([[0.0; 2].into(); 2]).0);
-    compare_mats(three.0, Matrix::<3, 3>([[0.0; 3].into(); 3]).0);
+    compare_mats(one, Matrix::<1, 1>([[0.0; 1].into(); 1]));
+    compare_mats(two, Matrix::<2, 2>([[0.0; 2].into(); 2]));
+    compare_mats(three, Matrix::<3, 3>([[0.0; 3].into(); 3]));
 
 }
 #[test]
@@ -327,19 +330,75 @@ fn matrix_identity() {
     let id = Matrix::<3, 3>::ID();
     let correct_id = Matrix::<3, 3>(
         [[1.0, 0.0, 0.0].into(),
-            [0.0, 1.0, 0.0].into(),
-            [0.0, 0.0, 1.0].into()]
+         [0.0, 1.0, 0.0].into(),
+         [0.0, 0.0, 1.0].into()]
     );
-    compare_mats(id.0, correct_id.0);
+    compare_mats(id, correct_id);
 }
 
 #[test]
-fn inverse_id() {
-    let id = Matrix::<3, 3>::ID();
-    let correct_id = Matrix::<3, 3>(
-        [[1.0, 0.0, 0.0].into(),
-            [0.0, 1.0, 0.0].into(),
-            [0.0, 0.0, 1.0].into()]
+fn inverse_of_id() {
+    let mut i = 1;
+    while i < 5 {
+        let m = Matrix::<5, 5>::ID();
+        compare_mats(m.inverse().unwrap(), m);
+        i += 1;
+    }
+}
+
+#[test]
+fn zero_no_inverse() {
+    assert!(Matrix::<1, 1>::ZERO().inverse().is_none());
+    assert!(Matrix::<2, 2>::ZERO().inverse().is_none());
+    assert!(Matrix::<3, 3>::ZERO().inverse().is_none());
+    assert!(Matrix::<4, 4>::ZERO().inverse().is_none());
+    assert!(Matrix::<5, 5>::ZERO().inverse().is_none());
+}
+
+#[test]
+fn two_by_two_normal_inverse() {
+    let a = Matrix::<2, 2>(
+        [[1.0, 2.0].into(),
+         [3.0, 4.0].into()]
     );
-    compare_mats(id.inverse().unwrap().0, correct_id.0);
+    let a_prime = Matrix::<2, 2>(
+        [[-2.0, 1.0].into(),
+         [1.5, -0.5].into()]
+    );
+    compare_mats(a.inverse().unwrap(), a_prime);
+}
+
+#[test]
+fn two_by_two_no_inverse() {
+    let a = Matrix::<2, 2>(
+        [[1.0, 2.0].into(),
+         [2.0, 4.0].into()]
+    );
+    assert!(a.inverse().is_none())
+}
+
+
+#[test]
+fn three_by_three_normal_inverse() {
+    let a = Matrix::<3, 3>(
+        [[1.0, 2.0, 3.0].into(),
+         [1.0, 2.0, 3.0].into(),
+         [3.0, 4.0, 2.0].into()]
+    );
+    let a_prime = Matrix::<3, 3>(
+        [[4.0, -6.0, 1.0].into(),
+         [-7.0/2.0, 5.0, -0.5].into(),
+         [1.0, -1.0, 0.0].into()]
+    );
+    compare_mats(a.inverse().unwrap(), a_prime);
+}
+
+#[test]
+fn three_by_three_no_inverse() {
+    let a = Matrix::<3, 3>(
+        [[1.0, 2.0, 2.0].into(),
+         [1.0, 2.0, 2.0].into(),
+         [3.0, 4.0, 6.0].into()]
+    );
+    assert!(a.inverse().is_none())
 }
