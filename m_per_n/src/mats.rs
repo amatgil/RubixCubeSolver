@@ -1,19 +1,25 @@
+use crate::*;
+
 use std::ops::*;
 
-#[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
-pub struct Matrix<const NF: usize, const NC: usize> (
-    [MatRow<NC>; NF]
-);
+impl Point {
+    pub fn new(x: f64, y: f64, z: f64) -> Point {
+	Point { x, y, z }
+    }
+}
 
-#[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
-pub struct MatRow<const NROWS: usize>([f64; NROWS]);
+// MatRow impls
+impl<const N: usize> From<[f64; N]> for MatRow<N> {
+    fn from(v: [f64; N]) -> Self { MatRow::<N>(v) }
+}
+
+// Elementary transformations on rows (swap elided)
 impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
     type Output = Self;
     fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
 }
 
-
-impl<const NROWS: usize> Add for MatRow<NROWS> { 
+impl<const NROWS: usize> Add for MatRow<NROWS> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
         let mut out = [0.0; NROWS];
@@ -22,33 +28,110 @@ impl<const NROWS: usize> Add for MatRow<NROWS> {
     }
 }
 
-impl<const NROWS: usize> Sub for MatRow<NROWS> { 
-    type Output = Self;
-    fn sub(self, rhs: Self) -> Self {
-        let mut out = [0.0; NROWS];
-        for i in 0..NROWS { out[i] = self.0[i] - rhs.0[i]}
-        MatRow::<NROWS>(out)
-    }
-}
-
-impl<const NROWS: usize> Mul<MatRow<NROWS>> for f64 {
-    type Output = MatRow<NROWS>;
-    fn mul(self, rhs: MatRow<NROWS>) -> Self::Output { MatRow::<NROWS>(rhs.0.map(|i| i*self)) }
-}
-
-impl<const N: usize> From<[f64; N]> for MatRow<N> {
-    fn from(v: [f64; N]) -> Self { MatRow::<N>(v) }
-}
-
 impl<const N: usize> Index<usize> for MatRow<N> {
     type Output = f64;
-    fn index(&self, idx: usize) -> &Self::Output { 
-        &self.0[idx]
+    fn index(&self, idx: usize) -> &Self::Output { &self.0[idx] }
+}
+
+impl<const N: usize> IndexMut<usize> for MatRow<N> {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output { &mut self.0[idx] }
+}
+
+// Generic (rectangular) impls
+impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
+    #[allow(non_snake_case)]
+    pub const fn ZERO() -> Matrix<NF, NC> {
+        Matrix::<NF, NC>([MatRow::<NC>([0.0; NC]); NF])
+    }
+
+}
+
+/// Square impls
+impl<const N: usize> Matrix<N, N> {
+    #[allow(non_snake_case)]
+    pub const fn ID() -> Matrix<N, N> {
+        let mut out = Matrix::<N, N>([MatRow::<N>([0.0; N]); N]);
+        let mut i = 0;
+        while i < N {
+            out.0[i].0[i] = 1.0;
+            i += 1;
+        }
+        out
+    }
+    pub const fn scalar_matrix(lambda: f64) -> Matrix<N, N> {
+        let mut out = Matrix::<N, N>([MatRow::<N>([0.0; N]); N]);
+        let mut i = 0;
+        while i < N {
+            out.0[i].0[i] = lambda;
+            i += 1;
+        }
+        out
+    }
+
+    pub fn inverse(&self) -> Self {
+        let mut inverse = Matrix::<N, N>::ID();
+
+	todo!()
     }
 }
-impl<const N: usize> IndexMut<usize> for MatRow<N> {
-    fn index_mut(&mut self, idx: usize) -> &mut Self::Output { 
-        &mut self.0[idx]
+
+/// Matrix addition (must have the same dimensions, enforced by type-system)
+impl<const NF: usize, const NC: usize> Add<Matrix<NF, NC>> for Matrix<NF, NC> {
+    type Output = Matrix<NF, NC>;
+    fn add(mut self, rhs: Self) -> Self::Output {
+        for y in 0..NF {
+            for x in 0..NC { self.0[y][x] += rhs.0[y][x]; }
+        }
+        self
+    }
+}
+
+/// Matrix subtraction (must have the same dimensions, enforced by type-system)
+impl<const NF: usize, const NC: usize> Sub<Matrix<NF, NC>> for Matrix<NF, NC> {
+    type Output = Matrix<NF, NC>;
+    fn sub(mut self, rhs: Self) -> Self::Output {
+        for y in 0..NF {
+            for x in 0..NC { self.0[y][x] -= rhs.0[y][x] }
+        }
+        self
+    }
+}
+
+/// Scalar times matrix, `l * A`
+impl<const NF: usize, const NC: usize> Mul<f64> for Matrix<NF, NC> {
+    type Output = Matrix<NF, NC>;
+    fn mul(mut self, rhs: f64) -> Self::Output {
+        for y in 0..NF {
+            for x in 0..NC { self.0[y][x] = self.0[y][x]*rhs }
+        }
+        self
+    }
+}
+
+/// Matrix times scalar, `A * l`
+impl<const NF: usize, const NC: usize> Mul<Matrix<NF, NC>> for f64 {
+    type Output = Matrix<NF, NC>;
+    fn mul(self, mut rhs: Matrix<NF, NC>) -> Self::Output {
+        for y in 0..NF {
+            for x in 0..NC { rhs.0[y][x] = rhs.0[y][x]*self }
+        }
+        rhs
+    }
+}
+
+/// Matrix multiplication, validity enforced by the type-system
+impl<
+    const N: usize,
+    const C: usize, // Unused, NC of right
+    const F: usize  // Unused, NF of left
+> Mul<Matrix<N, C>> for Matrix<F, N> {
+    type Output = Matrix<F, C>;
+    fn mul(self, rhs: Matrix<N, C>) -> Self::Output {
+        let mut out: Self::Output = Matrix::ZERO();
+        for y in 0..F {
+            for x in 0..C { out.0[y][x] = (0..N).map(|i| self.0[y][i]*rhs.0[i][x]).sum() }
+        }
+        out
     }
 }
 
@@ -328,23 +411,12 @@ fn matrix_identity() {
 }
 
 #[test]
-fn matrix_inverse_d() {
+fn inverse_id() {
     let id = Matrix::<3, 3>::ID();
     let correct_id = Matrix::<3, 3>(
         [[1.0, 0.0, 0.0].into(),
             [0.0, 1.0, 0.0].into(),
             [0.0, 0.0, 1.0].into()]
     );
-    compare_mats(id.inverse().unwrap().0, correct_id.0);
-}
-
-#[test]
-fn matrix_inverse_doesnt_exist() {
-    let id = Matrix::<3, 3>::ID();
-    let correct_id = Matrix::<3, 3>(
-        [[1.0, 0.0, 0.0].into(),
-            [0.0, 1.0, 0.0].into(),
-            [0.0, 0.0, 1.0].into()]
-    );
-    compare_mats(id.inverse().unwrap().0, correct_id.0);
+    assert_eq!(id.inverse().0, correct_id.0);
 }
