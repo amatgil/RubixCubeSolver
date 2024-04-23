@@ -62,10 +62,9 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, 
         let i = i * n_in_between_frames;
         for inbetween_index in 0..n_in_between_frames {
             let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
-
             let filename = format!("{file_prefix}_{:>04}", i + inbetween_index);
 
-            let svg: String = format!("{cube} with {mov:?} at with lerp value {lerp_t}");
+            let svg: String = get_svg(&cube, &mov, lerp_t);
             
             let mut file: fs::File = fs::File::create(filename)?;
             file.write(svg.as_bytes())?;
@@ -75,4 +74,11 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, 
 
     todo!()
 
+}
+
+fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
+    let points = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
+    
+    // Recorda que el radi és DRAWING_PIECE_RADIUS
+    format!("{cube} with {mov:?} at with lerp value {lerp_t}")
 }
