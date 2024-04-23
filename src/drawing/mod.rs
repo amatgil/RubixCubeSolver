@@ -1,5 +1,8 @@
 use crate::*;
 
+mod matmath;
+use matmath::*;
+
 use std::fs;
 use std::io::Write;
 
