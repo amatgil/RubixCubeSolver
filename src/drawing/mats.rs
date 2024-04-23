@@ -12,6 +12,30 @@ impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
     fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
 }
 
+
+impl<const NROWS: usize> Add for MatRow<NROWS> { 
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        let mut out = [0.0; NROWS];
+        for i in 0..NROWS { out[i] = self.0[i] + rhs.0[i]}
+        MatRow::<NROWS>(out)
+    }
+}
+
+impl<const NROWS: usize> Sub for MatRow<NROWS> { 
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self {
+        let mut out = [0.0; NROWS];
+        for i in 0..NROWS { out[i] = self.0[i] - rhs.0[i]}
+        MatRow::<NROWS>(out)
+    }
+}
+
+impl<const NROWS: usize> Mul<MatRow<NROWS>> for f64 {
+    type Output = MatRow<NROWS>;
+    fn mul(self, rhs: MatRow<NROWS>) -> Self::Output { MatRow::<NROWS>(rhs.0.map(|i| i*self)) }
+}
+
 impl<const N: usize> From<[f64; N]> for MatRow<N> {
     fn from(v: [f64; N]) -> Self { MatRow::<N>(v) }
 }
@@ -40,15 +64,6 @@ impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
     }
 }
 
-impl<const NROWS: usize> Add for MatRow<NROWS> {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self {
-        let mut out = [0.0; NROWS];
-        for i in 0..NROWS { out[i] = self.0[i] + rhs.0[i]}
-        MatRow::<NROWS>(out)
-    }
-}
-
 // Generic impls
 impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     #[allow(non_snake_case)]
@@ -71,13 +86,27 @@ impl<const N: usize> Matrix<N, N> {
         out
     }
 
-    pub fn inverse(&self) -> Self {
+    pub fn inverse(&self) -> Option<Self> {
         let mut inverse = Matrix::<N, N>::ID();
 
-        //inverse.0[1] = inverse;
+        inverse[1] = inverse[0][0] * inverse[1] - inverse[1][0] * inverse[0];
+        inverse[2] = inverse[0][0] * inverse[2] - inverse[2][0] * inverse[0];
 
-        //inverse
-        todo!();
+        inverse[0] = inverse[1][1] * inverse[0] - inverse[0][1] * inverse[1];
+        inverse[2] = inverse[1][1] * inverse[2] - inverse[2][1] * inverse[1];
+
+        inverse[0] = inverse[2][2] * inverse[0] - inverse[0][2] * inverse[2];
+        inverse[1] = inverse[2][2] * inverse[1] - inverse[1][2] * inverse[2];
+
+
+        if inverse[0][0] == 0.0 || inverse[1][1] == 0.0 || inverse[2][2] == 0.0 {
+            return None;
+        }
+        inverse[0] = 1.0/inverse[0][0] * inverse[0];
+        inverse[1] = 1.0/inverse[1][1] * inverse[1];
+        inverse[2] = 1.0/inverse[2][2] * inverse[2];
+
+        Some(inverse)
     }
 }
 
@@ -296,4 +325,26 @@ fn matrix_identity() {
             [0.0, 0.0, 1.0].into()]
     );
     compare_mats(id.0, correct_id.0);
+}
+
+#[test]
+fn matrix_inverse_d() {
+    let id = Matrix::<3, 3>::ID();
+    let correct_id = Matrix::<3, 3>(
+        [[1.0, 0.0, 0.0].into(),
+            [0.0, 1.0, 0.0].into(),
+            [0.0, 0.0, 1.0].into()]
+    );
+    compare_mats(id.inverse().unwrap().0, correct_id.0);
+}
+
+#[test]
+fn matrix_inverse_doesnt_exist() {
+    let id = Matrix::<3, 3>::ID();
+    let correct_id = Matrix::<3, 3>(
+        [[1.0, 0.0, 0.0].into(),
+            [0.0, 1.0, 0.0].into(),
+            [0.0, 0.0, 1.0].into()]
+    );
+    compare_mats(id.inverse().unwrap().0, correct_id.0);
 }
