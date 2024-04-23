@@ -1,11 +1,13 @@
 #+TITLE: Cubes!
 
 * Progress
-** [X] 2x2
-** [ ] Displaying step-by-step
-** [ ] 3x3
+- [X] 2x2
+- [ ] Displaying step-by-step
+- [ ] 3x3
 
 * Usage (`tubaitu`)
+
+(NOTE: The UI is still very much in-progress, most of the work is happening on the back-end)
 
 The program has three options: =gen=, =solve=, =rand=.
 
