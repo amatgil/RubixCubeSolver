@@ -6,7 +6,7 @@ pub struct Matrix<const NF: usize, const NC: usize> (
 );
 
 #[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
-struct MatRow<const NROWS: usize>([f64; NROWS]);
+pub struct MatRow<const NROWS: usize>([f64; NROWS]);
 impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
     type Output = Self;
     fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
@@ -74,9 +74,7 @@ impl<const N: usize> Matrix<N, N> {
     pub fn inverse(&self) -> Self {
         let mut inverse = Matrix::<N, N>::ID();
 
-        inverse.0[1] = inverse.
-
-        inverse
+	todo!()
     }
 }
 
@@ -135,11 +133,6 @@ impl<
     }
 }
 
-
-/// For tests: panics if they're unequal
-fn compare_mats<const NF: usize, const NC: usize>(a: [MatRow<NC>; NF], b: [MatRow<NC>; NF]) {
-    for i in 0..N { if a[i] == b[i] { panic!("{a:?} is unequal from {b:?} at index {i}")} }
-}
 
 #[test]
 fn mat_addition() {
@@ -291,4 +284,15 @@ fn matrix_identity() {
             [0.0, 0.0, 1.0]]
     );
     assert_eq!(id.0, correct_id.0);
+}
+
+#[test]
+fn inverse_id() {
+    let id = Matrix::<3, 3>::ID();
+    let correct_id = Matrix::<3, 3>(
+        [[1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0]]
+    );
+    assert_eq!(id.inverse().0, correct_id.0);
 }

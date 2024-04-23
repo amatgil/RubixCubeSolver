@@ -1,20 +1,8 @@
+use m_per_n::*;
 use crate::*;
 
-mod mats;
-use mats::*;
-
-mod vec3;
-use vec3::*;
-
-use std::fs;
+use std::fs::{self, File};
 use std::io::Write;
-
-#[derive(Clone, Debug, Default, Copy)]
-struct Point {
-    x: f64,
-    y: f64,
-    z: f64
-}
 
 #[derive(Clone, Debug, Default, Copy)]
 struct DrawablePiece {
@@ -27,8 +15,6 @@ struct DrawablePiece {
 struct DrawableCube {
     pieces: [DrawablePiece; 8],
 }
-
-impl Point { fn new(x: f64, y: f64, z: f64) -> Point { Point { x, y, z } } }
 
 const DRAWING_PIECE_RADIUS: f64 = 10.0;
 impl Cube {
