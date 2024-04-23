@@ -17,6 +17,9 @@ You should now have a file called =tubaitu_input_file=. Input your state into it
 
 Now, to get a solve, run =cargo run --release -- solve= (or =./tubaitu solve=)
 
+
+To use a random scramble, use =cargo run --release -- rand= (=./tubaitu rand=)
+
 * Internal representation
 
 Each 2x2 cube is represented by eight pieces, each of which has six color (three of them are visible at any one time). This makes rotations easier to compute.

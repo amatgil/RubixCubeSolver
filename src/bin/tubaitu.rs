@@ -6,13 +6,13 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let Some(option) = args.get(1) else {
-	println!("[ERROR]: Missing argument: `gen` to (re-)generate template file or `solve` to read from it and output solving steps");
+	println!("[ERROR]: Missing argument: `gen` to (re-)generate template file, `solve` to read from it and output solving steps or `rand` to generate a random scramble and solve it");
 	exit(1);
     };
 
     match &**option {
 	"rand" => {
-	    let scramble_length = 30;
+	    let scramble_length = 10;
 	    println!("[INFO]: Generating random cube (n={scramble_length})...");
 	    let (mut cube, scramble) = Cube::random_scramble(scramble_length);
 	    println!("[INFO]: Generated cube:");

@@ -14,5 +14,5 @@ harness = false
 
 [dependencies]
 rand = { version = "0.8.5", features = ["small_rng"] }
-rayon = "1.10.0"
+
 m_per_n = { path = "../m_per_n" }

@@ -489,7 +489,6 @@ dependencies = [
  "criterion",
  "m_per_n",
  "rand",
- "rayon",
 ]
 
 [[package]]
