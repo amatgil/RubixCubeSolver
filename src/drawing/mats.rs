@@ -6,7 +6,7 @@ pub struct Matrix<const NF: usize, const NC: usize> (
 );
 
 #[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
-struct MatRow<const NROWS: usize>([f64; NROWS]);
+pub struct MatRow<const NROWS: usize>([f64; NROWS]);
 impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
     type Output = Self;
     fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
@@ -74,9 +74,10 @@ impl<const N: usize> Matrix<N, N> {
     pub fn inverse(&self) -> Self {
         let mut inverse = Matrix::<N, N>::ID();
 
-        inverse.0[1] = inverse.
+        //inverse.0[1] = inverse;
 
-        inverse
+        //inverse
+        todo!();
     }
 }
 
@@ -138,7 +139,13 @@ impl<
 
 /// For tests: panics if they're unequal
 fn compare_mats<const NF: usize, const NC: usize>(a: [MatRow<NC>; NF], b: [MatRow<NC>; NF]) {
-    for i in 0..N { if a[i] == b[i] { panic!("{a:?} is unequal from {b:?} at index {i}")} }
+    for y in 0..NF {
+        for x in 0..NC {
+            if a[y][x] != b[y][x] {
+                panic!("{a:?} is unequal from {b:?} at index ({x}, {y})");
+            }
+        }
+    }
 }
 
 #[test]
@@ -156,119 +163,117 @@ fn mat_addition() {
         [[6.0, 8.0].into(),
          [0.0, 5.5].into()]
     );
-
-    compare_rows((a+b).0, c.0);
+    compare_mats((a+b).0, c.0);
 }
 
 #[test]
 fn mat_subtraction() {
     let a = Matrix::<2, 2>(
-        [[1.0, 2.0],
-         [3.0, 4.0]]
+        [[1.0, 2.0].into(),
+         [3.0, 4.0].into()]
     );
     let b = Matrix::<2, 2>(
-        [[5.0, 6.0],
-         [-3.0, 1.5]]
+        [[5.0, 6.0].into(),
+         [-3.0, 1.5].into()]
     );
 
     let c = Matrix::<2, 2>(
-        [[-4.0, -4.0],
-         [6.0, 2.5]]
+        [[-4.0, -4.0].into(),
+         [6.0, 2.5].into()]
     );
 
-    assert_eq!((a - b).0, c.0);
+    compare_mats((a-b).0, c.0);
 }
 
 
 #[test]
 fn mat_mult_by_scalar() {
     let a = Matrix::<2, 2>(
-        [[1.0, 2.0],
-         [0.0, 4.0]]
+        [[1.0, 2.0].into(),
+         [0.0, 4.0].into()]
     );
     let k = -7.4;
 
     let c = Matrix::<2, 2>(
-        [[-7.4, -14.8],
-         [-0.0, -29.6]]
+        [[-7.4, -14.8].into(),
+         [-0.0, -29.6].into()]
     );
-
-    assert_eq!((a * k).0, c.0); // I hate float equality lmao
-    assert_eq!((k * a).0, c.0); // I hate float equality lmao
+    // I hate float equality lmao
+    compare_mats((a * k).0, c.0);
+    compare_mats((k * a).0, c.0);
 }
 
 #[test]
 fn mat_mult_square() {
     let a = Matrix::<2, 2>(
-        [[1.0, 2.0],
-         [0.0, 4.0]]
+        [[1.0, 2.0].into(),
+         [0.0, 4.0].into()]
     );
 
     let b = Matrix::<2, 2>(
-        [[5.0, 6.0],
-         [-3.0, 1.5]]
+        [[5.0, 6.0].into() ,
+         [-3.0, 1.5].into()]
     );
 
     let c = Matrix::<2, 2>(
-        [[-1.0, 9.0],
-        [-12.0, 6.0]]
+        [[-1.0, 9.0].into(),
+        [-12.0, 6.0].into()]
     ); 
 
     let d = Matrix::<2, 2>(
-        [[5.0, 34.0],
-        [-3.0, 0.0]]
+        [[5.0, 34.0].into(),
+        [-3.0, 0.0].into()]
     );
 
 
-    assert_eq!((a * b).0, c.0);
-    assert_eq!((b * a).0, d.0);
+    compare_mats((a * b).0, c.0);
 
 }
 
 #[test]
 fn mat_mult_rectangle() {
     let a = Matrix::<3, 2>(
-        [[5.0,  6.0],
-         [-1.0, 1.0],
-         [-3.0, 1.5]]
+        [[5.0,  6.0].into(),
+         [-1.0, 1.0].into(),
+         [-3.0, 1.5].into()]
     );
     
     let b = Matrix::<2, 3>(
-        [[1.0, 2.0, 3.0],
-         [0.0, 4.0, 5.0]]
+        [[1.0, 2.0, 3.0].into(),
+         [0.0, 4.0, 5.0].into()]
     );
 
 
     let c = Matrix::<3, 3>(
-        [[5.0, 34.0, 45.0],
-         [-1.0, 2.0, 2.0 ],
-         [-3.0, 0.0, -1.5]],
+        [[5.0, 34.0, 45.0].into(),
+         [-1.0, 2.0, 2.0 ].into(),
+         [-3.0, 0.0, -1.5].into()],
     );
 
-    assert_eq!((a * b).0, c.0);
+    compare_mats((a * b).0, c.0);
 }
 
 
 #[test]
 fn mat_mult_rectangle_other() {
     let a = Matrix::<3, 2>(
-        [[5.0,  6.0],
-         [-1.0, 1.0],
-         [-3.0, 1.5]]
+        [[5.0,  6.0].into(),
+         [-1.0, 1.0].into(),
+         [-3.0, 1.5].into()]
     );
     
     let b = Matrix::<2, 3>(
-        [[1.0, 2.0, 3.0],
-         [0.0, 4.0, 5.0]]
+        [[1.0, 2.0, 3.0].into(),
+         [0.0, 4.0, 5.0].into()]
     );
 
 
     let c = Matrix::<2, 2>(
-        [[-6.0, 12.5],
-         [-19.0, 11.5 ]]
+        [[-6.0, 12.5].into(),
+         [-19.0, 11.5 ].into()]
     );
 
-    assert_eq!((b * a).0, c.0);
+    compare_mats((b * a).0, c.0);
 }
 
 #[test]
@@ -277,18 +282,18 @@ fn zeros() {
     let two = Matrix::<2, 2>::ZERO();
     let three = Matrix::<3, 3>::ZERO();
 
-    assert_eq!(one.0, Matrix::<1, 1>([[0.0; 1]; 1]).0);
-    assert_eq!(two.0, Matrix::<2, 2>([[0.0; 2]; 2]).0);
-    assert_eq!(three.0, Matrix::<3, 3>([[0.0; 3]; 3]).0);
+    compare_mats(one.0, Matrix::<1, 1>([[0.0; 1].into(); 1]).0);
+    compare_mats(two.0, Matrix::<2, 2>([[0.0; 2].into(); 2]).0);
+    compare_mats(three.0, Matrix::<3, 3>([[0.0; 3].into(); 3]).0);
 
 }
 #[test]
 fn matrix_identity() {
     let id = Matrix::<3, 3>::ID();
     let correct_id = Matrix::<3, 3>(
-        [[1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0]]
+        [[1.0, 0.0, 0.0].into(),
+            [0.0, 1.0, 0.0].into(),
+            [0.0, 0.0, 1.0].into()]
     );
-    assert_eq!(id.0, correct_id.0);
+    compare_mats(id.0, correct_id.0);
 }
