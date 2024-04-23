@@ -55,16 +55,22 @@ impl Cube {
     }
 }
 
-pub fn draw_sequence(file_prefix: &str, cube: &Cube, moves: Vec<Move>, n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
+pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
+    let mut cube: Cube = starting_cube.clone();
+
     for (i, mov) in moves.iter().enumerate() {
+        let i = i * n_in_between_frames;
         for inbetween_index in 0..n_in_between_frames {
+            let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
+
             let filename = format!("{file_prefix}_{:>04}", i + inbetween_index);
 
-            let svg: String = "Testing string".to_string();
+            let svg: String = format!("{cube} with {mov:?} at with lerp value {lerp_t}");
             
             let mut file: fs::File = fs::File::create(filename)?;
             file.write(svg.as_bytes())?;
         }
+        cube.make_move(mov);
     }
 
     todo!()
