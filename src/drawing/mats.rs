@@ -2,14 +2,58 @@ use std::ops::*;
 
 #[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
 pub struct Matrix<const NF: usize, const NC: usize> (
-    [[f64; NC]; NF]
+    [MatRow<NC>; NF]
 );
+
+#[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
+struct MatRow<const NROWS: usize>([f64; NROWS]);
+impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
+    type Output = Self;
+    fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
+}
+
+impl<const N: usize> From<[f64; N]> for MatRow<N> {
+    fn from(v: [f64; N]) -> Self { MatRow::<N>(v) }
+}
+
+impl<const N: usize> Index<usize> for MatRow<N> {
+    type Output = f64;
+    fn index(&self, idx: usize) -> &Self::Output { 
+        &self.0[idx]
+    }
+}
+impl<const N: usize> IndexMut<usize> for MatRow<N> {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output { 
+        &mut self.0[idx]
+    }
+}
+
+impl<const NF: usize, const NC: usize> Index<usize> for Matrix<NF, NC> {
+    type Output = MatRow<NC>;
+    fn index(&self, idx: usize) -> &Self::Output { 
+        &self.0[idx]
+    }
+}
+impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output { 
+        &mut self.0[idx]
+    }
+}
+
+impl<const NROWS: usize> Add for MatRow<NROWS> {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        let mut out = [0.0; NROWS];
+        for i in 0..NROWS { out[i] = self.0[i] + rhs.0[i]}
+        MatRow::<NROWS>(out)
+    }
+}
 
 // Generic impls
 impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     #[allow(non_snake_case)]
     pub const fn ZERO() -> Matrix<NF, NC> {
-        Matrix::<NF, NC>([[0.0; NC]; NF])
+        Matrix::<NF, NC>([MatRow::<NC>([0.0; NC]); NF])
     }
 
 }
@@ -18,13 +62,21 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
 impl<const N: usize> Matrix<N, N> {
     #[allow(non_snake_case)]
     pub const fn ID() -> Matrix<N, N> {
-        let mut out = Matrix::<N, N>([[0.0; N]; N]);
+        let mut out = Matrix::<N, N>([MatRow::<N>([0.0; N]); N]);
         let mut i = 0;
         while i < N {
-            out.0[i][i] = 1.0;
+            out.0[i].0[i] = 1.0;
             i += 1;
         }
         out
+    }
+
+    pub fn inverse(&self) -> Self {
+        let mut inverse = Matrix::<N, N>::ID();
+
+        inverse.0[1] = inverse.
+
+        inverse
     }
 }
 
@@ -77,34 +129,35 @@ impl<
     fn mul(self, rhs: Matrix<N, C>) -> Self::Output {
         let mut out: Self::Output = Matrix::ZERO();
         for y in 0..F {
-            for x in 0..C {
-                let mut val = 0.0;
-                out.0[y][x] = (0..N).map(|i| self.0[y][i]*rhs.0[i][x]).sum();
-                
-            }
+            for x in 0..C { out.0[y][x] = (0..N).map(|i| self.0[y][i]*rhs.0[i][x]).sum() }
         }
         out
     }
 }
 
 
+/// For tests: panics if they're unequal
+fn compare_mats<const NF: usize, const NC: usize>(a: [MatRow<NC>; NF], b: [MatRow<NC>; NF]) {
+    for i in 0..N { if a[i] == b[i] { panic!("{a:?} is unequal from {b:?} at index {i}")} }
+}
+
 #[test]
 fn mat_addition() {
     let a = Matrix::<2, 2>(
-        [[1.0, 2.0],
-         [3.0, 4.0]]
+        [[1.0, 2.0].into(),
+         [3.0, 4.0].into()]
     );
     let b = Matrix::<2, 2>(
-        [[5.0, 6.0],
-         [-3.0, 1.5]]
+        [[5.0, 6.0].into(),
+         [-3.0, 1.5].into()]
     );
 
     let c = Matrix::<2, 2>(
-        [[6.0, 8.0],
-         [0.0, 5.5]]
+        [[6.0, 8.0].into(),
+         [0.0, 5.5].into()]
     );
 
-    assert_eq!((a + b).0, c.0);
+    compare_rows((a+b).0, c.0);
 }
 
 #[test]
