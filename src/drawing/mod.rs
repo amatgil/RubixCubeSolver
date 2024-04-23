@@ -1,7 +1,10 @@
 use crate::*;
 
-mod matmath;
-use matmath::*;
+mod mats;
+use mats::*;
+
+mod vec3;
+use vec3::*;
 
 use std::fs;
 use std::io::Write;
