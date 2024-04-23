@@ -7,10 +7,20 @@ pub use vec3::*;
 
 #[derive(Clone, Debug, Default, Copy)]
 pub struct Point {
-    x: f64,
-    y: f64,
-    z: f64
+    pub x: f64,
+    pub y: f64,
+    pub z: f64
 }
 
-impl Point { pub fn new(x: f64, y: f64, z: f64) -> Point { Point { x, y, z } } }
 
+#[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
+pub struct Matrix<const NF: usize, const NC: usize> (
+    [MatRow<NC>; NF]
+);
+
+#[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
+pub struct MatRow<const NROWS: usize>([f64; NROWS]);
+
+pub type Vec2 = Matrix<2, 1>;
+pub type Vec3 = Matrix<3, 1>;
+pub type Vec4 = Matrix<4, 1>;
