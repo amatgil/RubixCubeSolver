@@ -110,6 +110,12 @@ impl Cube {
 #[derive(Debug, Clone)]
 pub struct MoveSeq(pub Vec<Move>);
 
+impl MoveSeq {
+    pub fn reversed(&self) -> Self {
+        Self(self.0.iter().rev().map(|m| m.opposite()).collect())
+    }
+}
+
 impl From<Vec<Move>> for MoveSeq { fn from(value: Vec<Move>) -> Self { Self(value) } }
 
 impl Deref for MoveSeq {
@@ -179,7 +185,7 @@ impl ExpandedMove {
 
 impl Display for ExpandedMove {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-	let is_p = |&b| if b { "'" } else { "" };
+	let is_p = |&b: &bool| if b { "'" } else { "" };
 	let o: String = match self {
 	    ExpandedMove::L { prime } => format!("L{}", is_p(prime)),
 	    ExpandedMove::R { prime } => format!("R{}", is_p(prime)),

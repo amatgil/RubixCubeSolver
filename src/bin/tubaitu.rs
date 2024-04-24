@@ -32,7 +32,7 @@ fn main() {
 
 	    println!();
 	    
-	    println!("[RESULT]: Reverse of solution: {}", MoveSeq(r.0.clone().into_iter().rev().collect()));
+	    println!("[RESULT]: Reverse of solution: {}", r.reversed());
 	    print!("[INFO]: Uncompressed reverse: [ "); for m in r.0.iter().rev() { print!("{} ", m.opposite()); } println!("]");
 	},
 	"gen" => {
