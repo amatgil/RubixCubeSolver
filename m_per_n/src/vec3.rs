@@ -1,5 +1,6 @@
 use std::ops::*;
 
+#[derive(Clone, Copy)]
 pub struct Vec3 {
     x: f64,
     y: f64,
@@ -7,9 +8,13 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    const ZERO: Self     = Vec3 { x:  0.0, y:  0.0, z:  0.0 };
-    const ONE: Self      = Vec3 { x:  1.0, y:  1.0, z:  1.0 };
-    const NEG_ONE: Self  = Vec3 { x: -1.0, y: -1.0, z: -1.0 };
+    pub const ZERO: Self     = Vec3 { x:  0.0, y:  0.0, z:  0.0 };
+    pub const ONE: Self      = Vec3 { x:  1.0, y:  1.0, z:  1.0 };
+    pub const NEG_ONE: Self  = Vec3 { x: -1.0, y: -1.0, z: -1.0 };
+
+    pub fn new(x: f64, y: f64, z: f64) -> Vec3{
+        Vec3{x:x,y:y,z:z}
+    }
     pub fn abs(&self) -> f64 {
         (self.x*self.x + self.y*self.y + self.z*self.z).sqrt()
     }
@@ -23,15 +28,16 @@ impl Vec3 {
             })
         }
     }
-    pub fn cross_product(&self, rhs: &Self) -> Self {
+    pub fn cross_product(lhs: Vec3, rhs: Vec3) -> Vec3 {
         return Vec3 {
-            x: self.y*rhs.z - self.z*rhs.y,
-            y: self.z*rhs.x - self.x*rhs.z,
-            z: self.x*rhs.y - self.y*rhs.x
+            x: lhs.y*rhs.z - lhs.z*rhs.y,
+            y: lhs.z*rhs.x - lhs.x*rhs.z,
+            z: lhs.x*rhs.y - lhs.y*rhs.x
         };
     }
-    pub fn dot_product(&self, rhs: &Self) -> f64 {
-        self.x*rhs.x + self.y*rhs.y + self.z*rhs.z
+
+    pub fn dot_product(lhs: Vec3, rhs: Vec3) -> f64 {
+        lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z
     }
 
 }

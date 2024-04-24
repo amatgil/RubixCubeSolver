@@ -2,6 +2,7 @@ use crate::*;
 
 use std::ops::*;
 
+
 impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Point {
 	Point { x, y, z }
@@ -57,7 +58,6 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     pub const fn ZERO() -> Matrix<NF, NC> {
         Matrix::<NF, NC>([MatRow::<NC>([0.0; NC]); NF])
     }
-
 }
 
 /// Square impls
@@ -170,7 +170,6 @@ impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
         &mut self.0[idx]
     }
 }
-
 
 /// For tests: panics if they're unequal
 fn compare_mats<const NF: usize, const NC: usize>(a: [MatRow<NC>; NF], b: [MatRow<NC>; NF]) {

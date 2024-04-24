@@ -3,12 +3,77 @@ use crate::*;
 
 use std::fs::{self, File};
 use std::io::Write;
+use m_per_n::Vec3;
 
 #[derive(Clone, Debug, Default, Copy)]
 struct DrawablePiece {
     rotation: PieceRotation,
     center: Point,
     radius: f64,
+}
+
+impl DrawablePiece {
+
+    /// Returns an array of row marices which correspond to the positions of the 
+    /// pieces' vertices. 
+    fn get_vertex_positions(&self) -> [MatRow<3>; 8] {
+        let r = self.radius;
+        let c = self.center;
+        let mut vertices = [MatRow::<3>([c.x,c.y,c.z]);8];
+
+        for i in 0..7 {
+            let point = match i {
+                P_TOP_RIGHT_FRONT    => vertices[0] + MatRow::<3>([ r, -r,  r]),  
+                P_TOP_RIGHT_BACK     => vertices[1] + MatRow::<3>([ r,  r,  r]),
+                P_TOP_LEFT_BACK      => vertices[2] + MatRow::<3>([-r,  r,  r]),
+                P_TOP_LEFT_FRONT     => vertices[3] + MatRow::<3>([-r, -r,  r]),
+                P_BOTTOM_RIGHT_FRONT => vertices[4] + MatRow::<3>([ r, -r, -r]),  
+                P_BOTTOM_RIGHT_BACK  => vertices[5] + MatRow::<3>([ r,  r, -r]),
+                P_BOTTOM_LEFT_BACK   => vertices[6] + MatRow::<3>([-r,  r, -r]),
+                P_BOTTOM_LEFT_FRONT  => vertices[7] + MatRow::<3>([-r, -r, -r]),
+                _ => unreachable!("Piece index no vàlid?"),
+            };
+            vertices[i] = point;
+        }
+        vertices
+    }
+
+    /// Returns an array of 3x3 matrices which represent triplets of coordinates which 
+    /// make up the faces of the cube. (in the order described during hack nights!)
+    fn get_faces_with_brightness(&self, light_dir: Vec3) -> [(Matrix<4,3>, f64);6] {
+        let verts = self.get_vertex_positions();
+        let mut faces:[(Matrix<4,3>, f64);6] = [(Matrix::ZERO(), 0.0);6];
+        faces[0].0 = Matrix::<4,3>([verts[0], verts[1], verts[4],verts[5]]);
+        faces[1].0 = Matrix::<4,3>([verts[0], verts[3], verts[4],verts[7]]);
+        faces[2].0 = Matrix::<4,3>([verts[0], verts[1], verts[2],verts[3]]);
+        faces[3].0 = Matrix::<4,3>([verts[2], verts[3], verts[6],verts[7]]);
+        faces[4].0 = Matrix::<4,3>([verts[1], verts[2], verts[5],verts[6]]);
+        faces[5].0 = Matrix::<4,3>([verts[4], verts[5], verts[6],verts[7]]);
+
+        let center = Vec3::new(self.center.x,self.center.y, self.center.z);
+        for (face, brightness) in &mut faces {
+            let normal_vector = get_normal_vector(*face, center);
+            *brightness = 0.8*max(0.1, Vec3::dot_product(normal_vector, light_dir));
+        }
+        faces
+    }
+
+    fn draw(&self, light_dir: Vec3) -> String {
+        let cube_faces = self.get_faces_with_brightness(light_dir);
+        todo!()
+    }
+}
+
+fn get_normal_vector(face: Matrix<4,3>, center: Vec3) -> Vec3 {
+    let vertex0: Vec3 = Vec3::new(face[0][0], face[0][1],face[0][2]);
+    let vertex1: Vec3 = Vec3::new(face[1][0], face[1][1],face[1][2]);
+    let vertex2: Vec3 = Vec3::new(face[2][0], face[2][1],face[2][2]);
+
+    let mut normal = Vec3::cross_product(vertex1 - vertex0, vertex2 - vertex0);
+    normal = normal.normalize().unwrap();
+    let dot_product = Vec3::dot_product(normal,center-vertex0);
+
+    normal * if dot_product < 0.0 {-1.0} else {1.0}
 }
 
 #[derive(Clone, Debug, Default, Copy)]
@@ -72,5 +137,15 @@ fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
     let points = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
     
     // Recorda que el radi és DRAWING_PIECE_RADIUS
-    format!("{cube} with {mov:?} at with lerp value {lerp_t}")
+    format!("{cube} with {mov:?} at with lerp value {lerp_t}");
+    let cam_pos = Vec3::new(10.0, 10.0, 10.0);
+    let cam_dir = Vec3::ZERO - cam_pos;
+
+    let light_pos = Vec3::new(0.0,0.0,20.0);
+    let light_dir = Vec3::ZERO - light_pos;
+
+
+
+
+    todo!();
 }
