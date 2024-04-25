@@ -102,6 +102,17 @@ impl Solvable for Cube2 {
 
     }
 
+    fn make_move(&mut self, m: &Move) {
+        match m.side {
+            MoveSide::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
+            MoveSide::L => cycle_face(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),
+            MoveSide::U => cycle_face(&mut self.pieces, FACE_UP_SEQ_CYCLE   , m),
+            MoveSide::B => cycle_face(&mut self.pieces, FACE_BACK_SEQ_CYCLE , m),
+            MoveSide::F => cycle_face(&mut self.pieces, FACE_FRONT_SEQ_CYCLE, m),
+            MoveSide::D => cycle_face(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , m),
+        };
+    }
+
     fn scramble(scramble: &MoveSeq) -> Self {
         let mut c = Cube2::default();
         for m in &scramble.0 {

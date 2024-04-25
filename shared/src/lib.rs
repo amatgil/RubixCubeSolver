@@ -3,8 +3,9 @@ use std::ops::Deref;
 pub mod colors;
 pub use colors::*;
 
-pub trait Solvable: Display + Eq + Sized {
+pub trait Solvable: Display + Eq + Sized + Default {
     fn solve(&self) -> MoveSeq;
+    fn make_move(&mut self, movimement: &Move);
     fn scramble(inp: &MoveSeq) -> Self;
     fn random_scramble(lengtth: usize) -> (Self, MoveSeq);
 }

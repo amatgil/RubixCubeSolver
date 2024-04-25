@@ -14,9 +14,9 @@ fn main() {
 	"rand" => {
 	    let scramble_length = 10;
 	    println!("[INFO]: Generating random cube (n={scramble_length})...");
-		let scrambling_instant = Instant::now();
+	    let scrambling_instant = Instant::now();
 	    let (mut cube, scramble) = Cube2::random_scramble(scramble_length);
-		let time_taken_to_scramble = scrambling_instant.elapsed();
+	    let time_taken_to_scramble = scrambling_instant.elapsed();
 	    println!("[INFO]: Scrambling took: {}ms ({}μs)", time_taken_to_scramble.as_millis(), time_taken_to_scramble.as_micros());
 	    print!("[INFO]: Scramble is: ");
 	    println!("{scramble}");
@@ -25,20 +25,20 @@ fn main() {
 	    println!("[INFO]: Solving...");
 	    println!("Scramble to solve:\n{cube}");
 
-		let starting_instant = Instant::now();
-	    let r = cube.solve();
-		let time_taken = starting_instant.elapsed();
+            let starting_instant = Instant::now();
+            let r = cube.solve();
+            let time_taken = starting_instant.elapsed();
 
 	    for m in &r.0 { cube.make_move(m) }
 	    println!("Final state:\n{cube}");
 
-		println!();
+            println!();
 
 	    println!("[RESULT]: Solving time was: {}ms ({}μs)", time_taken.as_millis(), time_taken.as_micros());
-	    println!("[RESULT]: Final solution is: {r}");
-	    print!("[INFO]: Uncompressed solution: [ "); for m in &r.0 { print!("{m} "); } println!("]");
+            println!("[RESULT]: Final solution is: {r}");
+            print!("[INFO]: Uncompressed solution: [ "); for m in &r.0 { print!("{m} "); } println!("]");
 
-	    println!();
+            println!();
 	    
 	    println!("[RESULT]: Reverse of solution: {}", r.reversed());
 	    print!("[INFO]: Uncompressed reverse: [ "); for m in r.0.iter().rev() { print!("{} ", m.opposite()); } println!("]");

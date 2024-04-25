@@ -13,3 +13,8 @@ members = [
 
 [dependencies]
 tubaitu = { path = "./tubaitu" }
+tribaitri = { path = "./tribaitri" }
+
+[workspace.dependencies]
+rand = { version = "0.8.5", features = ["small_rng"] }
+
