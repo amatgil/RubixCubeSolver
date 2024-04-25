@@ -40,8 +40,8 @@ impl DrawablePiece {
 
     /// Returns an array of 3x3 matrices which represent triplets of coordinates which 
     /// make up the faces of the cube. (in the order described during hack nights!)
-    fn get_faces_with_brightness(&self, light_dir: Vec3) -> [(Matrix<4,3>, f64);6] {
-        let verts = self.get_vertex_positions();
+    fn get_faces_with_brightness(&self, light_dir: Vec3, verts: &mut [MatRow<3>;8]) -> [(Matrix<4,3>, f64);6] {
+        *verts = self.get_vertex_positions();
         let mut faces:[(Matrix<4,3>, f64);6] = [(Matrix::ZERO(), 0.0);6];
         faces[0].0 = Matrix::<4,3>([verts[0], verts[1], verts[4],verts[5]]);
         faces[1].0 = Matrix::<4,3>([verts[0], verts[3], verts[4],verts[7]]);
@@ -59,7 +59,9 @@ impl DrawablePiece {
     }
 
     fn draw(&self, light_dir: Vec3) -> String {
-        let cube_faces = self.get_faces_with_brightness(light_dir);
+        let vertices: &mut [MatRow<3>;8] = &mut [MatRow::<3>([0.0,0.0,0.0]);8];
+        let cube_faces = self.get_faces_with_brightness(light_dir, vertices);
+        
         todo!()
     }
 }
