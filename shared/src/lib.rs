@@ -59,6 +59,8 @@ fn find_adjacents<C>(x: &C) -> Vec<(Move, C)> where C: Solvable {
 
 pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn moves_of_adjacency() -> Vec<Move>;
+    fn make_move(&mut self, movimement: &Move);
+    
     fn solve(&self) -> MoveSeq {
         let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube: self.clone() });
         let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
@@ -105,10 +107,35 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         path_from_unsolved.into()
 
     }
+    fn cycle_elements<const N: usize>(face: &mut [Piece; N], mut face_seq: [usize; 4], mov @ Move { side: _, prime }: &Move) {
+        if *prime { face_seq = reverse_seq(face_seq); }
+        cycle_items(face, face_seq);  // Move the pieces
+        for i in face_seq { face[i].rotate(mov) } // Rotate the pieces
+    }
 
-    fn make_move(&mut self, movimement: &Move);
-    fn scramble(inp: &MoveSeq) -> Self;
-    fn random_scramble(lengtth: usize) -> (Self, MoveSeq);
+
+    fn scramble(moves: &MoveSeq) -> Self {
+	let mut c = Self::default();
+	for m in moves.iter() { c.make_move(&m) }
+        c
+    }
+    fn random_scramble(length: usize) -> (Self, MoveSeq) {
+        use rand::Rng;
+        fn get_move_from_n(n: usize) -> Move {
+            match n % 12 {
+                0 => Move::new("R"), 1 => Move::new("L"), 2 => Move::new("R"), 3 => Move::new("B"),
+                4 => Move::new("U"), 5 => Move::new("D"), 6 => Move::new("R'"), 7 => Move::new("L'"),
+                8 => Move::new("R'"), 9 => Move::new("B'"), 10 => Move::new("U'"), 11 => Move::new("D'"),
+                _ => unreachable!("Range reaches 12")
+            }
+        }
+
+	let mut scramble = vec![];
+        for _ in 0..length { scramble.push(get_move_from_n(rand::thread_rng().gen_range(0..12))) }
+
+        let c = Self::scramble(&scramble.clone().into());
+	(c, scramble.into())
+    }
 }
 
 
@@ -325,6 +352,12 @@ pub enum PieceRotation {
     OG, GO, OB, BO,
     RG, GR, RB, BR,
     #[default] WB,
+}
+
+pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
+    v.swap(idxs[0], idxs[1]);
+    v.swap(idxs[0], idxs[2]);
+    v.swap(idxs[0], idxs[3]);
 }
 
 pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {

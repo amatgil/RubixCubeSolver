@@ -15,58 +15,6 @@ fn basic_is_solved_test() {
 }
 
 
-// TODO: Only check disjoint-ness between newly explored verticies
-impl Solvable for Cube2 {
-    fn make_move(&mut self, m: &Move) {
-        match m.side {
-            MoveSide::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
-            MoveSide::L => cycle_face(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),
-            MoveSide::U => cycle_face(&mut self.pieces, FACE_UP_SEQ_CYCLE   , m),
-            MoveSide::B => cycle_face(&mut self.pieces, FACE_BACK_SEQ_CYCLE , m),
-            MoveSide::F => cycle_face(&mut self.pieces, FACE_FRONT_SEQ_CYCLE, m),
-            MoveSide::D => cycle_face(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , m),
-        };
-    }
-
-    fn scramble(scramble: &MoveSeq) -> Self {
-        let mut c = Cube2::default();
-        for m in &scramble.0 {
-            c.make_move(&m);
-        }
-        c
-    }
-
-    fn random_scramble(length: usize) -> (Self, MoveSeq) {
-	    use rand::Rng;
-	    fn get_move_from_n(n: usize) -> Move {
-	        match n {
-	    	0 => Move::new("R"), 1 => Move::new("L"), 2 => Move::new("R"), 3 => Move::new("B"),
-	    	4 => Move::new("U"), 5 => Move::new("D"), 6 => Move::new("R'"), 7 => Move::new("L'"),
-	    	8 => Move::new("R'"), 9 => Move::new("B'"), 10 => Move::new("U'"), 11 => Move::new("D'"),
-	    	_ => unreachable!("Range reaches 12")
-	        }
-	    }
-
-	    let mut scramble = vec![];
-
-	    let mut c = Cube2::default();
-	    for _ in 0..length {
-	        let mov = get_move_from_n(rand::thread_rng().gen_range(0..12));
-	        scramble.push(mov);
-	        c.make_move(&mov);
-	    }
-
-	    (c, scramble.into())
-    }
-
-    fn moves_of_adjacency() -> Vec<Move> {
-        Vec::from([
-            Move::new("R"), Move::new("F"), Move::new("U"),
-            Move::new("L'"), Move::new("B'"), Move::new("D'")
-        ])
-    }
-}
-
 /// Takes in two cubes. Returns a sequence of moves that will turn the left one into the right one
 /// Not optimized for efficiency
 fn reorient_together(a: &Cube2, b: &Cube2) -> Option<Vec<Move>> {
