@@ -78,6 +78,9 @@ pub fn solve(cube: Cube) -> MoveSeq {
 
     // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
     //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
+    println!("[INFO]: Number of intersecting states found is: {}",
+        w_from_solved.intersection(&w_from_unsolved).count()
+    );
     let schrodinger_state: State = (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref().clone();
     let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(&schrodinger_state).unwrap().past_moves.clone();
     let path_from_solved: Vec<Move> = w_from_solved.get(&schrodinger_state).unwrap().past_moves.clone();
