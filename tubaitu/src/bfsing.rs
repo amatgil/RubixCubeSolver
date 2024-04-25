@@ -2,8 +2,6 @@ use crate::*;
 use std::collections::VecDeque;
 use std::collections::HashSet;
 use std::hash::Hash;
-use std::io;
-use std::io::Write;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -39,7 +37,7 @@ fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>
 	if rc_state.past_moves.len() > current_depth { return; }
 	let past_moves = &rc_state.past_moves;
 	let x = rc_state.cube;
-        for (m, y) in find_adjacents(&x) {
+    for (m, y) in find_adjacents(&x) {
 	    let new_moves = append_move(&past_moves, m);
             let new_state = Rc::new(State {
                 past_moves: new_moves.clone(),
@@ -109,15 +107,15 @@ impl Solvable for Cube2 {
 /// Not optimized for efficiency
 fn reorient_together(a: &Cube2, b: &Cube2) -> Option<Vec<Move>> {
     for mut o in get_orientation_generators() {
-	for mut r in get_rotation_generators() {
-	    let mut alternate_cube = a.clone();
-	    for m1 in &mut *o { alternate_cube.make_move(m1) }
-	    for m2 in &r { alternate_cube.make_move(&m2) }
-	    if alternate_cube.pieces == b.pieces {
-		o.append(&mut r);
-		return Some(o);
-	    }
-	}
+        for mut r in get_rotation_generators() {
+            let mut alternate_cube = a.clone();
+            for m1 in &mut *o { alternate_cube.make_move(m1) }
+            for m2 in &r { alternate_cube.make_move(&m2) }
+            if alternate_cube.pieces == b.pieces {
+                o.append(&mut r);
+                return Some(o);
+            }
+        }
     }
     None
 }
@@ -178,7 +176,7 @@ fn adjacent_test() {
 #[test]
 fn only_right_solve() {
     let mut cube = Cube2::scramble(&vec![Move::new("R")].into());
-    for m in solve(cube) { cube.make_move(&m); }
+    for m in cube.solve() { cube.make_move(&m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -186,7 +184,7 @@ fn only_right_solve() {
 #[test]
 fn only_left_solve() {
     let mut cube = Cube2::scramble(&vec![Move::new("L")].into());
-    for m in solve(cube) { cube.make_move(&m); }
+    for m in cube.solve() { cube.make_move(&m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -197,7 +195,7 @@ fn double_up_solve() {
 	Move::new("U"),
 	Move::new("U"),
     ].into());
-    for m in solve(cube) { cube.make_move(&m); }
+    for m in cube.solve() { cube.make_move(&m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -208,7 +206,7 @@ fn back_up_solve() {
 	Move::new("B"),
 	Move::new("U"),
     ].into());
-    for m in solve(cube) { cube.make_move(&m); }
+    for m in cube.solve() { cube.make_move(&m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -220,7 +218,7 @@ fn redundant_solve() {
 	Move::new("U"),
 	Move::new("U"),
     ].into());
-    for m in solve(cube) { cube.make_move(&m); }
+    for m in cube.solve() { cube.make_move(&m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -231,7 +229,7 @@ fn opposite_solve() {
 	Move::new("L"),
 	Move::new("R"),
     ].into());
-    for m in solve(cube) { cube.make_move(&m); }
+    for m in cube.solve() { cube.make_move(&m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -245,7 +243,7 @@ fn complicated_solve() {
 	Move::new("D"),
 	Move::new("F"),
     ].into());
-    for m in solve(cube) { cube.make_move(&m); }
+    for m in cube.solve() { cube.make_move(&m); }
 
     assert_eq!(cube, Cube2::default());
 }

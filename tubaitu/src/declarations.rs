@@ -24,9 +24,6 @@ pub enum PieceRotation {
     #[default] WB,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub enum Color { #[default] White, Red, Blue, Yellow, Orange, Green }
-
 impl Cube2 {
     pub fn make_move(&mut self, m: &Move) {
         match m.side {
@@ -70,33 +67,6 @@ impl Cube2 {
     }
  
 }
-
-
-//#[test]
-//fn moveseq_debuggign() {
-//    let (_, random_moves) = Cube::random_scramble(6); 
-//
-//    let random_moves = vec![
-//	Move::new("R"),
-//	Move::new("R"),
-//	Move::new("R"),
-//	Move::new("R"),
-//	Move::new("R"),
-//	Move::new("R"),
-//	Move::new("L"),
-//	Move::new("L"),
-//	Move::new("L"),
-//	Move::new("R"),
-//	Move::new("L"),
-//	Move::new("R"),
-//	Move::new("L"),
-//    ];
-//    print_solution(&random_moves);
-//    let seq: MoveSeq = random_moves.into();
-//    println!("Compressed: {seq}");
-//
-//    panic!()
-//}
 
 #[test]
 fn redundant_move_right() {
@@ -239,21 +209,6 @@ impl std::fmt::Display for Cube2 {
 
 }
 
-impl std::fmt::Display for Color {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let o = match self {
-            Color::White  => "W",
-            Color::Red    => "R",
-            Color::Blue   => "B",
-            Color::Yellow => "Y",
-            Color::Orange => "O",
-            Color::Green  => "G",
-        };
-
-        write!(f, "{o}")
-    }
-}
-
 fn print_add_face(
     buffer: &mut [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT],
     p: &[Piece; 8],
@@ -327,30 +282,4 @@ pub fn cycle_items_unchecked<T: Clone, const N: usize>(v: &mut [T; N], idxs: [us
 	&mut v[idxs[0]] as *mut T,
 	&mut v[idxs[3]] as *mut T,
     )};
-}
-
-#[test]
-fn cycling_test() {
-    let t1 = [1, 2, 3, 4, 5];
-    let idx = [0, 1, 2, 3];
-
-    let mut a = t1.clone();
-    let mut b = t1.clone();
-    cycle_items(&mut a, idx);
-    cycle_items_old(&mut b, idx);
-
-    assert_eq!(a, b);
-}
-
-#[test]
-fn cycling_test_unchecked() {
-    let t1 = [1, 2, 3, 4, 5];
-    let idx = [0, 1, 2, 3];
-
-    let mut a = t1.clone();
-    let mut b = t1.clone();
-    cycle_items_safe(&mut a, idx);
-    cycle_items_unchecked(&mut b, idx);
-
-    assert_eq!(a, b);
 }

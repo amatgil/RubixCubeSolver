@@ -15,6 +15,8 @@ pub use drawing::*;
 
 pub use shared::*;
 
+#[cfg(test)]
+mod tests;
 
 // Position constants
 const P_TOP_RIGHT_FRONT: usize    = 0;

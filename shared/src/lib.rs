@@ -1,8 +1,12 @@
 use std::fmt::Display;
 use std::ops::Deref;
+pub mod colors;
+pub use colors::*;
+
 pub trait Solvable {
     fn solve(&self) -> MoveSeq;
 }
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move {
