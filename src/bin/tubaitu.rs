@@ -14,18 +14,21 @@ fn main() {
 	"rand" => {
 	    let scramble_length = 10;
 	    println!("[INFO]: Generating random cube (n={scramble_length})...");
+            let scrambling_instant = Instant::now();
 	    let (mut cube, scramble) = Cube::random_scramble(scramble_length);
-	    println!("[INFO]: Generated cube:");
-
+            let time_taken_to_scramble = scrambling_instant.elapsed();
+	    println!("[INFO]: Scrambling took: {}ms ({}μs)", time_taken_to_scramble.as_millis(), time_taken_to_scramble.as_micros());
 	    print!("[INFO]: Scramble is: ");
 	    println!("{scramble}");
 	    print!("[INFO]: (Uncompressed: [ "); for m in &scramble.0 { print!("{m} "); } println!("])");
 
 	    println!("[INFO]: Solving...");
 	    println!("Scramble to solve:\n{cube}");
+
             let starting_instant = Instant::now();
 	    let r = solve(cube);
             let time_taken = starting_instant.elapsed();
+
 	    for m in &r.0 { cube.make_move(m) }
 	    println!("Final state:\n{cube}");
 
