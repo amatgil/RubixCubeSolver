@@ -57,7 +57,6 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     pub const fn ZERO() -> Matrix<NF, NC> {
         Matrix::<NF, NC>([MatRow::<NC>([0.0; NC]); NF])
     }
-
 }
 
 /// Square impls
@@ -74,17 +73,23 @@ impl<const N: usize> Matrix<N, N> {
         out
     }
 
+    /// Uses the Gauss-Jordan method to find an inverse: applying the sequence of elementary transformations that would turn the original into the identity onto the identity, we end up with the resulting inverse.
     pub fn inverse(&self) -> Option<Self> {
+        todo!("Need to think about the steps needed to invert any NxN matrix");
+        // These two may be seen as the augmented (Original | Identity) ~ ... ~ (Identity | Result)
+        let mut original = self.clone();
         let mut inverse = Matrix::<N, N>::ID();
 
-        inverse[1] = inverse[0][0] * inverse[1] - inverse[1][0] * inverse[0];
-        inverse[2] = inverse[0][0] * inverse[2] - inverse[2][0] * inverse[0];
 
-        inverse[0] = inverse[1][1] * inverse[0] - inverse[0][1] * inverse[1];
-        inverse[2] = inverse[1][1] * inverse[2] - inverse[2][1] * inverse[1];
 
-        inverse[0] = inverse[2][2] * inverse[0] - inverse[0][2] * inverse[2];
-        inverse[1] = inverse[2][2] * inverse[1] - inverse[1][2] * inverse[2];
+        //inverse[1] = inverse[0][0] * inverse[1] - inverse[1][0] * inverse[0];
+        //inverse[2] = inverse[0][0] * inverse[2] - inverse[2][0] * inverse[0];
+
+        //inverse[0] = inverse[1][1] * inverse[0] - inverse[0][1] * inverse[1];
+        //inverse[2] = inverse[1][1] * inverse[2] - inverse[2][1] * inverse[1];
+
+        //inverse[0] = inverse[2][2] * inverse[0] - inverse[0][2] * inverse[2];
+        //inverse[1] = inverse[2][2] * inverse[1] - inverse[1][2] * inverse[2];
 
 
         if inverse[0][0] == 0.0 || inverse[1][1] == 0.0 || inverse[2][2] == 0.0 {
@@ -95,6 +100,21 @@ impl<const N: usize> Matrix<N, N> {
         inverse[2] = 1.0/inverse[2][2] * inverse[2];
 
         Some(inverse)
+    }
+
+    /// Uses Sarrus' rule to compute the determinant
+    pub fn determinant(&self) -> f64 {
+        todo!("Not yet fully thought through");
+        let mut result = 0.0;
+        for x in 0..N {
+            let mut diag_acc = 0.0;
+            for y in 0..N {
+                diag_acc *= self.0[y][x];
+            }
+            diag_acc += result;
+        }
+
+        result
     }
 }
 
@@ -176,6 +196,7 @@ impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
 /// 
 /// This relies of float equality, so it's not public. It should only be used in controlled ways, when
 /// you already know the result
+#[allow(unused)] // It's for testing only, of course it's "unused"
 fn compare_mats<const NF: usize, const NC: usize>(a: Matrix<NF, NC>, b: Matrix<NF, NC>) {
     for y in 0..NF {
         for x in 0..NC {
@@ -265,6 +286,7 @@ fn mat_mult_square() {
 
 
     compare_mats(a * b, c);
+    compare_mats(b * a, d);
 
 }
 
@@ -338,12 +360,11 @@ fn matrix_identity() {
 
 #[test]
 fn inverse_of_id() {
-    let mut i = 1;
-    while i < 5 {
-        let m = Matrix::<5, 5>::ID();
-        compare_mats(m.inverse().unwrap(), m);
-        i += 1;
-    }
+    compare_mats(Matrix::<1, 1>::ID().inverse().unwrap(), Matrix::<1, 1>::ID());
+    compare_mats(Matrix::<2, 2>::ID().inverse().unwrap(), Matrix::<2, 2>::ID());
+    compare_mats(Matrix::<3, 3>::ID().inverse().unwrap(), Matrix::<3, 3>::ID());
+    compare_mats(Matrix::<4, 4>::ID().inverse().unwrap(), Matrix::<4, 4>::ID());
+    compare_mats(Matrix::<5, 5>::ID().inverse().unwrap(), Matrix::<5, 5>::ID());
 }
 
 #[test]
@@ -400,5 +421,15 @@ fn three_by_three_no_inverse() {
          [1.0, 2.0, 2.0].into(),
          [3.0, 4.0, 6.0].into()]
     );
+
     assert!(a.inverse().is_none())
+}
+
+#[test]
+fn identity_determinant() {
+    assert_eq!(Matrix::<1, 1>::ID().determinant(), 1.0);
+    assert_eq!(Matrix::<2, 2>::ID().determinant(), 1.0);
+    assert_eq!(Matrix::<3, 3>::ID().determinant(), 1.0);
+    assert_eq!(Matrix::<4, 4>::ID().determinant(), 1.0);
+    assert_eq!(Matrix::<5, 5>::ID().determinant(), 1.0);
 }
