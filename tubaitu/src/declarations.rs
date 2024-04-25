@@ -3,7 +3,7 @@ use std::{fmt::Display, ops::Deref};
 use crate::*;
 
 #[derive(Debug, Clone, Copy, Hash, Default)]
-pub struct Cube {
+pub struct Cube2 {
     pub pieces: [Piece; 8],
 }
 
@@ -63,7 +63,7 @@ impl Move {
     }
 }
 
-impl Cube {
+impl Cube2 {
     pub fn make_move(&mut self, m: &Move) {
         match m.side {
             MoveSide::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
@@ -76,7 +76,7 @@ impl Cube {
     }
 
     pub fn scramble(scramble: &MoveSeq) -> Self {
-	let mut c = Cube::default();
+	let mut c = Cube2::default();
 	for m in &scramble.0 {
 	    c.make_move(&m);
 	}
@@ -95,7 +95,7 @@ impl Cube {
 
 	let mut scramble = vec![];
 
-	let mut c = Cube::default();
+	let mut c = Cube2::default();
 	for _ in 0..length {
 	    let mov = get_move_from_n(rand::thread_rng().gen_range(0..12));
 	    scramble.push(mov);
@@ -266,35 +266,35 @@ impl Display for MoveSeq {
 
 #[test]
 fn redundant_move_right() {
-    let mut cube = Cube::default();
+    let mut cube = Cube2::default();
     cube.make_move(&Move::new("R"));
     cube.make_move(&Move::new("R"));
     cube.make_move(&Move::new("R"));
     cube.make_move(&Move::new("R"));
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn redundant_move_up() {
-    let mut cube = Cube::default();
+    let mut cube = Cube2::default();
     cube.make_move(&Move::new("U"));
     cube.make_move(&Move::new("U"));
     cube.make_move(&Move::new("U"));
     cube.make_move(&Move::new("U"));
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn redundant_move_double_up() {
-    let mut cube = Cube::default();
+    let mut cube = Cube2::default();
     cube.make_move(&Move::new("U"));
     cube.make_move(&Move::new("U"));
     cube.make_move(&Move::new("U'"));
     cube.make_move(&Move::new("U'"));
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
-impl std::cmp::PartialEq for Cube {
+impl std::cmp::PartialEq for Cube2 {
     fn eq(&self, other: &Self) -> bool {
 
         for o in &get_orientation_generators() {
@@ -309,7 +309,7 @@ impl std::cmp::PartialEq for Cube {
         return false;
     }
  }
-impl std::cmp::Eq for Cube { }
+impl std::cmp::Eq for Cube2 { }
 
 
 // If you touch these, remember to change the magic numbers in Cube's Display impl!
@@ -336,7 +336,7 @@ const CUBE_PRINT_NORMT_DIVIDER: char = '┳';
 const CUBE_PRINT_UPSDT_DIVIDER: char = '┻';
 fn xy_to_idx(x: usize, y: usize) -> usize { y*CUBE_PRINT_WIDTH + x }
 
-impl std::fmt::Display for Cube {
+impl std::fmt::Display for Cube2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 	let mut buffer: [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT] =
 	    [' ' as u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT];

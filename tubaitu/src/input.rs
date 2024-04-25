@@ -33,8 +33,8 @@ impl Index<usize> for StickerFace {
     }
 }
 
-impl Cube {
-    pub fn from_stickers(s: Stickers) -> Cube {
+impl Cube2 {
+    pub fn from_stickers(s: Stickers) -> Cube2 {
 	// Piece seq is: right, front, top, left, back, down
 
 	let p_000: Piece = {
@@ -78,7 +78,7 @@ impl Cube {
 	    Piece { rotation: PieceRotation::from_color_pair(down.opposite(), front) }
 	};
 
-	Cube { pieces: [ p_000, p_001, p_010, p_011, p_100, p_101, p_110, p_111  ] }
+	Cube2 { pieces: [ p_000, p_001, p_010, p_011, p_100, p_101, p_110, p_111  ] }
     }
 }
 
@@ -116,11 +116,11 @@ fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> 
     Ok(())
 }
 
-pub fn read_from_input_file() -> Result<Cube, Box<dyn Error>> {
+pub fn read_from_input_file() -> Result<Cube2, Box<dyn Error>> {
     let input = fs::read_to_string(INPUT_FILE_NAME)?;
     read_from_string(&input)
 }
-fn read_from_string(input: &str) -> Result<Cube, Box<dyn Error>> {
+fn read_from_string(input: &str) -> Result<Cube2, Box<dyn Error>> {
     let error_s: Cow<str> = format!("File {INPUT_FILE_NAME} does not represent a cube (valid or non-valid)").into();
 
     let mut s = Stickers::default();
@@ -200,7 +200,7 @@ fn read_from_string(input: &str) -> Result<Cube, Box<dyn Error>> {
 
     s.down.0 = [down_top_left, down_bottom_left, down_bottom_right, down_top_right];
 
-    Ok(Cube::from_stickers(s))
+    Ok(Cube2::from_stickers(s))
 }
 
 
@@ -216,8 +216,8 @@ fn stickers_solved_input() {
     s.front  = StickerFace([C::Green, C::Green, C::Green, C::Green]);
     s.back   = StickerFace([C::Blue, C::Blue, C::Blue, C::Blue]);
 
-    let test_cube = Cube::from_stickers(s);
-    let solved_cube = Cube { pieces: [Piece { rotation: PieceRotation::WO }; 8] };
+    let test_cube = Cube2::from_stickers(s);
+    let solved_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::WO }; 8] };
     dbg!(test_cube, solved_cube);
     assert!(test_cube == solved_cube)
 }
@@ -234,8 +234,8 @@ fn stickers_afterright_input() {
     s.front  = StickerFace([C::Green, C::Green, C::White, C::White]);
     s.back   = StickerFace([C::Blue, C::Blue, C::Yellow, C::Yellow]);
 
-    let test_cube = Cube::from_stickers(s);
-    let mut righted_cube = Cube { pieces: [Piece { rotation: PieceRotation::YG }; 8] };
+    let test_cube = Cube2::from_stickers(s);
+    let mut righted_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::YG }; 8] };
     righted_cube.make_move(&Move::new("R"));
     dbg!(righted_cube);
 
@@ -257,7 +257,7 @@ fn from_string_right() {
    ┃YG┃
    ┗━━┛";
 
-    let correct_cube = Cube::scramble(&vec![Move::new("R")].into());
+    let correct_cube = Cube2::scramble(&vec![Move::new("R")].into());
     let r = read_from_string(input).unwrap();
     println!("Comparing: gotten:\n{r}");
     println!("vs expected:\n{correct_cube}");

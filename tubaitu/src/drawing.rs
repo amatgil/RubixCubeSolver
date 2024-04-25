@@ -17,7 +17,7 @@ struct DrawableCube {
 }
 
 const DRAWING_PIECE_RADIUS: f64 = 10.0;
-impl Cube {
+impl Cube2 {
     fn to_points(&self) -> DrawableCube {
         let r = DRAWING_PIECE_RADIUS;
         let mut drawable_pieces = [DrawablePiece::default(); 8 ];
@@ -47,8 +47,8 @@ impl Cube {
     }
 }
 
-pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
-    let mut cube: Cube = starting_cube.clone();
+pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: Vec<Move>, n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
+    let mut cube: Cube2 = starting_cube.clone();
 
     for (i, mov) in moves.iter().enumerate() {
         let i = i * n_in_between_frames;
@@ -68,7 +68,7 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, 
 
 }
 
-fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
+fn get_svg(cube: &Cube2, mov: &Move, lerp_t: f64) -> String {
     let points = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
     
     // Recorda que el radi és DRAWING_PIECE_RADIUS

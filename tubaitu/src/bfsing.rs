@@ -7,14 +7,14 @@ use std::io::Write;
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub fn is_solved(c: &Cube) -> bool {
+pub fn is_solved(c: &Cube2) -> bool {
     c.pieces.iter().fold((true, &c.pieces[0]), |(acc_b, acc_c), x| (acc_b && &acc_c == &x, x) ).0
 }
 
 #[test]
 fn basic_is_solved_test() {
     let solved_piece = Piece { rotation: PieceRotation::WO };
-    let mut cube: Cube = Cube { pieces: [solved_piece; 8] };
+    let mut cube = Cube2 { pieces: [solved_piece; 8] };
 
     assert!(is_solved(&cube));
     cube.make_move(&Move::new("R"));
@@ -24,7 +24,7 @@ fn basic_is_solved_test() {
 #[derive(Debug, Clone)]
 struct State {
     past_moves: Vec<Move>,
-    cube: Cube,
+    cube: Cube2,
 }
 
 impl Hash for State {
@@ -54,12 +54,12 @@ fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>
 }
 
 // TODO: Only check disjoint-ness between newly explored verticies
-pub fn solve(cube: Cube) -> MoveSeq {
+pub fn solve(cube: Cube2) -> MoveSeq {
     let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube });
     let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
     let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
 
-    let first_state_solved    = Rc::new(State { past_moves: Vec::new(), cube: Cube::default() });
+    let first_state_solved    = Rc::new(State { past_moves: Vec::new(), cube: Cube2::default() });
     let mut w_from_solved     = HashSet::from([first_state_solved.clone()]);
     let mut queue_from_solved = VecDeque::from([first_state_solved]);
 
@@ -88,7 +88,7 @@ pub fn solve(cube: Cube) -> MoveSeq {
     println!("[INFO]: Found halves of the math: merging...");
 
     let mut reorient_a = cube.clone();
-    let mut reorient_b = Cube::default();
+    let mut reorient_b = Cube2::default();
     for m in &path_from_unsolved { reorient_a.make_move(m) }
     for m in &path_from_solved { reorient_b.make_move(m) }
 
@@ -106,7 +106,7 @@ pub fn solve(cube: Cube) -> MoveSeq {
 
 /// Takes in two cubes. Returns a sequence of moves that will turn the left one into the right one
 /// Not optimized for efficiency
-fn reorient_together(a: &Cube, b: &Cube) -> Option<Vec<Move>> {
+fn reorient_together(a: &Cube2, b: &Cube2) -> Option<Vec<Move>> {
     for mut o in get_orientation_generators() {
 	for mut r in get_rotation_generators() {
 	    let mut alternate_cube = a.clone();
@@ -134,7 +134,7 @@ impl std::cmp::PartialEq for State {
 }
 impl Eq for State {}
 
-fn find_adjacents(x: &Cube) -> Vec<(Move, Cube)>{
+fn find_adjacents(x: &Cube2) -> Vec<(Move, Cube2)>{
     let moviments: [Move; 6] = [
         Move::new("R"), Move::new("F"), Move::new("U"),
         Move::new("L'"), Move::new("B'"), Move::new("D'"),
@@ -156,7 +156,7 @@ fn have_we_seen_this_state_before(seen: &HashSet<Rc<State>>, new: Rc<State>) -> 
 #[test]
 fn adjacent_test() {
     let solved_piece = Piece { rotation: PieceRotation::OW };
-    let solved_cube: Cube = Cube { pieces: [solved_piece; 8] };
+    let solved_cube: Cube2 = Cube2 { pieces: [solved_piece; 8] };
     let mut t = Vec::new();
 
     let moviments: [Move; 6] = [
@@ -176,68 +176,68 @@ fn adjacent_test() {
 
 #[test]
 fn only_right_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("R")].into());
+    let mut cube = Cube2::scramble(&vec![Move::new("R")].into());
     for m in solve(cube) { cube.make_move(&m); }
 
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn only_left_solve() {
-    let mut cube = Cube::scramble(&vec![Move::new("L")].into());
+    let mut cube = Cube2::scramble(&vec![Move::new("L")].into());
     for m in solve(cube) { cube.make_move(&m); }
 
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn double_up_solve() {
-    let mut cube = Cube::scramble(&vec![
+    let mut cube = Cube2::scramble(&vec![
 	Move::new("U"),
 	Move::new("U"),
     ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn back_up_solve() {
-    let mut cube = Cube::scramble(&vec![
+    let mut cube = Cube2::scramble(&vec![
 	Move::new("B"),
 	Move::new("U"),
     ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn redundant_solve() {
-    let mut cube = Cube::scramble(&vec![
+    let mut cube = Cube2::scramble(&vec![
 	Move::new("U"),
 	Move::new("U"),
 	Move::new("U"),
     ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn opposite_solve() {
-    let mut cube = Cube::scramble(&vec![
+    let mut cube = Cube2::scramble(&vec![
 	Move::new("L"),
 	Move::new("R"),
     ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn complicated_solve() {
-    let mut cube = Cube::scramble(&vec![
+    let mut cube = Cube2::scramble(&vec![
 	Move::new("R"),
 	Move::new("U"),
 	Move::new("L"),
@@ -246,13 +246,13 @@ fn complicated_solve() {
     ].into());
     for m in solve(cube) { cube.make_move(&m); }
 
-    assert_eq!(cube, Cube::default());
+    assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn reorientation() {
-    let a = Cube::default();
-    let mut b = Cube::default();
+    let a = Cube2::default();
+    let mut b = Cube2::default();
     b.make_move(&Move::new("R"));
     b.make_move(&Move::new("L'"));
 
@@ -262,8 +262,8 @@ fn reorientation() {
 
 #[test]
 fn reorientation2() {
-    let a = Cube::default();
-    let mut b = Cube::default();
+    let a = Cube2::default();
+    let mut b = Cube2::default();
     b.make_move(&Move::new("U"));
     b.make_move(&Move::new("U"));
     b.make_move(&Move::new("D'"));
