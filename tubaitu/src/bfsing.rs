@@ -75,6 +75,8 @@ pub fn solve(cube: Cube) -> MoveSeq {
 	     w_from_solved.len(),
     );
 
+    // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
+    //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
     let schrodinger_state: State = (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref().clone();
     let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(&schrodinger_state).unwrap().past_moves.clone();
     let path_from_solved: Vec<Move> = w_from_solved.get(&schrodinger_state).unwrap().past_moves.clone();
@@ -86,8 +88,8 @@ pub fn solve(cube: Cube) -> MoveSeq {
     for m in &path_from_unsolved { reorient_a.make_move(m) }
     for m in &path_from_solved { reorient_b.make_move(m) }
 
-    // Adjust for rotational symmetry
-    let linking_moves = reorient_together(&reorient_a, &reorient_b).expect("This comes from two sets being non-disjoint, this case should never be reached");
+    // Adjust for rotational symmetry. This seems to make it so the resulting solved cube is always WB, curiously
+    let linking_moves = reorient_together(&reorient_a, &reorient_b).expect("This comes from two sets being non-disjoint, and so should never be reached.");
     for m in linking_moves { path_from_unsolved.push(m) }
 
     for m in path_from_solved.into_iter().rev() {

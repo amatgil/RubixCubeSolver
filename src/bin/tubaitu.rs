@@ -1,4 +1,4 @@
-use std::{env, process::exit};
+use std::{env, process::exit, time::Instant};
 
 use tubaitu::*;
 
@@ -23,10 +23,15 @@ fn main() {
 
 	    println!("[INFO]: Solving...");
 	    println!("Scramble to solve:\n{cube}");
+            let starting_instant = Instant::now();
 	    let r = solve(cube);
+            let time_taken = starting_instant.elapsed();
 	    for m in &r.0 { cube.make_move(m) }
 	    println!("Final state:\n{cube}");
 
+            println!();
+
+	    println!("[RESULT]: Solving time was: {}ms ({}μs)", time_taken.as_millis(), time_taken.as_micros());
 	    println!("[RESULT]: Final solution is: {r}");
 	    print!("[INFO]: Uncompressed solution: [ "); for m in &r.0 { print!("{m} "); } println!("]");
 
