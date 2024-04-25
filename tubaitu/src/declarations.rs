@@ -6,6 +6,24 @@ pub struct Cube2 {
 }
 
 
+
+impl std::cmp::PartialEq for Cube2 {
+    fn eq(&self, other: &Self) -> bool {
+        for o in &get_orientation_generators() {
+            for r in &get_rotation_generators() {
+                let mut alternate_cube = self.clone();
+                for m1 in o { alternate_cube.make_move(m1) }
+                for m2 in r { alternate_cube.make_move(m2) }
+                if alternate_cube.pieces == other.pieces { return true; }
+            }
+        }
+        return false;
+    }
+ }
+impl std::cmp::Eq for Cube2 { }
+
+fn xy_to_idx(x: usize, y: usize) -> usize { y*CUBE_PRINT_WIDTH + x }
+
 // If you touch these, remember to change the magic numbers in Cube's Display impl!
 pub const CUBE_PRINT_WIDTH: usize = 2*4 + 5 + 1;
 pub const CUBE_PRINT_HEIGHT: usize = 2*3 + 3 + 1;
@@ -28,24 +46,6 @@ const CUBE_PRINT_BOT_L_DIVIDER: char = '┗';
 const CUBE_PRINT_BOT_R_DIVIDER: char = '┛';
 const CUBE_PRINT_NORMT_DIVIDER: char = '┳';
 const CUBE_PRINT_UPSDT_DIVIDER: char = '┻';
-
-impl std::cmp::PartialEq for Cube2 {
-    fn eq(&self, other: &Self) -> bool {
-        for o in &get_orientation_generators() {
-            for r in &get_rotation_generators() {
-                let mut alternate_cube = self.clone();
-                for m1 in o { alternate_cube.make_move(m1) }
-                for m2 in r { alternate_cube.make_move(m2) }
-                if alternate_cube.pieces == other.pieces { return true; }
-            }
-        }
-        return false;
-    }
- }
-impl std::cmp::Eq for Cube2 { }
-
-fn xy_to_idx(x: usize, y: usize) -> usize { y*CUBE_PRINT_WIDTH + x }
-
 impl std::fmt::Display for Cube2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 	let mut buffer: [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT] =

@@ -43,7 +43,7 @@ impl Cube2 {
             };
         }
 
-    DrawableCube { pieces: drawable_pieces }
+        DrawableCube { pieces: drawable_pieces }
     }
 }
 
