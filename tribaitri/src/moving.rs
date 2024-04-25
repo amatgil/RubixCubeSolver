@@ -30,12 +30,20 @@ pub enum ThreeByEdge {
     GO,
 }
 
-const RIGHT_EDGE_CYCLE: [ThreeByEdge; 4] = [ThreeByEdge::YB, ThreeByEdge::BR, ThreeByEdge::WB, ThreeByEdge::OB];
-const LEFT_EDGE_CYCLE:  [ThreeByEdge; 4] = [ThreeByEdge::YG, ThreeByEdge::GO, ThreeByEdge::WG, ThreeByEdge::RG];
-const FRONT_EDGE_CYCLE: [ThreeByEdge; 4] = [ThreeByEdge::];
-const BACK_EDGE_CYCLE:  [ThreeByEdge; 4] = [];
-const UP_EDGE_CYCLE:    [ThreeByEdge; 4] = [];
-const DOWN_EDGE_CYCLE:  [ThreeByEdge; 4] = [];
+const RIGHT_EDGE_CYCLE: [ThreeByEdge; 4] = [ThreeByEdge::YB, ThreeByEdge::BR, ThreeByEdge::WB, ThreeByEdge::OB]; // Blue
+const LEFT_EDGE_CYCLE:  [ThreeByEdge; 4] = [ThreeByEdge::YG, ThreeByEdge::GO, ThreeByEdge::WG, ThreeByEdge::RG]; // Green
+const FRONT_EDGE_CYCLE: [ThreeByEdge; 4] = [ThreeByEdge::YO, ThreeByEdge::OB, ThreeByEdge::WO, ThreeByEdge::GO]; // Orange
+const BACK_EDGE_CYCLE:  [ThreeByEdge; 4] = [ThreeByEdge::YR, ThreeByEdge::RG, ThreeByEdge::WR, ThreeByEdge::BR]; // Red
+const UP_EDGE_CYCLE:    [ThreeByEdge; 4] = [ThreeByEdge::YO, ThreeByEdge::YG, ThreeByEdge::YR, ThreeByEdge::YB]; // Yellow
+const DOWN_EDGE_CYCLE:  [ThreeByEdge; 4] = [ThreeByEdge::WO, ThreeByEdge::WB, ThreeByEdge::WR, ThreeByEdge::WG]; // White
+
+const RIGHT_CORNER_CYCLE: [ThreeByCorner; 4] = []; 
+const LEFT_CORNER_CYCLE:  [ThreeByCorner; 4] = []; 
+const FRONT_CORNER_CYCLE: [ThreeByCorner; 4] = []; 
+const BACK_CORNER_CYCLE:  [ThreeByCorner; 4] = []; 
+const UP_CORNER_CYCLE:    [ThreeByCorner; 4] = []; 
+const DOWN_CORNER_CYCLE:  [ThreeByCorner; 4] = []; 
+
 
 /// Note our representation:
 /// | Face  | Center Color |
@@ -55,7 +63,6 @@ pub(crate) fn make_three_by_three_move(cube: &mut Cube3, m: &Move) {
         Move { side: MoveSide::B, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, BACK_EDGE_CYCLE.map( |v| v as usize), m),
         Move { side: MoveSide::U, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, UP_EDGE_CYCLE.map(   |v| v as usize), m),
         Move { side: MoveSide::D, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, DOWN_EDGE_CYCLE.map( |v| v as usize), m),
-        
     }
 
     // Cycle edges
