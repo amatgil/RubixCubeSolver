@@ -7,19 +7,21 @@ pub struct Vec3 {
     z: f64
 }
 
+pub const FLOAT_VEC_EPSILON: f64 = 0.001;
+
 impl Vec3 {
     pub const ZERO: Self     = Vec3 { x:  0.0, y:  0.0, z:  0.0 };
     pub const ONE: Self      = Vec3 { x:  1.0, y:  1.0, z:  1.0 };
     pub const NEG_ONE: Self  = Vec3 { x: -1.0, y: -1.0, z: -1.0 };
 
     pub fn new(x: f64, y: f64, z: f64) -> Vec3{
-        Vec3{x:x,y:y,z:z}
+        Vec3{ x, y, z }
     }
     pub fn abs(&self) -> f64 {
         (self.x*self.x + self.y*self.y + self.z*self.z).sqrt()
     }
     pub fn normalize(&self) -> Option<Vec3> {
-        if self.abs() == 0.0 { None }
+        if self.abs() < FLOAT_VEC_EPSILON { None }
         else {
             Some(Vec3 {
                 x: self.x / self.abs(),

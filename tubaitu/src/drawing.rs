@@ -12,8 +12,10 @@ struct DrawablePiece {
     radius: f64,
 }
 
-impl DrawablePiece {
+const MIN_BRIGHTNESS_MULTIPLIER: f64 = 1.0;
+const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 0.8;
 
+impl DrawablePiece {
     /// Returns an array of row marices which correspond to the positions of the 
     /// pieces' vertices. 
     fn get_vertex_positions(&self) -> [MatRow<3>; 8] {
@@ -53,7 +55,8 @@ impl DrawablePiece {
         let center = Vec3::new(self.center.x,self.center.y, self.center.z);
         for (face, brightness) in &mut faces {
             let normal_vector = get_normal_vector(*face, center);
-            *brightness = 0.8*max(0.1, Vec3::dot_product(normal_vector, light_dir));
+            *brightness = MIN_BRIGHTNESS_MULTIPLIER.max(normal_vector.dot_product(light_dir)
+                *GENERAL_BRIGHTNESS_MULTIPLIER);
         }
         faces
     }
@@ -71,7 +74,7 @@ fn get_normal_vector(face: Matrix<4,3>, center: Vec3) -> Vec3 {
     let vertex1: Vec3 = Vec3::new(face[1][0], face[1][1],face[1][2]);
     let vertex2: Vec3 = Vec3::new(face[2][0], face[2][1],face[2][2]);
 
-    let mut normal = (vertex1 - vertex0).cross_product( vertex2 - vertex0).normalize().unwrap();
+    let normal = (vertex1 - vertex0).cross_product( vertex2 - vertex0).normalize().unwrap();
     let dot_product = normal.dot_product(center-vertex0);
 
     normal * if dot_product < 0.0 {-1.0} else {1.0}
@@ -134,7 +137,8 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, 
 
 }
 
-fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
+/// Given a cube, the move being done and how far along the move is, generate the corresponding svg as a String. This is a self-contained frame representing the cube in the given state.
+pub fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
     let points = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
     
     // Recorda que el radi és DRAWING_PIECE_RADIUS

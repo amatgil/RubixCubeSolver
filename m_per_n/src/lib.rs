@@ -12,10 +12,6 @@ pub struct Point {
     pub z: f64
 }
 
-pub fn max(x:f64, y:f64) -> f64 {
-    if x > y {x} else {y}
-}
-
 #[derive(Debug, Clone, Copy)] // TODO: Check if Copy is hurting performance
 pub struct Matrix<const NF: usize, const NC: usize> (
     pub [MatRow<NC>; NF]
