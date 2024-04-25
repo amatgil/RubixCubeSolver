@@ -54,54 +54,55 @@ fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>
 }
 
 // TODO: Only check disjoint-ness between newly explored verticies
-pub fn solve(cube: Cube2) -> MoveSeq {
-    let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube });
-    let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
-    let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
+impl Solvable for Cube2 {
+    fn solve(&self) -> MoveSeq {
+        let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube: *self });
+        let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
+        let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
 
-    let first_state_solved    = Rc::new(State { past_moves: Vec::new(), cube: Cube2::default() });
-    let mut w_from_solved     = HashSet::from([first_state_solved.clone()]);
-    let mut queue_from_solved = VecDeque::from([first_state_solved]);
+        let first_state_solved    = Rc::new(State { past_moves: Vec::new(), cube: Cube2::default() });
+        let mut w_from_solved     = HashSet::from([first_state_solved.clone()]);
+        let mut queue_from_solved = VecDeque::from([first_state_solved]);
 
 
-    while w_from_solved.is_disjoint(&w_from_unsolved) {
-	io::stdout().flush().unwrap();
-	advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
-	advance_bfs(&mut w_from_solved, &mut queue_from_solved);
+        while w_from_solved.is_disjoint(&w_from_unsolved) {
+        advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
+        advance_bfs(&mut w_from_solved, &mut queue_from_solved);
+        }
+        println!();
+
+        println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
+            w_from_unsolved.len(),
+            w_from_solved.len(),
+        );
+
+        // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
+        //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
+        println!("[INFO]: Number of intersecting states found is: {}",
+            w_from_solved.intersection(&w_from_unsolved).count()
+        );
+        let schrodinger_state: State = (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref().clone();
+        let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(&schrodinger_state).unwrap().past_moves.clone();
+        let path_from_solved: Vec<Move> = w_from_solved.get(&schrodinger_state).unwrap().past_moves.clone();
+
+        println!("[INFO]: Found halves of the math: merging...");
+
+        let mut reorient_a = self.clone();
+        let mut reorient_b = Cube2::default();
+        for m in &path_from_unsolved { reorient_a.make_move(m) }
+        for m in &path_from_solved { reorient_b.make_move(m) }
+
+        // Adjust for rotational symmetry. This seems to make it so the resulting solved cube is always WB, curiously
+        let linking_moves = reorient_together(&reorient_a, &reorient_b).expect("This comes from two sets being non-disjoint, and so should never be reached.");
+        for m in linking_moves { path_from_unsolved.push(m) }
+
+        for m in path_from_solved.into_iter().rev() {
+        path_from_unsolved.push(m.opposite());
+        }
+
+        path_from_unsolved.into()
+
     }
-    println!();
-
-    println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
-	     w_from_unsolved.len(),
-	     w_from_solved.len(),
-    );
-
-    // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
-    //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
-    println!("[INFO]: Number of intersecting states found is: {}",
-        w_from_solved.intersection(&w_from_unsolved).count()
-    );
-    let schrodinger_state: State = (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref().clone();
-    let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(&schrodinger_state).unwrap().past_moves.clone();
-    let path_from_solved: Vec<Move> = w_from_solved.get(&schrodinger_state).unwrap().past_moves.clone();
-
-    println!("[INFO]: Found halves of the math: merging...");
-
-    let mut reorient_a = cube.clone();
-    let mut reorient_b = Cube2::default();
-    for m in &path_from_unsolved { reorient_a.make_move(m) }
-    for m in &path_from_solved { reorient_b.make_move(m) }
-
-    // Adjust for rotational symmetry. This seems to make it so the resulting solved cube is always WB, curiously
-    let linking_moves = reorient_together(&reorient_a, &reorient_b).expect("This comes from two sets being non-disjoint, and so should never be reached.");
-    for m in linking_moves { path_from_unsolved.push(m) }
-
-    for m in path_from_solved.into_iter().rev() {
-	path_from_unsolved.push(m.opposite());
-    }
-
-    path_from_unsolved.into()
-
 }
 
 /// Takes in two cubes. Returns a sequence of moves that will turn the left one into the right one
