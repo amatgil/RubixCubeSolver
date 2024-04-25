@@ -53,6 +53,7 @@ fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>
     } 
 }
 
+// TODO: Only check disjoint-ness between newly explored verticies
 pub fn solve(cube: Cube) -> MoveSeq {
     let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube });
     let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
