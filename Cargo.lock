@@ -489,6 +489,10 @@ dependencies = [
 [[package]]
 name = "tribaitri"
 version = "0.1.0"
+dependencies = [
+ "m_per_n",
+ "shared",
+]
 
 [[package]]
 name = "tubaitu"

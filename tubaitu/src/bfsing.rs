@@ -101,6 +101,36 @@ impl Solvable for Cube2 {
         path_from_unsolved.into()
 
     }
+
+    fn scramble(scramble: &MoveSeq) -> Self {
+        let mut c = Cube2::default();
+        for m in &scramble.0 {
+            c.make_move(&m);
+        }
+        c
+    }
+    fn random_scramble(length: usize) -> (Self, MoveSeq) {
+	    use rand::Rng;
+	    fn get_move_from_n(n: usize) -> Move {
+	        match n {
+	    	0 => Move::new("R"), 1 => Move::new("L"), 2 => Move::new("R"), 3 => Move::new("B"),
+	    	4 => Move::new("U"), 5 => Move::new("D"), 6 => Move::new("R'"), 7 => Move::new("L'"),
+	    	8 => Move::new("R'"), 9 => Move::new("B'"), 10 => Move::new("U'"), 11 => Move::new("D'"),
+	    	_ => unreachable!("Range reaches 12")
+	        }
+	    }
+
+	    let mut scramble = vec![];
+
+	    let mut c = Cube2::default();
+	    for _ in 0..length {
+	        let mov = get_move_from_n(rand::thread_rng().gen_range(0..12));
+	        scramble.push(mov);
+	        c.make_move(&mov);
+	    }
+
+	    (c, scramble.into())
+    }
 }
 
 /// Takes in two cubes. Returns a sequence of moves that will turn the left one into the right one

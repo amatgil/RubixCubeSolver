@@ -7,23 +7,6 @@ pub struct Cube2 {
     pub pieces: [Piece; 8],
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Piece {
-    pub rotation: PieceRotation,
-}
-
-/// Stored as [top color][front color], which uniquely defines a rotation (because the cross product isn't commutative!)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub enum PieceRotation {
-    WR, WO, WG,
-    RW, BW, OW, GW,
-    YR, YB, YO, YG,
-    RY, BY, OY, GY,
-    OG, GO, OB, BO,
-    RG, GR, RB, BR,
-    #[default] WB,
-}
-
 impl Cube2 {
     pub fn make_move(&mut self, m: &Move) {
         match m.side {
@@ -36,35 +19,6 @@ impl Cube2 {
         };
     }
 
-    pub fn scramble(scramble: &MoveSeq) -> Self {
-	let mut c = Cube2::default();
-	for m in &scramble.0 {
-	    c.make_move(&m);
-	}
-	c
-    }
-    pub fn random_scramble(length: usize) -> (Self, MoveSeq) {
-	use rand::Rng;
-	fn get_move_from_n(n: usize) -> Move {
-	    match n {
-		0 => Move::new("R"), 1 => Move::new("L"), 2 => Move::new("R"), 3 => Move::new("B"),
-		4 => Move::new("U"), 5 => Move::new("D"), 6 => Move::new("R'"), 7 => Move::new("L'"),
-		8 => Move::new("R'"), 9 => Move::new("B'"), 10 => Move::new("U'"), 11 => Move::new("D'"),
-		_ => unreachable!("Range reaches 12")
-	    }
-	}
-
-	let mut scramble = vec![];
-
-	let mut c = Cube2::default();
-	for _ in 0..length {
-	    let mov = get_move_from_n(rand::thread_rng().gen_range(0..12));
-	    scramble.push(mov);
-	    c.make_move(&mov);
-	}
-
-	(c, scramble.into())
-    }
  
 }
 
@@ -200,10 +154,6 @@ fn print_add_face(
 	    y += 1;
 	}
     }
-}
-
-pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
-    [d, c, b, a]
 }
 
 pub fn cycle_face(face: &mut [Piece; 8], mut face_seq: [usize; 4], mov @ Move { side: _, prime }: &Move) {

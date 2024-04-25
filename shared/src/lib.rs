@@ -3,10 +3,26 @@ use std::ops::Deref;
 pub mod colors;
 pub use colors::*;
 
-pub trait Solvable {
+pub trait Solvable: Display + Eq + Sized {
     fn solve(&self) -> MoveSeq;
+    fn scramble(inp: &MoveSeq) -> Self;
+    fn random_scramble(lengtth: usize) -> (Self, MoveSeq);
 }
 
+
+pub const SIDE_RIGHT: usize = 0;
+pub const SIDE_FRONT: usize = 1;
+pub const SIDE_TOP: usize   = 2;
+pub const SIDE_LEFT: usize  = 3;
+pub const SIDE_BACK: usize  = 4;
+pub const SIDE_DOWN: usize  = 5;
+
+pub const COLOR_RIGHT_SEQ: [usize; 4] = [SIDE_FRONT, SIDE_TOP, SIDE_BACK, SIDE_DOWN];
+pub const COLOR_LEFT_SEQ: [usize; 4]  = [SIDE_DOWN, SIDE_BACK, SIDE_TOP, SIDE_FRONT];
+pub const COLOR_UP_SEQ: [usize; 4]    = [SIDE_FRONT, SIDE_LEFT, SIDE_BACK, SIDE_RIGHT];
+pub const COLOR_DOWN_SEQ: [usize; 4]  = [SIDE_RIGHT, SIDE_BACK, SIDE_LEFT, SIDE_FRONT];
+pub const COLOR_FRONT_SEQ: [usize; 4] = [SIDE_TOP, SIDE_RIGHT, SIDE_DOWN, SIDE_LEFT];
+pub const COLOR_BACK_SEQ: [usize; 4]  = [SIDE_LEFT, SIDE_DOWN, SIDE_RIGHT, SIDE_TOP];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move {
@@ -192,3 +208,24 @@ impl std::fmt::Display for Move {
     }
 }
 
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct Piece {
+    pub rotation: PieceRotation,
+}
+
+/// Stored as [top color][front color], which uniquely defines a rotation (because the cross product isn't commutative!)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum PieceRotation {
+    WR, WO, WG,
+    RW, BW, OW, GW,
+    YR, YB, YO, YG,
+    RY, BY, OY, GY,
+    OG, GO, OB, BO,
+    RG, GR, RB, BR,
+    #[default] WB,
+}
+
+pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
+    [d, c, b, a]
+}
