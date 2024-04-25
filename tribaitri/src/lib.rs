@@ -1,8 +1,11 @@
-use std::{fmt::Display, rc::Rc};
+use std::{collections::{HashSet, VecDeque}, fmt::Display, rc::Rc};
 
 use shared::*;
 
-#[derive(Debug, Clone)]
+mod bfsing;
+use bfsing::*;
+
+#[derive(Debug, Clone, Hash)]
 pub struct Cube3 {
     left:  [Rc<Piece>; 8], // Orange
     right: [Rc<Piece>; 8], // Orange
@@ -21,7 +24,7 @@ impl Default for Cube3 {
     
 impl Solvable for Cube3 {
     fn solve(&self) -> MoveSeq {
-        todo!()
+        solve_three_by_three(self)
     }
     fn make_move(&mut self, m: &Move) {
         todo!()
