@@ -71,9 +71,8 @@ fn get_normal_vector(face: Matrix<4,3>, center: Vec3) -> Vec3 {
     let vertex1: Vec3 = Vec3::new(face[1][0], face[1][1],face[1][2]);
     let vertex2: Vec3 = Vec3::new(face[2][0], face[2][1],face[2][2]);
 
-    let mut normal = Vec3::cross_product(vertex1 - vertex0, vertex2 - vertex0);
-    normal = normal.normalize().unwrap();
-    let dot_product = Vec3::dot_product(normal,center-vertex0);
+    let mut normal = (vertex1 - vertex0).cross_product( vertex2 - vertex0).normalize().unwrap();
+    let dot_product = normal.dot_product(center-vertex0);
 
     normal * if dot_product < 0.0 {-1.0} else {1.0}
 }
