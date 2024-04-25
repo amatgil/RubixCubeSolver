@@ -1,10 +1,111 @@
+use std::collections::{HashSet, VecDeque};
 use std::fmt::Display;
+use std::hash::Hash;
 use std::ops::Deref;
+use std::rc::Rc;
 pub mod colors;
 pub use colors::*;
 
-pub trait Solvable: Display + Eq + Sized + Default {
-    fn solve(&self) -> MoveSeq;
+
+struct State<C> {
+    past_moves: Vec<Move>,
+    cube: C,
+}
+impl<C: Solvable> Hash for State<C> { fn hash<H: std::hash::Hasher>(&self, state: &mut H) { self.cube.hash(state); } }
+impl<C: Solvable> PartialEq for State<C> { fn eq(&self, rhs: &Self) -> bool { self.cube == rhs.cube }}
+impl<C: Solvable> Eq for State<C> {}
+
+fn advance_bfs<C: Solvable>(visited: &mut HashSet<Rc<State<C>>>, queue: &mut VecDeque<Rc<State<C>>>) {
+    let current_depth = queue.back().unwrap().past_moves.len();
+    while let Some(rc_state) = queue.pop_front() {
+	if rc_state.past_moves.len() > current_depth { return; }
+	let past_moves = &rc_state.past_moves;
+	let x = &rc_state.cube;
+        for (m, y) in find_adjacents(x) {
+	    let new_moves = append_move(&past_moves, m);
+            let new_state = Rc::new(State {
+                past_moves: new_moves.clone(),
+                cube: y,
+            });
+            if !have_we_seen_this_state_before(visited, new_state.clone()) {
+                visited.insert(new_state.clone());
+                queue.push_back(new_state);
+            }
+        }
+    } 
+}
+
+fn have_we_seen_this_state_before<C: Solvable>(seen: &HashSet<Rc<State<C>>>, new: Rc<State<C>>) -> bool {
+    seen.contains(&new) // Equality only depends on the cube
+}
+
+fn append_move(old: &Vec<Move>, m: Move) -> Vec<Move> {
+    let mut new = old.clone();
+    new.push(m);
+    new
+}
+
+fn find_adjacents<C>(x: &C) -> Vec<(Move, C)> where C: Solvable {
+    let moviments = C::moves_of_adjacency();
+
+    let mut t = Vec::new();
+    for mov in moviments {
+        let mut alt = x.clone();
+        alt.make_move(&mov);
+        t.push((mov, alt))
+    }
+    t
+}
+
+pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
+    fn moves_of_adjacency() -> Vec<Move>;
+    fn solve(&self) -> MoveSeq {
+        let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube: self.clone() });
+        let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
+        let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
+
+        let first_state_solved    = Rc::new(State { past_moves: Vec::new(), cube: Self::default() });
+        let mut w_from_solved     = HashSet::from([first_state_solved.clone()]);
+        let mut queue_from_solved = VecDeque::from([first_state_solved]);
+
+
+        while w_from_solved.is_disjoint(&w_from_unsolved) {
+        advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
+        advance_bfs(&mut w_from_solved, &mut queue_from_solved);
+        }
+        println!();
+
+        println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
+            w_from_unsolved.len(),
+            w_from_solved.len(),
+        );
+
+        // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
+        //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
+        println!("[INFO]: Number of intersecting states found is: {}",
+            w_from_solved.intersection(&w_from_unsolved).count()
+        );
+        let schrodinger_state: &State<_> = (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref();
+        let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(schrodinger_state).unwrap().past_moves.clone();
+        let path_from_solved: Vec<Move> = w_from_solved.get(schrodinger_state).unwrap().past_moves.clone();
+
+        println!("[INFO]: Found halves of the math: merging...");
+
+        for m in path_from_solved.into_iter().rev() {
+            path_from_unsolved.push(m.opposite());
+        }
+
+        println!("[INFO]: Verifying solution...");
+        let mut test_cube = self.clone();
+        for m in &path_from_unsolved {
+            test_cube.make_move(m);
+        }
+        if test_cube == Self::default() { println!("[INFO]: Verification succeeded") }
+        else { println!("[ERROR]: Verification incorrect, missing moves for linking rotation") }
+        path_from_unsolved.into()
+
+    }
+
     fn make_move(&mut self, movimement: &Move);
     fn scramble(inp: &MoveSeq) -> Self;
     fn random_scramble(lengtth: usize) -> (Self, MoveSeq);
@@ -208,7 +309,6 @@ impl std::fmt::Display for Move {
         write!(f, "{out}")
     }
 }
-
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Piece {

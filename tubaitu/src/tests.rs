@@ -1,4 +1,4 @@
-use shared::{Color, Move};
+use shared::{Color, Move, Solvable};
 
 use crate::{cycle_items, cycle_items_old, cycle_items_safe, cycle_items_unchecked, Cube2, Piece, PieceRotation, StickerFace, Stickers};
 

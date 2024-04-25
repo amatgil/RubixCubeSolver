@@ -1,9 +1,4 @@
 use crate::*;
-use std::collections::VecDeque;
-use std::collections::HashSet;
-use std::hash::Hash;
-use std::ops::Deref;
-use std::rc::Rc;
 
 pub fn is_solved(c: &Cube2) -> bool {
     c.pieces.iter().fold((true, &c.pieces[0]), |(acc_b, acc_c), x| (acc_b && &acc_c == &x, x) ).0
@@ -19,89 +14,9 @@ fn basic_is_solved_test() {
     assert!(!is_solved(&cube));
 }
 
-#[derive(Debug, Clone)]
-struct State {
-    past_moves: Vec<Move>,
-    cube: Cube2,
-}
-
-impl Hash for State {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-	self.cube.hash(state);
-    }
-}
-
-fn advance_bfs(visited: &mut HashSet<Rc<State>>, queue: &mut VecDeque<Rc<State>>) {
-    let current_depth = queue.back().unwrap().past_moves.len();
-    while let Some(rc_state) = queue.pop_front() {
-	if rc_state.past_moves.len() > current_depth { return; }
-	let past_moves = &rc_state.past_moves;
-	let x = rc_state.cube;
-    for (m, y) in find_adjacents(&x) {
-	    let new_moves = append_move(&past_moves, m);
-            let new_state = Rc::new(State {
-                past_moves: new_moves.clone(),
-                cube: y,
-            });
-            if !have_we_seen_this_state_before(visited, new_state.clone()) {
-                visited.insert(new_state.clone());
-                queue.push_back(new_state);
-            }
-        }
-    } 
-}
 
 // TODO: Only check disjoint-ness between newly explored verticies
 impl Solvable for Cube2 {
-    fn solve(&self) -> MoveSeq {
-        let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube: *self });
-        let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);
-        let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
-
-        let first_state_solved    = Rc::new(State { past_moves: Vec::new(), cube: Cube2::default() });
-        let mut w_from_solved     = HashSet::from([first_state_solved.clone()]);
-        let mut queue_from_solved = VecDeque::from([first_state_solved]);
-
-
-        while w_from_solved.is_disjoint(&w_from_unsolved) {
-        advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
-        advance_bfs(&mut w_from_solved, &mut queue_from_solved);
-        }
-        println!();
-
-        println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
-            w_from_unsolved.len(),
-            w_from_solved.len(),
-        );
-
-        // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
-        //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
-        println!("[INFO]: Number of intersecting states found is: {}",
-            w_from_solved.intersection(&w_from_unsolved).count()
-        );
-        let schrodinger_state: State = (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref().clone();
-        let mut path_from_unsolved: Vec<Move> = w_from_unsolved.get(&schrodinger_state).unwrap().past_moves.clone();
-        let path_from_solved: Vec<Move> = w_from_solved.get(&schrodinger_state).unwrap().past_moves.clone();
-
-        println!("[INFO]: Found halves of the math: merging...");
-
-        let mut reorient_a = self.clone();
-        let mut reorient_b = Cube2::default();
-        for m in &path_from_unsolved { reorient_a.make_move(m) }
-        for m in &path_from_solved { reorient_b.make_move(m) }
-
-        // Adjust for rotational symmetry. This seems to make it so the resulting solved cube is always WB, curiously
-        let linking_moves = reorient_together(&reorient_a, &reorient_b).expect("This comes from two sets being non-disjoint, and so should never be reached.");
-        for m in linking_moves { path_from_unsolved.push(m) }
-
-        for m in path_from_solved.into_iter().rev() {
-        path_from_unsolved.push(m.opposite());
-        }
-
-        path_from_unsolved.into()
-
-    }
-
     fn make_move(&mut self, m: &Move) {
         match m.side {
             MoveSide::R => cycle_face(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
@@ -120,6 +35,7 @@ impl Solvable for Cube2 {
         }
         c
     }
+
     fn random_scramble(length: usize) -> (Self, MoveSeq) {
 	    use rand::Rng;
 	    fn get_move_from_n(n: usize) -> Move {
@@ -142,6 +58,13 @@ impl Solvable for Cube2 {
 
 	    (c, scramble.into())
     }
+
+    fn moves_of_adjacency() -> Vec<Move> {
+        Vec::from([
+            Move::new("R"), Move::new("F"), Move::new("U"),
+            Move::new("L'"), Move::new("B'"), Move::new("D'")
+        ])
+    }
 }
 
 /// Takes in two cubes. Returns a sequence of moves that will turn the left one into the right one
@@ -160,59 +83,6 @@ fn reorient_together(a: &Cube2, b: &Cube2) -> Option<Vec<Move>> {
     }
     None
 }
-
-fn append_move(old: &Vec<Move>, m: Move) -> Vec<Move> {
-    let mut new = old.clone();
-    new.push(m);
-    new
-}
-
-impl std::cmp::PartialEq for State {
-    fn eq(&self, rhs: &Self) -> bool {
-       self.cube == rhs.cube
-    }
-}
-impl Eq for State {}
-
-fn find_adjacents(x: &Cube2) -> Vec<(Move, Cube2)>{
-    let moviments: [Move; 6] = [
-        Move::new("R"), Move::new("F"), Move::new("U"),
-        Move::new("L'"), Move::new("B'"), Move::new("D'"),
-    ];
-
-    let mut t = Vec::new();
-    for mov in moviments {
-        let mut alt = x.clone();
-        alt.make_move(&mov);
-        t.push((mov, alt))
-    }
-    t
-}
-
-fn have_we_seen_this_state_before(seen: &HashSet<Rc<State>>, new: Rc<State>) -> bool {
-    seen.contains(&new) // Equality only depends on the cube
-}
-
-#[test]
-fn adjacent_test() {
-    let solved_piece = Piece { rotation: PieceRotation::OW };
-    let solved_cube: Cube2 = Cube2 { pieces: [solved_piece; 8] };
-    let mut t = Vec::new();
-
-    let moviments: [Move; 6] = [
-        Move::new("R"), Move::new("F"), Move::new("U"),
-        Move::new("L'"), Move::new("B'"), Move::new("D'"),
-    ];
-    for mov in moviments {
-        let mut alt = solved_cube.clone();
-        alt.make_move(&mov);
-        t.push((mov, alt))
-    }
-
-    assert_eq!(t, find_adjacents(&solved_cube));
-    
-}
-
 
 #[test]
 fn only_right_solve() {

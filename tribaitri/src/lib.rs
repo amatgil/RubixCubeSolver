@@ -52,6 +52,10 @@ impl Solvable for Cube3 {
 	for m in moves.iter() { c.make_move(&m) }
         c
     }
+
+    fn moves_of_adjacency() -> Vec<Move> {
+        todo!()
+    }
 }
 
 
