@@ -15,7 +15,7 @@ fn main() {
 	    let scramble_length = 10;
 	    println!("[INFO]: Generating random cube (n={scramble_length})...");
             let scrambling_instant = Instant::now();
-	    let (mut cube, scramble) = Cube::random_scramble(scramble_length);
+	    let (mut cube, scramble) = Cube2::random_scramble(scramble_length);
             let time_taken_to_scramble = scrambling_instant.elapsed();
 	    println!("[INFO]: Scrambling took: {}ms ({}μs)", time_taken_to_scramble.as_millis(), time_taken_to_scramble.as_micros());
 	    print!("[INFO]: Scramble is: ");
@@ -51,7 +51,7 @@ fn main() {
 	},
 	"solve" => {
 	    println!("[INFO]: Reading from `{INPUT_FILE_NAME}`...");
-	    let cube: Cube = match read_from_input_file() {
+	    let cube: Cube2 = match read_from_input_file() {
 		Ok(c) => c,
 		Err(e) => {
 		    println!("[ERROR]: Could not parse `{INPUT_FILE_NAME}`:'{e}'. Please double check `{INPUT_FILE_NAME}`");

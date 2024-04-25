@@ -13,6 +13,8 @@ pub use colors::*;
 pub mod drawing;
 pub use drawing::*;
 
+pub use shared::*;
+
 
 // Position constants
 const P_TOP_RIGHT_FRONT: usize    = 0;

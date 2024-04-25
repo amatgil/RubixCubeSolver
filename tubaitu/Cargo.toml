@@ -16,3 +16,4 @@ harness = false
 rand = { version = "0.8.5", features = ["small_rng"] }
 
 m_per_n = { path = "../m_per_n" }
+shared = { path = "../shared" }

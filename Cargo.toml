@@ -8,7 +8,7 @@ edition = "2021"
 [workspace]
 members = [
     "tubaitu",
-    "m_per_n", "tribaitri",
+    "m_per_n", "tribaitri", "shared",
 ]
 
 [dependencies]

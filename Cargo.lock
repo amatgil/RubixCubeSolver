@@ -462,6 +462,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "shared"
+version = "0.1.0"
+
+[[package]]
 name = "syn"
 version = "2.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -493,6 +497,7 @@ dependencies = [
  "criterion",
  "m_per_n",
  "rand",
+ "shared",
 ]
 
 [[package]]
