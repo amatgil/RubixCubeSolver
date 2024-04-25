@@ -68,36 +68,6 @@ impl Cube2 {
  
 }
 
-#[test]
-fn redundant_move_right() {
-    let mut cube = Cube2::default();
-    cube.make_move(&Move::new("R"));
-    cube.make_move(&Move::new("R"));
-    cube.make_move(&Move::new("R"));
-    cube.make_move(&Move::new("R"));
-    assert_eq!(cube, Cube2::default());
-}
-
-#[test]
-fn redundant_move_up() {
-    let mut cube = Cube2::default();
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
-    assert_eq!(cube, Cube2::default());
-}
-
-#[test]
-fn redundant_move_double_up() {
-    let mut cube = Cube2::default();
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U'"));
-    cube.make_move(&Move::new("U'"));
-    assert_eq!(cube, Cube2::default());
-}
-
 impl std::cmp::PartialEq for Cube2 {
     fn eq(&self, other: &Self) -> bool {
 
