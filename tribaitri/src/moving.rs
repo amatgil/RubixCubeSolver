@@ -5,13 +5,13 @@ use crate::*;
 #[repr(u8)]
 pub enum ThreeByCorner {
     WRB = 0,
-    WBO,
-    WOG,
-    WGR,
-    YBR,
-    YBO,
-    YOG,
-    YRG,
+    WBO = 1,
+    WOG = 2,
+    WGR = 3,
+    YBR = 4,
+    YBO = 5,
+    YOG = 6,
+    YRG = 7,
 }
 
 /// Assigning variants (numbers from the discriminants) based on their two colors. These are always valid, even when unsolved, because the centers never move.
@@ -19,17 +19,17 @@ pub enum ThreeByCorner {
 #[repr(u8)]
 pub enum ThreeByEdge {
     WR = 8, // Start at 8 to not collide with the corner's indexes
-    WB,
-    WO,
-    WG,
-    YR,
-    YB,
-    YO,
-    YG,
-    OB,
-    BR,
-    RG,
-    GO,
+    WB = 9,
+    WO = 10,
+    WG = 11,
+    YR = 12,
+    YB = 13,
+    YO = 14,
+    YG = 15,
+    OB = 16,
+    BR = 17,
+    RG = 18,
+    GO = 19,
 }
 
 pub const RIGHT_EDGE_CYCLE: [ThreeByEdge; 4] = [ThreeByEdge::YB, ThreeByEdge::BR, ThreeByEdge::WB, ThreeByEdge::OB]; // Blue
@@ -43,7 +43,7 @@ pub const RIGHT_CORNER_CYCLE: [ThreeByCorner; 4] = [ThreeByCorner::YBO, ThreeByC
 pub const LEFT_CORNER_CYCLE:  [ThreeByCorner; 4] = [ThreeByCorner::YOG, ThreeByCorner::WOG, ThreeByCorner::WGR, ThreeByCorner::YRG]; 
 pub const FRONT_CORNER_CYCLE: [ThreeByCorner; 4] = [ThreeByCorner::YOG, ThreeByCorner::YOG, ThreeByCorner::WBO, ThreeByCorner::WOG]; 
 pub const BACK_CORNER_CYCLE:  [ThreeByCorner; 4] = [ThreeByCorner::YBR, ThreeByCorner::YRG, ThreeByCorner::WGR, ThreeByCorner::WRB]; 
-pub const UP_CORNER_CYCLE:    [ThreeByCorner; 4] = [ThreeByCorner::YBO, ThreeByCorner::WOG, ThreeByCorner::YRG, ThreeByCorner::YBR]; 
+pub const UP_CORNER_CYCLE:    [ThreeByCorner; 4] = [ThreeByCorner::YBO, ThreeByCorner::YOG, ThreeByCorner::YRG, ThreeByCorner::YBR]; 
 pub const DOWN_CORNER_CYCLE:  [ThreeByCorner; 4] = [ThreeByCorner::WBO, ThreeByCorner::WRB, ThreeByCorner::WGR, ThreeByCorner::WOG]; 
 
 
@@ -66,6 +66,7 @@ pub(crate) fn make_three_by_three_move(cube: &mut Cube3, m: &Move) {
         Move { side: MoveSide::U, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, UP_EDGE_CYCLE.map(   |v| v as usize), m),
         Move { side: MoveSide::D, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, DOWN_EDGE_CYCLE.map( |v| v as usize), m),
     }
+    // Cycle edges
     match m {
         Move { side: MoveSide::R, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, RIGHT_CORNER_CYCLE.map(|v| v as usize), m),
         Move { side: MoveSide::L, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, LEFT_CORNER_CYCLE.map( |v| v as usize), m),
@@ -75,11 +76,4 @@ pub(crate) fn make_three_by_three_move(cube: &mut Cube3, m: &Move) {
         Move { side: MoveSide::D, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, DOWN_CORNER_CYCLE.map( |v| v as usize), m),
     }
 
-    // Cycle edges
-}
-
-pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
-    v.swap(idxs[0], idxs[1]);
-    v.swap(idxs[0], idxs[2]);
-    v.swap(idxs[0], idxs[3]);
 }

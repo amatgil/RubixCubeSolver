@@ -152,12 +152,12 @@ impl Display for Cube3 {
 	    for x in 5..=8 - 1 { buffer[xy_to_idx(x, y)] = '-' as u8 } 
 	}
 
-        print_add_face(&mut buffer, &self.pieces, 3, LEFT_PRINTING_CYCLE,  1,  5, Color::Green);
-        print_add_face(&mut buffer, &self.pieces, 4, BACK_PRINTING_CYCLE,  13, 5, Color::Red);
-        print_add_face(&mut buffer, &self.pieces, 1, FRONT_PRINTING_CYCLE,  5,  5, Color::Orange);
-        print_add_face(&mut buffer, &self.pieces, 2, UP_PRINTING_CYCLE,  5,  1, Color::Yellow);
-        print_add_face(&mut buffer, &self.pieces, 0, RIGHT_PRINTING_CYCLE,  9,  5, Color::Blue);
-        print_add_face(&mut buffer, &self.pieces, 5, DOWN_PRINTING_CYCLE,  5,  9, Color::White);
+        print_add_face(&mut buffer, &self.pieces, 2, UP_PRINTING_CYCLE,    5, 1, Color::Yellow);
+        print_add_face(&mut buffer, &self.pieces, 3, LEFT_PRINTING_CYCLE,  1, 5, Color::Green);
+        print_add_face(&mut buffer, &self.pieces, 1, FRONT_PRINTING_CYCLE, 5, 5, Color::Orange);
+        print_add_face(&mut buffer, &self.pieces, 0, RIGHT_PRINTING_CYCLE, 9, 5, Color::Blue);
+        print_add_face(&mut buffer, &self.pieces, 5, DOWN_PRINTING_CYCLE,  5, 9, Color::White);
+        print_add_face(&mut buffer, &self.pieces, 4, BACK_PRINTING_CYCLE, 13, 5, Color::Red);
 
 	let s = std::str::from_utf8(&buffer).expect("invalid utf-8 sequence (should be impossible)");
         write!(f, "{}", s)
@@ -173,26 +173,14 @@ fn print_add_face(
     start_y: usize,
     center_color: Color
 ) {
-    let (mut x, mut y) = (start_x, start_y);
-    let mut iter = seq.into_iter().enumerate();
-    for (i, v) in iter.clone().take(4) {
-	let cols = p[v].to_color_sequence();
-	let buffer_idx = y*CUBE_PRINT_WIDTH + x;
-        buffer[buffer_idx] = cols[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 0, start_y + 0)] = p[seq[0]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 1, start_y + 0)] = p[seq[1]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 2, start_y + 0)] = p[seq[2]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 0, start_y + 1)] = p[seq[3]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 2, start_y + 1)] = p[seq[4]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 0, start_y + 2)] = p[seq[5]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 1, start_y + 2)] = p[seq[6]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 2, start_y + 2)] = p[seq[7]].to_color_sequence()[n].to_string().bytes().next().unwrap();
 
-	x += 1;
-	if i == 2 {
-	    x = start_x;
-	    y += 1;
-	}
-    }
-
-    // Center
     buffer[xy_to_idx(start_x + 1, start_y + 1)] = center_color.to_string().bytes().next().unwrap();
-
-    // Right of center
-    buffer[xy_to_idx(start_x + 2, start_y + 1)] = p[4].to_color_sequence()[n].to_string().bytes().next().unwrap();
-    buffer[xy_to_idx(start_x + 0, start_y + 2)] = p[5].to_color_sequence()[n].to_string().bytes().next().unwrap();
-    buffer[xy_to_idx(start_x + 1, start_y + 2)] = p[6].to_color_sequence()[n].to_string().bytes().next().unwrap();
-    buffer[xy_to_idx(start_x + 2, start_y + 2)] = p[7].to_color_sequence()[n].to_string().bytes().next().unwrap();
 }

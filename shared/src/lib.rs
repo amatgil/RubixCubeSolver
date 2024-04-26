@@ -107,10 +107,10 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         path_from_unsolved.into()
 
     }
-    fn cycle_elements<const N: usize>(face: &mut [Piece; N], mut face_seq: [usize; 4], mov @ Move { side: _, prime }: &Move) {
-        if *prime { face_seq = reverse_seq(face_seq); }
-        cycle_items(face, face_seq);  // Move the pieces
-        for i in face_seq { face[i].rotate(mov) } // Rotate the pieces
+    fn cycle_elements<const N: usize>(pieces: &mut [Piece; N], mut seq: [usize; 4], mov @ Move { side: _, prime }: &Move) {
+        if *prime { seq = reverse_seq(seq); }
+        cycle_items(pieces, seq);  // Move the pieces
+        for i in seq { pieces[i].rotate(mov) } // Rotate the pieces we just cycled around
     }
 
 
@@ -345,13 +345,13 @@ pub struct Piece {
 /// Stored as [top color][front color], which uniquely defines a rotation (because the cross product isn't commutative!)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum PieceRotation {
-    WR, WO, WG,
+    WR, WO, WG, WB,
     RW, BW, OW, GW,
-    YR, YB, YO, YG,
     RY, BY, OY, GY,
     OG, GO, OB, BO,
     RG, GR, RB, BR,
-    #[default] WB,
+    YR, YB, YG,
+    #[default] YO
 }
 
 pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
