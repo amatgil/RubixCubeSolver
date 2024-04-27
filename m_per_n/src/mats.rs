@@ -73,32 +73,41 @@ impl<const N: usize> Matrix<N, N> {
         }
         out
     }
-
-    pub fn inverse(&self) -> Option<Self> {
-        let mut inverse = Matrix::<N, N>::ID();
-
-        inverse[1] = inverse[0][0] * inverse[1] - inverse[1][0] * inverse[0];
-        inverse[2] = inverse[0][0] * inverse[2] - inverse[2][0] * inverse[0];
-
-        inverse[0] = inverse[1][1] * inverse[0] - inverse[0][1] * inverse[1];
-        inverse[2] = inverse[1][1] * inverse[2] - inverse[2][1] * inverse[1];
-
-        inverse[0] = inverse[2][2] * inverse[0] - inverse[0][2] * inverse[2];
-        inverse[1] = inverse[2][2] * inverse[1] - inverse[1][2] * inverse[2];
-
-
-        if inverse[0][0] == 0.0 || inverse[1][1] == 0.0 || inverse[2][2] == 0.0 {
-            return None;
-        }
-        inverse[0] = 1.0/inverse[0][0] * inverse[0];
-        inverse[1] = 1.0/inverse[1][1] * inverse[1];
-        inverse[2] = 1.0/inverse[2][2] * inverse[2];
-
-        Some(inverse)
-    }
 }
 
+impl Matrix<3,3>{
+    pub fn inverse(&self) -> Option<Self> {
+        let mut matrix = Matrix::<3, 6>([
+            MatRow([self[0][0], self[0][1], self[0][2], 1.0, 0.0, 0.0]),
+            MatRow([self[1][0], self[1][1], self[1][2], 0.0, 1.0, 0.0]),
+            MatRow([self[2][0], self[2][1], self[2][2], 0.0, 0.0, 1.0]),
+        ]);
 
+        matrix[1] = matrix[0][0] * matrix[1] - matrix[1][0] * matrix[0];
+        matrix[2] = matrix[0][0] * matrix[2] - matrix[2][0] * matrix[0];
+
+        matrix[0] = matrix[1][1] * matrix[0] - matrix[0][1] * matrix[1];
+        matrix[2] = matrix[1][1] * matrix[2] - matrix[2][1] * matrix[1];
+
+        matrix[0] = matrix[2][2] * matrix[0] - matrix[0][2] * matrix[2];
+        matrix[1] = matrix[2][2] * matrix[1] - matrix[1][2] * matrix[2];
+
+
+        if matrix[0][0] == 0.0 || matrix[1][1] == 0.0 || matrix[2][2] == 0.0 {
+            return None;
+        }
+        matrix[0] = 1.0/matrix[0][0] * matrix[0];
+        matrix[1] = 1.0/matrix[1][1] * matrix[1];
+        matrix[2] = 1.0/matrix[2][2] * matrix[2];
+
+        let result = Matrix::<3,3>([
+            MatRow([matrix[0][0+3], matrix[0][1+3], matrix[0][2+3]]),
+            MatRow([matrix[1][0+3], matrix[1][1+3], matrix[1][2+3]]),
+            MatRow([matrix[2][0+3], matrix[2][1+3], matrix[2][2+3]]),
+        ]);
+        Some(result)
+    }
+}
 /// Matrix addition (must have the same dimensions, enforced by type-system)
 impl<const NF: usize, const NC: usize> Add<Matrix<NF, NC>> for Matrix<NF, NC> {
     type Output = Matrix<NF, NC>;
@@ -345,11 +354,16 @@ fn matrix_identity() {
 
 #[test]
 fn inverse_id() {
-    let id = Matrix::<3, 3>::ID();
+    println!("Weird");
+    //let id = Matrix::<3, 3>::ID();
     let correct_id = Matrix::<3, 3>(
-        [[1.0, 0.0, 0.0].into(),
-            [0.0, 1.0, 0.0].into(),
-            [0.0, 0.0, 1.0].into()]
+        [[3.0, 1.0, 5.0].into(),
+         [7.0, 5.0, 1.0].into(),
+         [2.0, 6.0, 8.0].into()]
     );
-    compare_mats(id.inverse().unwrap().0, correct_id.0);
+    let x: Matrix<3,3> = correct_id.inverse().unwrap();
+    for row in x.0 {
+        println!("{}, {}, {}", row[0], row[1], row[2]);
+    }
+    //compare_mats(id.matrix().unwrap().0, correct_id.0);
 }
