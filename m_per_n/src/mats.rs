@@ -1,6 +1,6 @@
 use crate::*;
 
-use std::ops::*;
+use std::{fmt::Display, ops::*};
 
 const FLOAT_EPSILON: f64 = 0.0001;
 
@@ -9,6 +9,23 @@ impl Point {
 	Point { x, y, z }
     }
 }
+
+
+impl<const NF: usize, const NC: usize> Display for Matrix<NF, NC> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut buffer = String::new();
+        for i in 0..NF {
+            buffer.push_str("|");
+            for j in 0..NC {
+                buffer.push_str(&format!("{:>4}", &self[i][j].to_string()));
+            }
+            buffer.push_str("|\n");
+        }
+
+        write!(f, "{buffer}")
+    }
+}
+
 
 // MatRow impls
 impl<const NCOLS: usize> From<[f64; NCOLS]> for MatRow<NCOLS> {
@@ -87,29 +104,46 @@ impl<const N: usize> Matrix<N, N> {
 
     pub fn inverse(&self) -> Option<Self> {
         // Applying these steps to our original matrix will reduce it to the identity, meaning 'inverse' will now be self^(-1)
-        let mut original = self.clone();
+        let mut m = self.clone();
         let mut inverse = Matrix::<N, N>::ID(); // Starts as ID, will become our result
 
         // Transform to row echelon form
         //   Align by pivot
-        original.0.sort_by(|a, b| a.pivot_position().cmp(&b.pivot_position()));
+        m.0.sort_by(|a, b| a.pivot_position().cmp(&b.pivot_position()));
+        if m[0][0] < FLOAT_EPSILON { return None; } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
+        if m[N - 1].0.iter().all(|&e| e < FLOAT_EPSILON) { return None; } // Last row is zero, rank isn't full, no inverse exists
 
-        if original[0][0] < FLOAT_EPSILON { return None; } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
-        if original[N - 1].0.iter().all(|&e| e < FLOAT_EPSILON) { return None; } // Last row is zero, rank isn't full, no inverse exists
-
-        //   Make all pivots be 1
-        for t in 0..N {
-            original[t] = (1.0 / original[t][t]) * original[t];
-        }
-
-        // Transform to reduced row echelon form (applying both to the original and ID to get our inverse)
-        for j in (0..N).into_iter().rev() {
-            for i in (0..N).into_iter().rev() {
-                if i == j { continue; }
-                original[i] = original[i] - original[i][j]*original[j];
-                inverse[i] = inverse[i] - inverse[i][j]*inverse[j];
+        for j in 0..N {
+            for i in 0..N {
+                if i <= j { continue; }
+                m[i] = m[i][j] * m[j] - m[j][i]*m[i];
+                inverse[i] = inverse[i][j] * inverse[j] - inverse[j][i]*inverse[i];
             }
         }
+
+        //   Make all pivots be 1
+        //for t in 0..N {
+        //    m[t] = (1.0 / m[t][t]) * m[t];
+        //    inverse[t] = (1.0 / inverse[t][t]) * inverse[t];
+        //}
+
+        for j in 0..N {
+            for i in 0..N {
+                if i > j { continue; }
+                m[i] = m[i][j] * m[j] - m[j][i]*m[i];
+                inverse[i] = inverse[i][j] * inverse[j] - inverse[j][i]*inverse[i];
+            }
+        }
+        println!("{m}");
+
+        // Transform to reduced row echelon form (applying both to the original and ID to get our inverse)
+        //for j in (0..N).into_iter().rev() {
+        //    for i in (0..N).into_iter().rev() {
+        //        if i == j { continue; }
+        //        original[i] = original[i] - original[i][j]*original[j];
+        //        inverse[i] = inverse[i] - inverse[i][j]*inverse[j];
+        //    }
+        //}
 
 
 
@@ -383,4 +417,60 @@ fn inverse_zero() {
     assert!(Matrix::<3, 3>::ZERO().inverse().is_none());
     assert!(Matrix::<4, 4>::ZERO().inverse().is_none());
     assert!(Matrix::<5, 5>::ZERO().inverse().is_none());
+}
+
+#[test]
+fn two_by_two_inverse() {
+    let a = Matrix::<2, 2>([
+        [1.0, 2.0].into(),
+        [1.0, -2.0].into()
+    ]);
+    let inv_a = Matrix::<2, 2>([
+        [0.5, 0.5].into(),
+        [0.25, -0.25].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
+}
+
+#[test]
+fn two_by_two_inverse_again() {
+    let a = Matrix::<2, 2>([
+        [1.0, -4.0].into(),
+        [5.0, -4.0].into()
+    ]);
+    let inv_a = Matrix::<2, 2>([
+        [-0.25, 0.25].into(),
+        [-0.3125, 0.0625].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
+}
+
+#[test]
+fn three_by_three_inverse() {
+    let a = Matrix::<3, 3>([
+        [1.0, 2.0, 4.0].into(),
+        [1.0, 2.0, -4.0].into(),
+        [1.0, -2.0, 0.0].into()
+    ]);
+    let inv_a = Matrix::<3, 3>([
+        [0.25, 0.25, 0.5].into(),
+        [0.125, 0.125, -0.25].into(),
+        [0.125, -0.125, 0.0].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
+}
+
+#[test]
+fn three_by_three_inverse_again() {
+    let a = Matrix::<3, 3>([
+        [2.0, 1.0, 0.0].into(),
+        [3.0, -4.0, -4.0].into(),
+        [4.0, 6.0, 0.0].into()
+    ]);
+    let inv_a = Matrix::<3, 3>([
+        [0.75, 0.0, -0.125].into(),
+        [-0.5, 0.0, 0.25].into(),
+        [1.0625, -0.25, -0.34375].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
 }
