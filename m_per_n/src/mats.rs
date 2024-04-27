@@ -290,6 +290,19 @@ impl<const NF: usize, const NC: usize> Matrix <NF,NC>{
         result
     }
 }
+
+
+impl<const NF: usize, const NC: usize> PartialEq for Matrix<NF, NC> {
+    fn eq(&self, other: &Self) -> bool {
+        for i in 0..NF {
+            for j in 0..NC {
+                if self[i][j] - other[i][k] > FLOAT_EPSILON { return false; }
+            }
+        }
+        true
+    }
+}
+
 /// For tests: panics if they're unequal
 /// 
 /// This relies of float equality, so it's not public. It should only be used in controlled ways, when

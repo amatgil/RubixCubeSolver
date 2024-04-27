@@ -40,12 +40,16 @@ impl PartialEq for Quadrilateral {
         (self.brightness - other.brightness).abs() < FLOAT_EPSILON &&
             (self.distance - other.distance).abs() < FLOAT_EPSILON &&
             self.vertices == other.vertices
-            
     }
 }
 
 impl Eq for Quadrilateral {}
 
+impl PartialOrd for Quadrilateral {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 impl Ord for Quadrilateral {
     fn cmp(&self, other: &Self) -> Ordering {
         if self.distance < other.distance {Ordering::Less}
