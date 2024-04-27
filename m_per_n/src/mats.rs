@@ -2,6 +2,7 @@ use crate::*;
 
 use std::ops::*;
 
+const FLOAT_EPSILON: f64 = 0.0001;
 
 impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Point {
@@ -10,42 +11,47 @@ impl Point {
 }
 
 // MatRow impls
-impl<const N: usize> From<[f64; N]> for MatRow<N> {
-    fn from(v: [f64; N]) -> Self { MatRow::<N>(v) }
+impl<const NCOLS: usize> From<[f64; NCOLS]> for MatRow<NCOLS> {
+    fn from(v: [f64; NCOLS]) -> Self { MatRow::<NCOLS>(v) }
 }
 
+impl<const NCOLS: usize>  MatRow<NCOLS> {
+    pub fn pivot_position(&self) -> Option<usize> {
+        self.0.iter().position(|&e| e > FLOAT_EPSILON) // Position of first non-zero value
+    }
+}
 // Elementary transformations on rows
 // - Swap two rows
-impl<const NROWS: usize>  MatRow<NROWS> {
+impl<const NCOLS: usize>  MatRow<NCOLS> {
     pub fn swap(&mut self, rhs: &mut Self) {
         std::mem::swap(self, rhs);
     }
 }
 // - Multiply by scalar
-impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
+impl<const NCOLS: usize> Mul<f64> for MatRow<NCOLS> {
     type Output = Self;
-    fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
+    fn mul(self, lambda: f64) -> Self { MatRow::<NCOLS>(self.0.map(|i| i*lambda)) }
 }
-impl<const NROWS: usize> Mul<MatRow<NROWS>> for f64 {
-    type Output = MatRow<NROWS>;
-    fn mul(self, rhs: MatRow<NROWS>) -> Self::Output { MatRow::<NROWS>(rhs.0.map(|i| i*self)) }
+impl<const NCOLS: usize> Mul<MatRow<NCOLS>> for f64 {
+    type Output = MatRow<NCOLS>;
+    fn mul(self, rhs: MatRow<NCOLS>) -> Self::Output { MatRow::<NCOLS>(rhs.0.map(|i| i*self)) }
 }
 
 // Add/subtract two rows:
-impl<const NROWS: usize> Add for MatRow<NROWS> {
+impl<const NCOLS: usize> Add for MatRow<NCOLS> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
-        let mut out = [0.0; NROWS];
-        for i in 0..NROWS { out[i] = self.0[i] + rhs.0[i]}
-        MatRow::<NROWS>(out)
+        let mut out = [0.0; NCOLS];
+        for i in 0..NCOLS { out[i] = self.0[i] + rhs.0[i]}
+        MatRow::<NCOLS>(out)
     }
 }
-impl<const NROWS: usize> Sub for MatRow<NROWS> { 
+impl<const NCOLS: usize> Sub for MatRow<NCOLS> { 
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
-        let mut out = [0.0; NROWS];
-        for i in 0..NROWS { out[i] = self.0[i] - rhs.0[i]}
-        MatRow::<NROWS>(out)
+        let mut out = [0.0; NCOLS];
+        for i in 0..NCOLS { out[i] = self.0[i] - rhs.0[i]}
+        MatRow::<NCOLS>(out)
     }
 }
 
@@ -71,7 +77,6 @@ impl<const N: usize> Matrix<N, N> {
     #[allow(non_snake_case)]
     pub const fn ID() -> Matrix<N, N> {
         let mut out = Matrix::<N, N>([MatRow::<N>([0.0; N]); N]);
-
         let mut i = 0;
         while i < N {
             out.0[i].0[i] = 1.0;
@@ -81,22 +86,36 @@ impl<const N: usize> Matrix<N, N> {
     }
 
     pub fn inverse(&self) -> Option<Self> {
+        // Applying these steps to our original matrix will reduce it to the identity, meaning 'inverse' will now be self^(-1)
         let mut original = self.clone();
-        let mut inverse = Matrix::<N, N>::ID();
+        let mut inverse = Matrix::<N, N>::ID(); // Starts as ID, will become our result
 
-        for i in 0..N {
-            assert!(original[i][i] != 0.0, "Inverse method is not prepared to handle 0s along the main diagonal");
-            original[i] = (1.0/original[i][i]) * original[i];
+        // Transform to row echelon form
+        //   Align by pivot
+        original.0.sort_by(|a, b| a.pivot_position().cmp(&b.pivot_position()));
+
+        if original[0][0] < FLOAT_EPSILON { return None; } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
+        if original[N - 1].0.iter().all(|&e| e < FLOAT_EPSILON) { return None; } // Last row is zero, rank isn't full, no inverse exists
+
+        //   Make all pivots be 1
+        for t in 0..N {
+            original[t] = (1.0 / original[t][t]) * original[t];
         }
 
-        for j in 0..N {
-            for i in 0..N {
+        // Transform to reduced row echelon form (applying both to the original and ID to get our inverse)
+        for j in (0..N).into_iter().rev() {
+            for i in (0..N).into_iter().rev() {
                 if i == j { continue; }
-                original[i] = original[i] - (original[i][j]*original[j]);
-                inverse[i] = inverse[i] - (inverse[i][j]*inverse[j]);
+                original[i] = original[i] - original[i][j]*original[j];
+                inverse[i] = inverse[i] - inverse[i][j]*inverse[j];
             }
         }
 
+
+
+
+
+        // inverse is now our solution
         Some(inverse)
     }
 }
