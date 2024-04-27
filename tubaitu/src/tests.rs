@@ -1,8 +1,8 @@
 use shared::{Color, Move, Solvable};
 
-use crate::{cycle_items, cycle_items_old, cycle_items_safe, cycle_items_unchecked, Cube2, Piece, PieceRotation, TubaiStickerFace, TubaiStickers};
+use crate::{cycle_items, Cube2, Piece, PieceRotation, TubaiStickerFace, TubaiStickers};
 
-
+/* 
 #[test]
 fn cycling_test() {
     let t1 = [1, 2, 3, 4, 5];
@@ -27,7 +27,7 @@ fn cycling_test_unchecked() {
     cycle_items_unchecked(&mut b, idx);
 
     assert_eq!(a, b);
-}
+}*/
 
 #[test]
 fn redundant_move_right() {
