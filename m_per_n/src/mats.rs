@@ -1,8 +1,7 @@
 use crate::*;
 
 use std::{fmt::Display, ops::*};
-
-const FLOAT_EPSILON: f64 = 0.0001;
+use shared::FLOAT_EPSILON;
 
 impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Point {

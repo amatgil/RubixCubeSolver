@@ -14,6 +14,8 @@ pub use colors::*;
 pub mod ui;
 pub use ui::*;
 
+pub const FLOAT_EPSILON: f64 = 0.0001;
+
 struct State<C> {
     past_moves: Vec<Move>,
     cube: C,

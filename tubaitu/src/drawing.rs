@@ -35,26 +35,38 @@ struct Quadrilateral {
     brightness: f64,
 }
 
-impl Quadrilateral {
+impl PartialEq for Quadrilateral {
+    fn eq(&self, other: &Self) -> bool {
+        (self.brightness - other.brightness).abs() < FLOAT_EPSILON &&
+            (self.distance - other.distance).abs() < FLOAT_EPSILON &&
+            self.vertices == other.vertices
+            
+    }
+}
+
+impl Eq for Quadrilateral {}
+
+impl Ord for Quadrilateral {
     fn cmp(&self, other: &Self) -> Ordering {
         if self.distance < other.distance {Ordering::Less}
         else if self.distance > other.distance {Ordering::Greater}
         else {Ordering::Equal}
     }
-    
-    fn empty() -> Self{
+}
+
+impl Quadrilateral {
+    fn empty() -> Self {
         Quadrilateral{distance: 0.0, vertices: Matrix::ZERO(), brightness: 0.0}
     }
 }
 
 impl DrawablePiece {
-
-    /// Returns an array of row marices which correspond to the positions of the 
+    /// Returns an array of row matricies that correspond to the positions of the 
     /// pieces' vertices. 
     fn get_vertex_positions(&self) -> [Vec3; 8] {
         let r = self.radius;
         let c = self.center;
-        let mut vertices = [Vec3::new(c.x,c.y,c.z);8];
+        let mut vertices = [Vec3::new(c.x, c.y, c.z); 8];
         for i in 0..8 {
             let point = match i {
                 P_TOP_RIGHT_FRONT    => vertices[0] + Vec3::new( r, -r,  r),  
@@ -79,13 +91,17 @@ impl DrawablePiece {
 
     /// Pre: vertices and projected_vertices are ordered as shown in README file.
     /// Returns an array of 6 tuples, containing the following information about each of the faces:
-    
+    ///
     /// - The distance of the furthest point from the cammera
     /// - A 4x2 matrix with the coordiantes of its vertices (Projected into the XY plane)
     /// - Brightness level ranging from 0 to 1
-
-    fn get_polygons_with_brightness(&self, light_dir: Vec3, camera_pos: Vec3, verts: [Vec3;8] , projected_verts: Matrix<8,2>) 
-    -> [Quadrilateral;6] {
+    fn get_polygons_with_brightness(
+        &self,
+        light_dir: Vec3,
+        camera_pos: Vec3,
+        verts: [Vec3;8],
+        projected_verts: Matrix<8,2>
+    )-> [Quadrilateral;6] {
         // faces are the 
         let mut projected_faces:[Quadrilateral;6] = [Quadrilateral::empty();6];
         let mut faces: [[Vec3;4];6] = [[Vec3::ZERO;4];6];
@@ -116,8 +132,11 @@ impl DrawablePiece {
         projected_faces
     }
 
-    fn find_intersection(point: Vec3, camera_pos: Vec3, camera_dir: Vec3) 
-    -> Option<Vec3> {
+    fn find_intersection(
+        point: Vec3,
+        camera_pos: Vec3,
+        camera_dir: Vec3
+    ) -> Option<Vec3> {
         let v = point - camera_pos;
         let n = camera_dir;
         let p1 = point;
@@ -147,7 +166,7 @@ impl DrawablePiece {
     }
 
 
-    fn to_xy_plane(vertices: [Vec3;8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
+    fn to_xy_plane(vertices: [Vec3; 8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
         let n = camera_dir;
         let basis1 = Vec3::new(
             n.y*0.0 - n.z*n.y,
@@ -181,7 +200,7 @@ impl DrawablePiece {
         result
     }
 
-    fn project_points(vertices: [Vec3;8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
+    fn project_points(vertices: [Vec3; 8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
         let mut intersections: [Vec3; 8] = [Vec3::ZERO;8];
         for i in 0..8 {
             let vec = vertices[i] - camera_pos;
@@ -312,7 +331,6 @@ fn get_svg(cube: &Cube2, mov: &Move, lerp_t: f64) -> String {
 }
 
 #[test]
-
 fn test_drawing_piece() {
     let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0};
 
@@ -327,9 +345,8 @@ fn test_drawing_piece() {
 }
 
 #[test]
-
 fn test_drawing_cube() {
-    let cube = Cube::default();
+    let cube = Cube2::default();
     let m = Move{side:MoveSide::R, prime: false};
     
     let text = get_svg(&cube,&m,0.0);
