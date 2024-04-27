@@ -19,3 +19,9 @@ shared = { path = "./shared" }
 [workspace.dependencies]
 rand = { version = "0.8.5", features = ["small_rng"] }
 
+[profile.release]
+opt-level = 3
+debug = false
+strip = true
+lto = true
+codegen-units = 1
