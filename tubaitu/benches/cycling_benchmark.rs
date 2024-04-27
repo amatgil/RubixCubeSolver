@@ -2,9 +2,6 @@
 use std::fmt::Display;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use tubaitu::cycle_items_safe;
-use tubaitu::cycle_items_unchecked;
-use tubaitu::cycle_items_old;
 
 const TS: [[usize; 5]; 3] = [
     [1, 2, 3, 4, 5],

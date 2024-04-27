@@ -250,7 +250,7 @@ impl DrawablePiece {
 }
 
 fn get_normal_vector(face: [Vec3; 4], center: Vec3) -> Vec3 {
-
+    dbg!(face);
     let normal = (face[1] - face[0]).cross_product( face[2] - face[0]).normalize().unwrap();
     let dot_product = normal.dot_product(center-face[0]);
 
@@ -338,10 +338,10 @@ fn get_svg(cube: &Cube2, mov: &Move, lerp_t: f64) -> String {
 fn test_drawing_piece() {
     let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0};
 
-    let cam_pos = (Vec3::new(30.0, 20.0, 10.0))*10.0;
+    let cam_pos = (Vec3::new(35.5, 25.0, 10.5))*10.0;
     let cam_dir = Vec3::ZERO - cam_pos;
 
-    let light_pos = Vec3::new(10.0,20.0,30.0);
+    let light_pos = Vec3::new(12.0,20.2,30.7);
     let light_dir = Vec3::ZERO - light_pos;
 
     let buffer = piece.draw(cam_pos, cam_dir, light_dir);
