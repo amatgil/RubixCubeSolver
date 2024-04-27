@@ -171,6 +171,17 @@ impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
     }
 }
 
+impl<const NF: usize, const NC: usize> Matrix <NF,NC>{
+    pub fn transpose(&self) -> Matrix<NC,NF>{
+        let mut result = Matrix::<NC,NF>::ZERO();
+        for y in 0..NF {
+            for x in 0..NC {
+                result[y][x] = self[x][y];
+            }
+        }
+        result
+    }
+}
 /// For tests: panics if they're unequal
 fn compare_mats<const NF: usize, const NC: usize>(a: [MatRow<NC>; NF], b: [MatRow<NC>; NF]) {
     for y in 0..NF {

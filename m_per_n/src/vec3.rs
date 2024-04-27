@@ -2,9 +2,9 @@ use std::ops::*;
 
 #[derive(Clone, Copy)]
 pub struct Vec3 {
-    x: f64,
-    y: f64,
-    z: f64
+    pub x: f64,
+    pub y: f64,
+    pub z: f64
 }
 
 pub const FLOAT_VEC_EPSILON: f64 = 0.001;
