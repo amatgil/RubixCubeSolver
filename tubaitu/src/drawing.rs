@@ -89,18 +89,18 @@ impl DrawablePiece {
         let mut projected_faces:[Quadrilateral;6] = [Quadrilateral::empty();6];
         let mut faces: [[Vec3;4];6] = [[Vec3::ZERO;4];6];
 
-        faces[0] = [verts[0],verts[1],verts[4],verts[5]];
-        faces[1] = [verts[0],verts[3],verts[4],verts[7]];
+        faces[0] = [verts[0],verts[1],verts[5],verts[4]];
+        faces[1] = [verts[0],verts[3],verts[7],verts[4]];
         faces[2] = [verts[0],verts[1],verts[2],verts[3]];
         faces[3] = [verts[2],verts[3],verts[6],verts[7]];
-        faces[4] = [verts[1],verts[2],verts[5],verts[6]];
+        faces[4] = [verts[1],verts[2],verts[6],verts[5]];
         faces[5] = [verts[4],verts[5],verts[6],verts[7]]; 
 
-        projected_faces[0].vertices = Matrix::<4,2>([projected_verts[0], projected_verts[1], projected_verts[4], projected_verts[5]]);
-        projected_faces[1].vertices = Matrix::<4,2>([projected_verts[0], projected_verts[3], projected_verts[4], projected_verts[7]]);
+        projected_faces[0].vertices = Matrix::<4,2>([projected_verts[0], projected_verts[1], projected_verts[5], projected_verts[4]]);
+        projected_faces[1].vertices = Matrix::<4,2>([projected_verts[0], projected_verts[3], projected_verts[7], projected_verts[4]]);
         projected_faces[2].vertices = Matrix::<4,2>([projected_verts[0], projected_verts[1], projected_verts[2], projected_verts[3]]);
         projected_faces[3].vertices = Matrix::<4,2>([projected_verts[2], projected_verts[3], projected_verts[6], projected_verts[7]]);
-        projected_faces[4].vertices = Matrix::<4,2>([projected_verts[1], projected_verts[2], projected_verts[5], projected_verts[6]]);
+        projected_faces[4].vertices = Matrix::<4,2>([projected_verts[1], projected_verts[2], projected_verts[6], projected_verts[5]]);
         projected_faces[5].vertices = Matrix::<4,2>([projected_verts[4], projected_verts[5], projected_verts[6], projected_verts[7]]);
 
         let center = Vec3::new(self.center.x,self.center.y, self.center.z);
@@ -181,7 +181,6 @@ impl DrawablePiece {
     }
 
     fn project_points(vertices: [Vec3;8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
-        let projected_points: Matrix::<8,2> = Matrix::<8,2>::ZERO();
         let mut intersections: [Vec3; 8] = [Vec3::ZERO;8];
         for i in 0..6 {
             let vec = vertices[i] - camera_pos;
@@ -288,16 +287,16 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding svg as a String. This is a self-contained frame representing the cube in the given state.
 pub fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
     let pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
-    
     // Recorda que el radi és DRAWING_PIECE_RADIUS
     format!("{cube} with {mov:?} at with lerp value {lerp_t}");
-    let cam_pos = Vec3::new(20.0, -20.0, 20.0);
+    let cam_pos = Vec3::new(20.0, 20.0, 20.0)*10.0;
     let cam_dir = Vec3::ZERO - cam_pos;
 
     let light_pos = Vec3::new(1.0,1.0,20.0);
     let light_dir = Vec3::ZERO - light_pos;
 
     let mut buffer: String = String::new();
+
     for piece in pieces {
         buffer = buffer + &piece.draw(cam_pos, cam_dir, light_dir);
     }
@@ -309,10 +308,10 @@ pub fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
 fn test_drawing_piece() {
     let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0};
 
-    let cam_pos = (Vec3::new(20.0, -20.0, 20.0))*10.0;
+    let cam_pos = (Vec3::new(30.0, 0.1, 0.1))*10.0;
     let cam_dir = Vec3::ZERO - cam_pos;
 
-    let light_pos = Vec3::new(1.0,1.0,-20.0);
+    let light_pos = Vec3::new(10.0,10.0,10.0);
     let light_dir = Vec3::ZERO - light_pos;
 
     let buffer = piece.draw(cam_pos, cam_dir, light_dir);
