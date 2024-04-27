@@ -1,7 +1,8 @@
 use crate::*;
 
-use std::ops::*;
+use std::{fmt::Display, ops::*};
 
+const FLOAT_EPSILON: f64 = 0.0001;
 
 impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Point {
@@ -9,37 +10,65 @@ impl Point {
     }
 }
 
-// MatRow impls
-impl<const N: usize> From<[f64; N]> for MatRow<N> {
-    fn from(v: [f64; N]) -> Self { MatRow::<N>(v) }
-}
 
-// Elementary transformations on rows (swap elided)
-impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
-    type Output = Self;
-    fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
-}
+impl<const NF: usize, const NC: usize> Display for Matrix<NF, NC> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut buffer = String::new();
+        for i in 0..NF {
+            buffer.push_str("|");
+            for j in 0..NC {
+                buffer.push_str(&format!("{:>4}", &self[i][j].to_string()));
+            }
+            buffer.push_str("|\n");
+        }
 
-impl<const NROWS: usize> Mul<MatRow<NROWS>> for f64 {
-    type Output = MatRow<NROWS>;
-    fn mul(self, rhs: MatRow<NROWS>) -> Self::Output { MatRow::<NROWS>(rhs.0.map(|i| i*self)) }
-}
-
-impl<const NROWS: usize> Add for MatRow<NROWS> {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self {
-        let mut out = [0.0; NROWS];
-        for i in 0..NROWS { out[i] = self.0[i] + rhs.0[i]}
-        MatRow::<NROWS>(out)
+        write!(f, "{buffer}")
     }
 }
 
-impl<const NROWS: usize> Sub for MatRow<NROWS> { 
+
+// MatRow impls
+impl<const NCOLS: usize> From<[f64; NCOLS]> for MatRow<NCOLS> {
+    fn from(v: [f64; NCOLS]) -> Self { MatRow::<NCOLS>(v) }
+}
+
+impl<const NCOLS: usize>  MatRow<NCOLS> {
+    pub fn pivot_position(&self) -> Option<usize> {
+        self.0.iter().position(|&e| e > FLOAT_EPSILON) // Position of first non-zero value
+    }
+}
+// Elementary transformations on rows
+// - Swap two rows
+impl<const NCOLS: usize>  MatRow<NCOLS> {
+    pub fn swap(&mut self, rhs: &mut Self) {
+        std::mem::swap(self, rhs);
+    }
+}
+// - Multiply by scalar
+impl<const NCOLS: usize> Mul<f64> for MatRow<NCOLS> {
+    type Output = Self;
+    fn mul(self, lambda: f64) -> Self { MatRow::<NCOLS>(self.0.map(|i| i*lambda)) }
+}
+impl<const NCOLS: usize> Mul<MatRow<NCOLS>> for f64 {
+    type Output = MatRow<NCOLS>;
+    fn mul(self, rhs: MatRow<NCOLS>) -> Self::Output { MatRow::<NCOLS>(rhs.0.map(|i| i*self)) }
+}
+
+// Add/subtract two rows:
+impl<const NCOLS: usize> Add for MatRow<NCOLS> {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        let mut out = [0.0; NCOLS];
+        for i in 0..NCOLS { out[i] = self.0[i] + rhs.0[i]}
+        MatRow::<NCOLS>(out)
+    }
+}
+impl<const NCOLS: usize> Sub for MatRow<NCOLS> { 
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
-        let mut out = [0.0; NROWS];
-        for i in 0..NROWS { out[i] = self.0[i] - rhs.0[i]}
-        MatRow::<NROWS>(out)
+        let mut out = [0.0; NCOLS];
+        for i in 0..NCOLS { out[i] = self.0[i] - rhs.0[i]}
+        MatRow::<NCOLS>(out)
     }
 }
 
@@ -65,7 +94,6 @@ impl<const N: usize> Matrix<N, N> {
     #[allow(non_snake_case)]
     pub const fn ID() -> Matrix<N, N> {
         let mut out = Matrix::<N, N>([MatRow::<N>([0.0; N]); N]);
-
         let mut i = 0;
         while i < N {
             out.0[i].0[i] = 1.0;
@@ -73,10 +101,56 @@ impl<const N: usize> Matrix<N, N> {
         }
         out
     }
-}
+    //pub fn inverse(&self) -> Option<Self> {
+    //    // Applying these steps to our original matrix will reduce it to the identity, meaning 'inverse' will now be self^(-1)
+    //    let mut m = self.clone();
+    //    let mut inverse = Matrix::<N, N>::ID(); // Starts as ID, will become our result
 
-impl Matrix<3,3>{
+    //    // Transform to row echelon form
+    //    //   Align by pivot
+    //    m.0.sort_by(|a, b| a.pivot_position().cmp(&b.pivot_position()));
+    //    if m[0][0] < FLOAT_EPSILON { return None; } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
+    //    if m[N - 1].0.iter().all(|&e| e < FLOAT_EPSILON) { return None; } // Last row is zero, rank isn't full, no inverse exists
+
+    //    for j in 0..N {
+    //        for i in 0..N {
+    //            if i <= j { continue; }
+    //            m[i] = m[i][j] * m[j] - m[j][i]*m[i];
+    //            inverse[i] = inverse[i][j] * inverse[j] - inverse[j][i]*inverse[i];
+    //        }
+    //    }
+
+    //    //   Make all pivots be 1
+    //    //for t in 0..N {
+    //    //    m[t] = (1.0 / m[t][t]) * m[t];
+    //    //    inverse[t] = (1.0 / inverse[t][t]) * inverse[t];
+    //    //}
+
+    //    for j in 0..N {
+    //        for i in 0..N {
+    //            if i > j { continue; }
+    //            m[i] = m[i][j] * m[j] - m[j][i]*m[i];
+    //            inverse[i] = inverse[i][j] * inverse[j] - inverse[j][i]*inverse[i];
+    //        }
+    //    }
+    //    println!("{m}");
+
+    //    // Transform to reduced row echelon form (applying both to the original and ID to get our inverse)
+    //    //for j in (0..N).into_iter().rev() {
+    //    //    for i in (0..N).into_iter().rev() {
+    //    //        if i == j { continue; }
+    //    //        original[i] = original[i] - original[i][j]*original[j];
+    //    //        inverse[i] = inverse[i] - inverse[i][j]*inverse[j];
+    //    //    }
+    //    //}
+
+
+    //    // inverse is now our solution
+    //    Some(inverse)
+    //}
+
     pub fn inverse(&self) -> Option<Self> {
+        assert!(N == 3, "Inverses not yet implemented for non 3x3 matricies");
         let mut matrix = Matrix::<3, 6>([
             MatRow([self[0][0], self[0][1], self[0][2], 1.0, 0.0, 0.0]),
             MatRow([self[1][0], self[1][1], self[1][2], 0.0, 1.0, 0.0]),
@@ -105,9 +179,19 @@ impl Matrix<3,3>{
             MatRow([matrix[1][0+3], matrix[1][1+3], matrix[1][2+3]]),
             MatRow([matrix[2][0+3], matrix[2][1+3], matrix[2][2+3]]),
         ]);
-        Some(result)
+
+        let mut temporary_holder = Matrix::<N, N>::ZERO(); // We've only got 3x3's inverses done, we'll fix this bodge later
+        for i in 0..3 {
+            for j in 0..3 {
+                temporary_holder[i][j] = result[i][j];
+            }
+        }
+
+
+        Some(temporary_holder)
     }
 }
+
 /// Matrix addition (must have the same dimensions, enforced by type-system)
 impl<const NF: usize, const NC: usize> Add<Matrix<NF, NC>> for Matrix<NF, NC> {
     type Output = Matrix<NF, NC>;
@@ -366,4 +450,69 @@ fn inverse_id() {
         println!("{}, {}, {}", row[0], row[1], row[2]);
     }
     //compare_mats(id.matrix().unwrap().0, correct_id.0);
+}
+
+#[test]
+fn inverse_zero() {
+    assert!(Matrix::<1, 1>::ZERO().inverse().is_none());
+    assert!(Matrix::<2, 2>::ZERO().inverse().is_none());
+    assert!(Matrix::<3, 3>::ZERO().inverse().is_none());
+    assert!(Matrix::<4, 4>::ZERO().inverse().is_none());
+    assert!(Matrix::<5, 5>::ZERO().inverse().is_none());
+}
+
+#[test]
+fn two_by_two_inverse() {
+    let a = Matrix::<2, 2>([
+        [1.0, 2.0].into(),
+        [1.0, -2.0].into()
+    ]);
+    let inv_a = Matrix::<2, 2>([
+        [0.5, 0.5].into(),
+        [0.25, -0.25].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
+}
+
+#[test]
+fn two_by_two_inverse_again() {
+    let a = Matrix::<2, 2>([
+        [1.0, -4.0].into(),
+        [5.0, -4.0].into()
+    ]);
+    let inv_a = Matrix::<2, 2>([
+        [-0.25, 0.25].into(),
+        [-0.3125, 0.0625].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
+}
+
+#[test]
+fn three_by_three_inverse() {
+    let a = Matrix::<3, 3>([
+        [1.0, 2.0, 4.0].into(),
+        [1.0, 2.0, -4.0].into(),
+        [1.0, -2.0, 0.0].into()
+    ]);
+    let inv_a = Matrix::<3, 3>([
+        [0.25, 0.25, 0.5].into(),
+        [0.125, 0.125, -0.25].into(),
+        [0.125, -0.125, 0.0].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
+}
+
+#[test]
+fn three_by_three_inverse_again() {
+    let a = Matrix::<3, 3>([
+        [2.0, 1.0, 0.0].into(),
+        [3.0, -4.0, -4.0].into(),
+        [4.0, 6.0, 0.0].into()
+    ]);
+    let inv_a = Matrix::<3, 3>([
+        [0.75, 0.0, -0.125].into(),
+        [-0.5, 0.0, 0.25].into(),
+        [1.0625, -0.25, -0.34375].into()
+    ]);
+    compare_mats(a.inverse().unwrap().0, inv_a.0);
 }
