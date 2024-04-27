@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error, fs::File, io::Write};
+use std::{borrow::Cow, error::Error, fs::File, io::Write, process::exit};
 
 use shared::{Color, Solvable};
 
@@ -41,7 +41,9 @@ fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> 
 
 pub fn read_three_from_string(input: &str) -> Result<Cube3, Box<dyn Error>> {
     let error_s: Cow<str> = format!("File {} does not represent a cube (valid or non-valid)", Cube3::INPUT_FILE_NAME).into();
-    let mut s = Stickers::default();
+    //let mut s = Stickers::default();
+    println!("[ERROR]: Not yet implemented!");
+    exit(4);
     let mut input = input.chars();
 
 
