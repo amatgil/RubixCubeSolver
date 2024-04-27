@@ -1,6 +1,12 @@
 
+
+pub use shared::*;
+
 mod mats;
 pub use mats::*;
+
+mod vec3;
+pub use vec3::*;
 
 #[derive(Clone, Debug, Default, Copy)]
 pub struct Point {
