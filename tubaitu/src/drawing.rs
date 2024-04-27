@@ -13,6 +13,8 @@ struct DrawablePiece {
     radius: f64,
 }
 
+const WIDTH :usize = 10000;
+const HEIGHT:usize = 10000;
 const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.1;
 const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 0.8;
 const DISTANCE_CAMERA_PLANE: f64 = 1.0;
@@ -196,12 +198,26 @@ impl DrawablePiece {
     fn draw(&self, camera_pos: Vec3, camera_dir: Vec3, light_dir: Vec3) -> String {
         let vertices = self.get_vertex_positions();
         let projected_vertices = Self::project_points(vertices, camera_pos, camera_dir);
-        let mut polygons = self.get_polygons_with_brightness(light_dir, camera_pos, vertices, projected_vertices);
+        let mut projected_faces = self.get_polygons_with_brightness(light_dir, camera_pos, vertices, projected_vertices);
         // Sorts the polygons from furthest to nearest.
-        polygons.sort_by(|a,b| b.cmp(a));
+        projected_faces.sort_by(|a,b| b.cmp(a));
         
-        let buffer = String::new();
+        let mut buffer = String::new();
 
+        buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
+        for face in projected_faces {
+            buffer.push_str(&format!("<polygon points=\""));
+            for i in 0..4 {
+                let x:usize = (face.vertices[i][0]*100.0) as usize;
+                let y:usize = (face.vertices[i][1]*100.0) as usize;
+                buffer.push_str(&format!("{x},{y} "));
+            }
+            let color: usize = (face.brightness*255.0) as usize;
+            buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color,color,color));
+        }
+        buffer.push_str(&format!("</svg>\n"));
+
+    return buffer;
     }
 }
 
@@ -282,8 +298,20 @@ pub fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
     let light_pos = Vec3::new(0.0,0.0,20.0);
     let light_dir = Vec3::ZERO - light_pos;
 
-
-
-
     todo!();
+}
+
+#[test]
+
+fn test_drawing_piece() {
+    let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0};
+
+    let cam_pos = Vec3::new(20.0, -20.0, 20.0);
+    let cam_dir = Vec3::ZERO - cam_pos;
+
+    let light_pos = Vec3::new(1.0,1.0,20.0);
+    let light_dir = Vec3::ZERO - light_pos;
+    println!("Hello every body! this should be working!!!");
+    let buffer = piece.draw(cam_pos, cam_dir, light_dir);
+    println!("{}", buffer);
 }

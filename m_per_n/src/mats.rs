@@ -174,8 +174,8 @@ impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
 impl<const NF: usize, const NC: usize> Matrix <NF,NC>{
     pub fn transpose(&self) -> Matrix<NC,NF>{
         let mut result = Matrix::<NC,NF>::ZERO();
-        for y in 0..NF {
-            for x in 0..NC {
+        for y in 0..NC {
+            for x in 0..NF {
                 result[y][x] = self[x][y];
             }
         }
