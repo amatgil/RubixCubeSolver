@@ -1,11 +1,10 @@
-use std::collections::{HashSet, VecDeque};
-use std::fmt::Display;
-use std::hash::Hash;
-use std::ops::Deref;
-use std::rc::Rc;
+use std::{collections::{HashSet, VecDeque}, error::Error, fmt::Display, hash::Hash, ops::Deref, rc::Rc, time::Instant};
+
 pub mod colors;
 pub use colors::*;
 
+pub mod ui;
+pub use ui::*;
 
 struct State<C> {
     past_moves: Vec<Move>,
@@ -60,7 +59,73 @@ fn find_adjacents<C>(x: &C) -> Vec<(Move, C)> where C: Solvable {
 pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn moves_of_adjacency() -> Vec<Move>;
     fn make_move(&mut self, movimement: &Move);
-    
+    const INPUT_FILE_NAME: &'static str;
+    fn write_blank_slate() -> Result<(), Box<dyn Error>>;
+    fn read_from_slate() -> Result<Self, Box<dyn Error>>;
+
+    fn solve_random(scramble_length: usize) {
+        println!("[INFO]: Generating random cube (n={scramble_length})...");
+        let scrambling_instant = Instant::now();
+        let (mut cube, scramble) = Self::random_scramble(scramble_length);
+        let time_taken_to_scramble = scrambling_instant.elapsed();
+        println!("[INFO]: Scrambling took: {}ms ({}μs)", time_taken_to_scramble.as_millis(), time_taken_to_scramble.as_micros());
+        print!("[INFO]: Scramble is: ");
+        println!("{scramble}");
+        print!("[INFO]: (Uncompressed: [ "); for m in &scramble.0 { print!("{m} "); } println!("])");
+
+	println!("[INFO]: Solving...");
+	println!("Scramble to solve:\n{cube}");
+
+        let starting_instant = Instant::now();
+        let r = cube.solve();
+        let time_taken = starting_instant.elapsed();
+
+	for m in &r.0 { cube.make_move(m) }
+	println!("Final state:\n{cube}");
+
+        println!();
+
+	println!("[RESULT]: Solving time was: {}ms ({}μs)", time_taken.as_millis(), time_taken.as_micros());
+        println!("[RESULT]: Final solution is: {r}");
+        print!("[INFO]: Uncompressed solution: [ "); for m in &r.0 { print!("{m} "); } println!("]");
+
+        println!();
+	
+	println!("[RESULT]: Reverse of solution: {}", r.reversed());
+	print!("[INFO]: Uncompressed reverse: [ "); for m in r.0.iter().rev() { print!("{} ", m.opposite()); } println!("]");
+        
+    }
+    /// Calls other Solvable methods with interspersed prints
+    fn solve_pretty() {
+        println!("[INFO]: Reading from `{}`...", Self::INPUT_FILE_NAME);
+        let cube: Self = match Self::read_from_slate() {
+            Ok(c) => c,
+            Err(e) => {
+                println!("[ERROR]: Could not parse `{0}`:'{e}'. Please double check `{0}`",
+                         Self::INPUT_FILE_NAME);
+                std::process::exit(2);
+            },
+        };
+        println!("[INFO]: `{}` has been read", Self::INPUT_FILE_NAME);
+        println!("[INFO]: Interpreted cube is:\n{cube}");
+        println!("[INFO]: Starting the solve...");
+        let r = cube.solve();
+
+	println!("[INFO]: Checking correctness...");
+	let mut checking_cube = cube.clone();
+	for m in &r.0 { checking_cube.make_move(&m) }
+
+	println!("Starting cube:\n{cube}\n");
+	println!("Final cube:\n{checking_cube}");
+
+	println!("[RESULT]: Final solution is: {r}");
+	print!("[INFO]: Uncompressed solution: [ "); for m in &r.0 { print!("{m} "); } println!("]");
+
+	println!();
+	
+	println!("[RESULT]: Reverse of solution: {}", r.reversed());
+	print!("[INFO]: Uncompressed reverse: [ "); for m in r.0.iter().rev() { print!("{} ", m.opposite()); } println!("]");
+    }
     fn solve(&self) -> MoveSeq {
         let first_state_unsolved    = Rc::new(State { past_moves: Vec::new(), cube: self.clone() });
         let mut w_from_unsolved     = HashSet::from([first_state_unsolved.clone()]);

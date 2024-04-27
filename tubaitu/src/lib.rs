@@ -1,4 +1,6 @@
 pub mod declarations;
+use std::{error::Error, fs::{self, File}, io::Write};
+
 pub use declarations::*;
 
 pub mod bfsing;
@@ -43,6 +45,12 @@ const FACE_BACK_SEQ_PRINT: [usize; 4]  = [P_TOP_RIGHT_BACK, P_TOP_LEFT_BACK, P_B
 
 // TODO: Only check disjoint-ness between newly explored verticies
 impl Solvable for Cube2 {
+    const INPUT_FILE_NAME: &'static str = "tubaitu_input_file";
+
+    fn read_from_slate() -> Result<Self, Box<dyn Error>> {
+        let input = fs::read_to_string(Cube2::INPUT_FILE_NAME)?;
+        read_tubaitu_from_string(&input)
+    }
     fn make_move(&mut self, m: &Move) {
         match m.side {
             MoveSide::R => Self::cycle_elements::<8>(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
@@ -59,6 +67,26 @@ impl Solvable for Cube2 {
             Move::new("L'"), Move::new("B'"), Move::new("D'")
         ])
     }
+    fn write_blank_slate() -> Result<(), Box<dyn Error>> {
+        let template =
+"   ┏━━┓
+   ┃XX┃
+   ┃XX┃
+┏━━╋━━╋━━┳━━┓
+┃XX┃XX┃XX┃XX┃
+┃XX┃XX┃XX┃XX┃
+┗━━╋━━╋━━┻━━┛
+   ┃XX┃
+   ┃XX┃
+   ┗━━┛";
+
+        let mut file = File::create(Self::INPUT_FILE_NAME)?;
+        file.write(template.as_bytes())?;
+
+        Ok(())
+
+    }
+
 }
 
 fn get_orientation_generators() -> [Vec<Move>; 6] {

@@ -1,16 +1,16 @@
-use std::{borrow::Cow, error::Error, fs::{self, File}, io::{self, Read, Write}, ops::Index};
+use std::{borrow::Cow, error::Error, ops::Index};
 
 use crate::*;
 
 
 #[derive(Default, Debug, Clone, Copy)]
-pub struct Stickers {
-    pub right: StickerFace,
-    pub left: StickerFace,
-    pub front: StickerFace,
-    pub back: StickerFace,
-    pub top: StickerFace,
-    pub down: StickerFace,
+pub struct TubaiStickers {
+    pub right: TubaiStickerFace,
+    pub left: TubaiStickerFace,
+    pub front: TubaiStickerFace,
+    pub back: TubaiStickerFace,
+    pub top: TubaiStickerFace,
+    pub down: TubaiStickerFace,
 }
 
 /// Represents the four colors on a face. The ordering of the array is: counterclockwise, starting from the "top left", where the top left is the sticker that's at the top left when the cube is rotated the least. For example:
@@ -24,9 +24,9 @@ pub struct Stickers {
 /// | Right: | U  | 0 | 0 |
 /// | Left:  | U' | 2 | 3 |
 #[derive(Default, Debug, Clone, Copy)]
-pub struct StickerFace (pub [Color; 4]);
+pub struct TubaiStickerFace (pub [Color; 4]);
 
-impl Index<usize> for StickerFace {
+impl Index<usize> for TubaiStickerFace {
     type Output = Color;
     fn index(&self, index: usize) -> &Self::Output {
 	&self.0[index]
@@ -34,7 +34,7 @@ impl Index<usize> for StickerFace {
 }
 
 impl Cube2 {
-    pub fn from_stickers(s: Stickers) -> Cube2 {
+    pub fn from_stickers(s: TubaiStickers) -> Cube2 {
 	// Piece seq is: right, front, top, left, back, down
 
 	let p_000: Piece = {
@@ -82,28 +82,6 @@ impl Cube2 {
     }
 }
 
-pub const INPUT_FILE_NAME: &str = "tubaitu_input_file";
-pub fn write_blank_slate() -> Result<(), Box<dyn Error>> {
-    let template =
-"   ┏━━┓
-   ┃XX┃
-   ┃XX┃
-┏━━╋━━╋━━┳━━┓
-┃XX┃XX┃XX┃XX┃
-┃XX┃XX┃XX┃XX┃
-┗━━╋━━╋━━┻━━┛
-   ┃XX┃
-   ┃XX┃
-   ┗━━┛";
-
-    let mut file = File::create(INPUT_FILE_NAME)?;
-    file.write(template.as_bytes())?;
-
-    Ok(())
-
-}
-
-
 fn get_next_color(input: &mut impl Iterator<Item = char>, error_s: String) -> Result<Color, Box<dyn Error>> {
     let c = input.next().ok_or(error_s.clone())?;
 
@@ -116,14 +94,10 @@ fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> 
     Ok(())
 }
 
-pub fn read_from_input_file() -> Result<Cube2, Box<dyn Error>> {
-    let input = fs::read_to_string(INPUT_FILE_NAME)?;
-    read_from_string(&input)
-}
-fn read_from_string(input: &str) -> Result<Cube2, Box<dyn Error>> {
-    let error_s: Cow<str> = format!("File {INPUT_FILE_NAME} does not represent a cube (valid or non-valid)").into();
+pub fn read_tubaitu_from_string(input: &str) -> Result<Cube2, Box<dyn Error>> {
+    let error_s: Cow<str> = format!("File {} does not represent a cube (valid or non-valid)", Cube2::INPUT_FILE_NAME).into();
 
-    let mut s = Stickers::default();
+    let mut s = TubaiStickers::default();
 
     let mut input = input.chars();
 

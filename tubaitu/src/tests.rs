@@ -1,6 +1,6 @@
 use shared::{Color, Move, Solvable};
 
-use crate::{cycle_items, cycle_items_old, cycle_items_safe, cycle_items_unchecked, Cube2, Piece, PieceRotation, StickerFace, Stickers};
+use crate::{cycle_items, cycle_items_old, cycle_items_safe, cycle_items_unchecked, Cube2, Piece, PieceRotation, TubaiStickerFace, TubaiStickers};
 
 
 #[test]
@@ -63,14 +63,14 @@ fn redundant_move_double_up() {
 #[test]
 fn stickers_solved_input() {
     use Color as C;
-    let mut s = Stickers::default();
+    let mut s = TubaiStickers::default();
 
-    s.right  = StickerFace([C::Orange, C::Orange, C::Orange, C::Orange]);
-    s.left   = StickerFace([C::Red, C::Red, C::Red, C::Red]);
-    s.top    = StickerFace([C::Yellow, C::Yellow, C::Yellow, C::Yellow]);
-    s.down   = StickerFace([C::White, C::White, C::White, C::White]);
-    s.front  = StickerFace([C::Green, C::Green, C::Green, C::Green]);
-    s.back   = StickerFace([C::Blue, C::Blue, C::Blue, C::Blue]);
+    s.right  = TubaiStickerFace([C::Orange, C::Orange, C::Orange, C::Orange]);
+    s.left   = TubaiStickerFace([C::Red, C::Red, C::Red, C::Red]);
+    s.top    = TubaiStickerFace([C::Yellow, C::Yellow, C::Yellow, C::Yellow]);
+    s.down   = TubaiStickerFace([C::White, C::White, C::White, C::White]);
+    s.front  = TubaiStickerFace([C::Green, C::Green, C::Green, C::Green]);
+    s.back   = TubaiStickerFace([C::Blue, C::Blue, C::Blue, C::Blue]);
 
     let test_cube = Cube2::from_stickers(s);
     let solved_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::WO }; 8] };
@@ -81,14 +81,14 @@ fn stickers_solved_input() {
 #[test]
 fn stickers_afterright_input() {
     use Color as C;
-    let mut s = Stickers::default();
+    let mut s = TubaiStickers::default();
 
-    s.right  = StickerFace([C::Orange, C::Orange, C::Orange, C::Orange]);
-    s.left   = StickerFace([C::Red, C::Red, C::Red, C::Red]);
-    s.top    = StickerFace([C::Yellow, C::Yellow, C::Green, C::Green]);
-    s.down   = StickerFace([C::White, C::White, C::Blue, C::Blue]);
-    s.front  = StickerFace([C::Green, C::Green, C::White, C::White]);
-    s.back   = StickerFace([C::Blue, C::Blue, C::Yellow, C::Yellow]);
+    s.right  = TubaiStickerFace([C::Orange, C::Orange, C::Orange, C::Orange]);
+    s.left   = TubaiStickerFace([C::Red, C::Red, C::Red, C::Red]);
+    s.top    = TubaiStickerFace([C::Yellow, C::Yellow, C::Green, C::Green]);
+    s.down   = TubaiStickerFace([C::White, C::White, C::Blue, C::Blue]);
+    s.front  = TubaiStickerFace([C::Green, C::Green, C::White, C::White]);
+    s.back   = TubaiStickerFace([C::Blue, C::Blue, C::Yellow, C::Yellow]);
 
     let test_cube = Cube2::from_stickers(s);
     let mut righted_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::YG }; 8] };
