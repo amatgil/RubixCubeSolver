@@ -14,17 +14,24 @@ impl<const N: usize> From<[f64; N]> for MatRow<N> {
     fn from(v: [f64; N]) -> Self { MatRow::<N>(v) }
 }
 
-// Elementary transformations on rows (swap elided)
+// Elementary transformations on rows
+// - Swap two rows
+impl<const NROWS: usize>  MatRow<NROWS> {
+    pub fn swap(&mut self, rhs: &mut Self) {
+        std::mem::swap(self, rhs);
+    }
+}
+// - Multiply by scalar
 impl<const NROWS: usize> Mul<f64> for MatRow<NROWS> {
     type Output = Self;
     fn mul(self, lambda: f64) -> Self { MatRow::<NROWS>(self.0.map(|i| i*lambda)) }
 }
-
 impl<const NROWS: usize> Mul<MatRow<NROWS>> for f64 {
     type Output = MatRow<NROWS>;
     fn mul(self, rhs: MatRow<NROWS>) -> Self::Output { MatRow::<NROWS>(rhs.0.map(|i| i*self)) }
 }
 
+// Add/subtract two rows:
 impl<const NROWS: usize> Add for MatRow<NROWS> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
@@ -33,7 +40,6 @@ impl<const NROWS: usize> Add for MatRow<NROWS> {
         MatRow::<NROWS>(out)
     }
 }
-
 impl<const NROWS: usize> Sub for MatRow<NROWS> { 
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
@@ -75,24 +81,21 @@ impl<const N: usize> Matrix<N, N> {
     }
 
     pub fn inverse(&self) -> Option<Self> {
+        let mut original = self.clone();
         let mut inverse = Matrix::<N, N>::ID();
 
-        inverse[1] = inverse[0][0] * inverse[1] - inverse[1][0] * inverse[0];
-        inverse[2] = inverse[0][0] * inverse[2] - inverse[2][0] * inverse[0];
-
-        inverse[0] = inverse[1][1] * inverse[0] - inverse[0][1] * inverse[1];
-        inverse[2] = inverse[1][1] * inverse[2] - inverse[2][1] * inverse[1];
-
-        inverse[0] = inverse[2][2] * inverse[0] - inverse[0][2] * inverse[2];
-        inverse[1] = inverse[2][2] * inverse[1] - inverse[1][2] * inverse[2];
-
-
-        if inverse[0][0] == 0.0 || inverse[1][1] == 0.0 || inverse[2][2] == 0.0 {
-            return None;
+        for i in 0..N {
+            assert!(original[i][i] != 0.0, "Inverse method is not prepared to handle 0s along the main diagonal");
+            original[i] = (1.0/original[i][i]) * original[i];
         }
-        inverse[0] = 1.0/inverse[0][0] * inverse[0];
-        inverse[1] = 1.0/inverse[1][1] * inverse[1];
-        inverse[2] = 1.0/inverse[2][2] * inverse[2];
+
+        for j in 0..N {
+            for i in 0..N {
+                if i == j { continue; }
+                original[i] = original[i] - (original[i][j]*original[j]);
+                inverse[i] = inverse[i] - (inverse[i][j]*inverse[j]);
+            }
+        }
 
         Some(inverse)
     }
@@ -352,4 +355,13 @@ fn inverse_id() {
             [0.0, 0.0, 1.0].into()]
     );
     compare_mats(id.inverse().unwrap().0, correct_id.0);
+}
+
+#[test]
+fn inverse_zero() {
+    assert!(Matrix::<1, 1>::ZERO().inverse().is_none());
+    assert!(Matrix::<2, 2>::ZERO().inverse().is_none());
+    assert!(Matrix::<3, 3>::ZERO().inverse().is_none());
+    assert!(Matrix::<4, 4>::ZERO().inverse().is_none());
+    assert!(Matrix::<5, 5>::ZERO().inverse().is_none());
 }
