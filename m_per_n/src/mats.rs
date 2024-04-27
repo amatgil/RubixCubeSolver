@@ -296,7 +296,7 @@ impl<const NF: usize, const NC: usize> PartialEq for Matrix<NF, NC> {
     fn eq(&self, other: &Self) -> bool {
         for i in 0..NF {
             for j in 0..NC {
-                if self[i][j] - other[i][k] > FLOAT_EPSILON { return false; }
+                if self[i][j] - other[i][j] > FLOAT_EPSILON { return false; }
             }
         }
         true
