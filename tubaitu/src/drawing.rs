@@ -54,8 +54,7 @@ impl DrawablePiece {
         let r = self.radius;
         let c = self.center;
         let mut vertices = [Vec3::new(c.x,c.y,c.z);8];
-
-        for i in 0..7 {
+        for i in 0..8 {
             let point = match i {
                 P_TOP_RIGHT_FRONT    => vertices[0] + Vec3::new( r, -r,  r),  
                 P_TOP_RIGHT_BACK     => vertices[1] + Vec3::new( r,  r,  r),
@@ -106,7 +105,7 @@ impl DrawablePiece {
 
         let center = Vec3::new(self.center.x,self.center.y, self.center.z);
 
-        for i in 0..5 {
+        for i in 0..6 {
             projected_faces[i].distance = furthest_vertex_from_point(faces[i], camera_pos);
 
             let normal_vector = get_normal_vector(faces[i], center);
@@ -184,7 +183,7 @@ impl DrawablePiece {
     fn project_points(vertices: [Vec3;8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
         let projected_points: Matrix::<8,2> = Matrix::<8,2>::ZERO();
         let mut intersections: [Vec3; 8] = [Vec3::ZERO;8];
-        for i in 0..5 {
+        for i in 0..6 {
             let vec = vertices[i] - camera_pos;
             let intersection_option = Self::find_intersection(vertices[i], camera_pos, camera_dir);
             intersections[i] = match intersection_option {
@@ -192,7 +191,7 @@ impl DrawablePiece {
                 None    => Vec3::new(0.0,0.0,0.0),
             };
         }
-        Self::to_xy_plane(vertices,camera_pos,camera_dir)
+        Self::to_xy_plane(intersections,camera_pos,camera_dir)
     }
 
     fn draw(&self, camera_pos: Vec3, camera_dir: Vec3, light_dir: Vec3) -> String {
@@ -208,8 +207,8 @@ impl DrawablePiece {
         for face in projected_faces {
             buffer.push_str(&format!("<polygon points=\""));
             for i in 0..4 {
-                let x:usize = (face.vertices[i][0]*100.0) as usize;
-                let y:usize = (face.vertices[i][1]*100.0) as usize;
+                let x:usize = (face.vertices[i][0]*100.0 + 0.5*WIDTH  as f64) as usize;
+                let y:usize = (face.vertices[i][1]*100.0 + 0.5*HEIGHT as f64) as usize;
                 buffer.push_str(&format!("{x},{y} "));
             }
             let color: usize = (face.brightness*255.0) as usize;
@@ -288,17 +287,21 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube, moves: Vec<Move>, 
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding svg as a String. This is a self-contained frame representing the cube in the given state.
 pub fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
-    let points = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
+    let pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
     
     // Recorda que el radi és DRAWING_PIECE_RADIUS
     format!("{cube} with {mov:?} at with lerp value {lerp_t}");
-    let cam_pos = Vec3::new(10.0, 10.0, 10.0);
+    let cam_pos = Vec3::new(20.0, -20.0, 20.0);
     let cam_dir = Vec3::ZERO - cam_pos;
 
-    let light_pos = Vec3::new(0.0,0.0,20.0);
+    let light_pos = Vec3::new(1.0,1.0,20.0);
     let light_dir = Vec3::ZERO - light_pos;
 
-    todo!();
+    let mut buffer: String = String::new();
+    for piece in pieces {
+        buffer = buffer + &piece.draw(cam_pos, cam_dir, light_dir);
+    }
+    buffer
 }
 
 #[test]
@@ -306,12 +309,22 @@ pub fn get_svg(cube: &Cube, mov: &Move, lerp_t: f64) -> String {
 fn test_drawing_piece() {
     let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0};
 
-    let cam_pos = Vec3::new(20.0, -20.0, 20.0);
+    let cam_pos = (Vec3::new(20.0, -20.0, 20.0))*10.0;
     let cam_dir = Vec3::ZERO - cam_pos;
 
-    let light_pos = Vec3::new(1.0,1.0,20.0);
+    let light_pos = Vec3::new(1.0,1.0,-20.0);
     let light_dir = Vec3::ZERO - light_pos;
-    println!("Hello every body! this should be working!!!");
+
     let buffer = piece.draw(cam_pos, cam_dir, light_dir);
     println!("{}", buffer);
+}
+
+#[test]
+
+fn test_drawing_cube() {
+    let cube = Cube::default();
+    let m = Move{side:MoveSide::R, prime: false};
+    
+    let text = get_svg(&cube,&m,0.0);
+    println!("{}", text);
 }
