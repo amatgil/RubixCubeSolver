@@ -115,7 +115,7 @@ fn reorientation() {
     b.make_move(Move::new("L'"));
 
     let answer = vec![Move::new("R"), Move::new("L'")];
-    assert_eq!(answer, reorient_together(&a, &b).unwrap());
+    assert_eq!(answer, reorient_together(a, b).unwrap());
 }
 
 #[test]
@@ -128,5 +128,5 @@ fn reorientation2() {
     b.make_move(Move::new("D'"));
 
     let answer = vec![Move::new("U"), Move::new("D"), Move::new("U"), Move::new("D")];
-    assert_eq!(answer, reorient_together(&a, &b).unwrap());
+    assert_eq!(answer, reorient_together(a, b).unwrap());
 }

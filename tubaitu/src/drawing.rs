@@ -353,6 +353,6 @@ fn test_drawing_cube() {
     let cube = Cube2::default();
     let m = Move{side:MoveSide::R, prime: false};
     
-    let text = get_svg(&cube,&m,0.0);
+    let text = get_svg(cube,m,0.0);
     println!("{}", text);
 }

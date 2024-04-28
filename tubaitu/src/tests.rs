@@ -32,30 +32,30 @@ fn cycling_test_unchecked() {
 #[test]
 fn redundant_move_right() {
     let mut cube = Cube2::default();
-    cube.make_move(&Move::new("R"));
-    cube.make_move(&Move::new("R"));
-    cube.make_move(&Move::new("R"));
-    cube.make_move(&Move::new("R"));
+    cube.make_move(Move::new("R"));
+    cube.make_move(Move::new("R"));
+    cube.make_move(Move::new("R"));
+    cube.make_move(Move::new("R"));
     assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn redundant_move_up() {
     let mut cube = Cube2::default();
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
+    cube.make_move(Move::new("U"));
+    cube.make_move(Move::new("U"));
+    cube.make_move(Move::new("U"));
+    cube.make_move(Move::new("U"));
     assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn redundant_move_double_up() {
     let mut cube = Cube2::default();
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U"));
-    cube.make_move(&Move::new("U'"));
-    cube.make_move(&Move::new("U'"));
+    cube.make_move(Move::new("U"));
+    cube.make_move(Move::new("U"));
+    cube.make_move(Move::new("U'"));
+    cube.make_move(Move::new("U'"));
     assert_eq!(cube, Cube2::default());
 }
 
@@ -92,7 +92,7 @@ fn stickers_afterright_input() {
 
     let test_cube = Cube2::from_stickers(s);
     let mut righted_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::YG }; 8] };
-    righted_cube.make_move(&Move::new("R"));
+    righted_cube.make_move(Move::new("R"));
     dbg!(righted_cube);
 
     assert!(test_cube == righted_cube)
