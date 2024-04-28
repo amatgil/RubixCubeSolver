@@ -259,7 +259,6 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         c
     }
     fn random_scramble(length: usize) -> (Self, MoveSeq) {
-        use rand::Rng;
         fn get_move_from_n(n: usize) -> Move {
             match n % 12 {
                 0 => Move::new("R"),
@@ -280,7 +279,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
 
         let mut scramble = vec![];
         for _ in 0..length {
-            scramble.push(get_move_from_n(rand::thread_rng().gen_range(0..12)))
+            scramble.push(get_move_from_n(random_number_in_range(12)))
         }
 
         let c = Self::scramble(&scramble.clone().into());
@@ -556,4 +555,14 @@ pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
 
 pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
     [d, c, b, a]
+}
+
+
+pub fn random_number_in_range(max: usize) -> usize {
+    let nanos: usize = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap().subsec_nanos()
+        .try_into().unwrap();
+
+    nanos % max
 }

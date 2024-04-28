@@ -7,8 +7,7 @@ edition = "2021"
 
 [workspace]
 members = [
-    "tubaitu",
-    "m_per_n", "tribaitri", "shared",
+        "shared", "m_per_n", "tubaitu",  "tribaitri", 
 ]
 
 [dependencies]
@@ -17,7 +16,6 @@ tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
 
 [workspace.dependencies]
-rand = { version = "0.8.5", features = ["small_rng"] }
 
 [profile.release]
 opt-level = 3

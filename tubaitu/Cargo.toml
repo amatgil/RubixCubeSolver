@@ -5,14 +5,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dev-dependencies]
-criterion = "0.5.1"
-
-[[bench]]
-name = "cycling_benchmark"
-harness = false
-
 [dependencies]
-rand = { workspace = true }
 m_per_n = { path = "../m_per_n" }
 shared = { path = "../shared" }
