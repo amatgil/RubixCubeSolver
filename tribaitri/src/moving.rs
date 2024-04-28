@@ -1,5 +1,7 @@
 use crate::*;
 
+#[allow(clippy::upper_case_acronyms)]
+
 /// Assigning variants (numbers from the discriminants) based on their three colors. These are always valid, even when unsolved, because the centers never move
 /// Numbering goes from 0..7, after which come the edges (Different enum, ThreeByEdge)
 #[repr(u8)]

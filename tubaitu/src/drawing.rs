@@ -1,7 +1,7 @@
 use m_per_n::*;
 use crate::*;
 
-use std::fs::{self, File};
+use std::fs;
 use std::io::Write;
 use std::cmp::Ordering;
 use m_per_n::Vec3;
@@ -25,7 +25,7 @@ fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64{
         let dist = (vertex - point).abs();
         if dist > max_dist { max_dist = dist }
     }
-    return max_dist;
+    max_dist
 }
 
 #[derive(Copy, Clone)]
@@ -234,7 +234,7 @@ impl DrawablePiece {
 
         buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
         for face in projected_faces {
-            buffer.push_str(&format!("<polygon points=\""));
+            buffer.push_str("<polygon points=\"");
             for i in 0..4 {
                 let x:usize = (face.vertices[i][0]*100.0 + 0.5*WIDTH  as f64) as usize;
                 let y:usize = (face.vertices[i][1]*100.0 + 0.5*HEIGHT as f64) as usize;
@@ -243,9 +243,9 @@ impl DrawablePiece {
             let color: usize = (face.brightness*255.0) as usize;
             buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color,color,color));
         }
-        buffer.push_str(&format!("</svg>\n"));
+        buffer.push_str("</svg>\n");
 
-    return buffer;
+        buffer
     }
 }
 
@@ -264,7 +264,7 @@ struct DrawableCube {
 
 const DRAWING_PIECE_RADIUS: f64 = 10.0;
 impl Cube2 {
-    fn to_points(&self) -> DrawableCube {
+    fn to_points(self) -> DrawableCube {
         let r = DRAWING_PIECE_RADIUS;
         let mut drawable_pieces = [DrawablePiece::default(); 8 ];
 
@@ -294,7 +294,7 @@ impl Cube2 {
 }
 
 pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: Vec<Move>, n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
-    let mut cube: Cube2 = starting_cube.clone();
+    let mut cube: Cube2 = *starting_cube;
 
     for (i, mov) in moves.iter().enumerate() {
         let i = i * n_in_between_frames;
@@ -302,10 +302,10 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: Vec<Move>,
             let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
             let filename = format!("{file_prefix}_{:>04}", i + inbetween_index);
 
-            let svg: String = get_svg(&cube, &mov, lerp_t);
+            let svg: String = get_svg(&cube, mov, lerp_t);
             
             let mut file: fs::File = fs::File::create(filename)?;
-            file.write(svg.as_bytes())?;
+            file.write_all(svg.as_bytes())?;
         }
         cube.make_move(mov);
     }

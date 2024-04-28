@@ -42,7 +42,7 @@ fn advance_bfs<C: Solvable>(
         let past_moves = &rc_state.past_moves;
         let x = &rc_state.cube;
         for (m, y) in find_adjacents(x) {
-            let new_moves = append_move(&past_moves, m);
+            let new_moves = append_move(past_moves, m);
             let new_state = Rc::new(State {
                 past_moves: new_moves.clone(),
                 cube: y,
@@ -62,8 +62,8 @@ fn have_we_seen_this_state_before<C: Solvable>(
     seen.contains(&new) // Equality only depends on the cube
 }
 
-fn append_move(old: &Vec<Move>, m: Move) -> Vec<Move> {
-    let mut new = old.clone();
+fn append_move(old: &[Move], m: Move) -> Vec<Move> {
+    let mut new = old.to_owned();
     new.push(m);
     new
 }
@@ -161,7 +161,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("[INFO]: Checking correctness...");
         let mut checking_cube = cube.clone();
         for m in &r.0 {
-            checking_cube.make_move(&m)
+            checking_cube.make_move(m)
         }
 
         println!("Starting cube:\n{cube}\n");
@@ -255,7 +255,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
 
     fn scramble(moves: &MoveSeq) -> Self {
         let mut c = Self::default();
-        for m in moves.iter() { c.make_move(&m) }
+        for m in moves.iter() { c.make_move(m) }
         c
     }
     fn random_scramble(length: usize) -> (Self, MoveSeq) {

@@ -21,19 +21,13 @@ use input::*;
 ///
 /// Internally, it is represented by the 6 edges and 14 corners only. Their indicies are defined by the corresponding ThreeByCorner and ThreeByEdge enums.
 /// Note that equality is direct here, unlike a 2x2: there are no symmetries to speak of because the centers ground us
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+/// The Default cube is the solved `YO` cube
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Default)]
 pub struct Cube3 {
     pieces: [Piece; 3*3*3 - 1 - 6], // 20: edges + corners
 }
 
 
-impl Default for Cube3 {
-    fn default() -> Self {
-
-        Self{ pieces: [Piece::default(); 20] }
-    }
-}
-    
 impl Solvable for Cube3 {
     const INPUT_FILE_NAME: &'static str = "tribaitri_input_file";
     fn moves_of_adjacency() -> Vec<Move> {
@@ -62,15 +56,15 @@ impl Solvable for Cube3 {
 
 pub const CUBE_PRINT_WIDTH: usize = 3*4 + 5 + 1;
 pub const CUBE_PRINT_HEIGHT: usize = 3*3 + 3 + 1;
-const CUBE_PRINT_HORIZ_DIVIDER_TMP: u8 = '-' as u8;
-const CUBE_PRINT_VERTI_DIVIDER_TMP: u8 = '|' as u8;
-const CUBE_PRINT_CROSS_DIVIDER_TMP: u8 = '+' as u8;
-const CUBE_PRINT_TOP_L_DIVIDER_TMP: u8 = '1' as u8;
-const CUBE_PRINT_TOP_R_DIVIDER_TMP: u8 = '2' as u8;
-const CUBE_PRINT_BOT_L_DIVIDER_TMP: u8 = '3' as u8;
-const CUBE_PRINT_BOT_R_DIVIDER_TMP: u8 = '4' as u8;
-const CUBE_PRINT_NORMT_DIVIDER_TMP: u8 = '5' as u8;
-const CUBE_PRINT_UPSDT_DIVIDER_TMP: u8 = '6' as u8;
+const CUBE_PRINT_HORIZ_DIVIDER_TMP: u8 = b'-';
+const CUBE_PRINT_VERTI_DIVIDER_TMP: u8 = b'|';
+const CUBE_PRINT_CROSS_DIVIDER_TMP: u8 = b'+';
+const CUBE_PRINT_TOP_L_DIVIDER_TMP: u8 = b'1';
+const CUBE_PRINT_TOP_R_DIVIDER_TMP: u8 = b'2';
+const CUBE_PRINT_BOT_L_DIVIDER_TMP: u8 = b'3';
+const CUBE_PRINT_BOT_R_DIVIDER_TMP: u8 = b'4';
+const CUBE_PRINT_NORMT_DIVIDER_TMP: u8 = b'5';
+const CUBE_PRINT_UPSDT_DIVIDER_TMP: u8 = b'6';
 
 const CUBE_PRINT_HORIZ_DIVIDER: char = '━';
 const CUBE_PRINT_VERTI_DIVIDER: char = '┃';
@@ -152,16 +146,16 @@ const DOWN_PRINTING_CYCLE: [usize; 8] = [
 impl Display for Cube3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 	let mut buffer: [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT] =
-	    [' ' as u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT];
+	    [b' '; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT];
 
 
-	for y in 0..CUBE_PRINT_HEIGHT - 1 { buffer[xy_to_idx(CUBE_PRINT_WIDTH - 1, y)] = '\n' as u8 }
+	for y in 0..CUBE_PRINT_HEIGHT - 1 { buffer[xy_to_idx(CUBE_PRINT_WIDTH - 1, y)] = b'\n' }
 	for y in [4, 8] {
-	    for x in 0..CUBE_PRINT_WIDTH - 1 { buffer[xy_to_idx(x, y)] = '-' as u8 } 
+	    for x in 0..CUBE_PRINT_WIDTH - 1 { buffer[xy_to_idx(x, y)] = b'-' } 
 	}
 
 	for y in [0, CUBE_PRINT_HEIGHT - 1] {
-	    for x in 5..=8 - 1 { buffer[xy_to_idx(x, y)] = '-' as u8 } 
+	    for x in 5..=8 - 1 { buffer[xy_to_idx(x, y)] = b'-' } 
 	}
 
         print_add_face(&mut buffer, &self.pieces, 2, UP_PRINTING_CYCLE,    5, 1, Color::Yellow);
@@ -176,6 +170,7 @@ impl Display for Cube3 {
     }
 }
 #[rustfmt::skip]
+#[allow(clippy::identity_op)]
 fn print_add_face(
     buffer: &mut [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT],
     p: &[Piece; 20],
@@ -189,10 +184,10 @@ fn print_add_face(
     buffer[xy_to_idx(start_x + 1, start_y + 0)] = p[seq[1]].to_color_sequence()[n].to_string().bytes().next().unwrap();
     buffer[xy_to_idx(start_x + 2, start_y + 0)] = p[seq[2]].to_color_sequence()[n].to_string().bytes().next().unwrap();
     buffer[xy_to_idx(start_x + 0, start_y + 1)] = p[seq[3]].to_color_sequence()[n].to_string().bytes().next().unwrap();
+    buffer[xy_to_idx(start_x + 1, start_y + 1)] = center_color.to_string().bytes().next().unwrap();
     buffer[xy_to_idx(start_x + 2, start_y + 1)] = p[seq[4]].to_color_sequence()[n].to_string().bytes().next().unwrap();
     buffer[xy_to_idx(start_x + 0, start_y + 2)] = p[seq[5]].to_color_sequence()[n].to_string().bytes().next().unwrap();
     buffer[xy_to_idx(start_x + 1, start_y + 2)] = p[seq[6]].to_color_sequence()[n].to_string().bytes().next().unwrap();
     buffer[xy_to_idx(start_x + 2, start_y + 2)] = p[seq[7]].to_color_sequence()[n].to_string().bytes().next().unwrap();
 
-    buffer[xy_to_idx(start_x + 1, start_y + 1)] = center_color.to_string().bytes().next().unwrap();
 }

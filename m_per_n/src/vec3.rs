@@ -31,11 +31,11 @@ impl Vec3 {
         }
     }
     pub fn cross_product(self, rhs: Vec3) -> Vec3 {
-        return Vec3 {
+        Vec3 {
             x: self.y*rhs.z - self.z*rhs.y,
             y: self.z*rhs.x - self.x*rhs.z,
             z: self.x*rhs.y - self.y*rhs.x
-        };
+        }
     }
 
     pub fn dot_product(self, rhs: Vec3) -> f64 {

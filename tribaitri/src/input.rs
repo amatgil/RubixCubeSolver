@@ -22,7 +22,7 @@ pub fn write_three_file() -> Result<(), Box<dyn std::error::Error>>{
     ┗━━━┛";
 
     let mut file = File::create(Cube3::INPUT_FILE_NAME)?;
-    file.write(template.as_bytes())?;
+    file.write_all(template.as_bytes())?;
 
     Ok(())
 }

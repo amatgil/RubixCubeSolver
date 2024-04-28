@@ -99,7 +99,7 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
             }
                 
         };
-        copy.0.sort_by(|a, b| comparator(a, b));
+        copy.0.sort_by(comparator);
         copy
     }
 }
@@ -150,7 +150,7 @@ impl<const NF: usize, const NC: usize> Mul<f64> for Matrix<NF, NC> {
     type Output = Matrix<NF, NC>;
     fn mul(mut self, rhs: f64) -> Self::Output {
         for y in 0..NF {
-            for x in 0..NC { self.0[y][x] = self.0[y][x]*rhs }
+            for x in 0..NC { self.0[y][x] *= rhs }
         }
         self
     }
@@ -161,7 +161,7 @@ impl<const NF: usize, const NC: usize> Mul<Matrix<NF, NC>> for f64 {
     type Output = Matrix<NF, NC>;
     fn mul(self, mut rhs: Matrix<NF, NC>) -> Self::Output {
         for y in 0..NF {
-            for x in 0..NC { rhs.0[y][x] = rhs.0[y][x]*self }
+            for x in 0..NC { rhs.0[y][x] *= self }
         }
         rhs
     }

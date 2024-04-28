@@ -44,8 +44,8 @@ fn inverse_helper<const N: usize, const N_TIMES_TWO: usize>(m: &Matrix<N, N>) ->
 
 
     // Transform to reduced row echelon form, propagating down
-    for j in (0..N).into_iter() {
-        for i in (0..N).into_iter() {
+    for j in 0..N {
+        for i in 0..N {
             if i == j { continue; } // Don't touch the pivots
             aug[i] = aug[i] - aug[i][j]*aug[j];
         }

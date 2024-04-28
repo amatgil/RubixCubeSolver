@@ -81,7 +81,7 @@ impl Solvable for Cube2 {
    ┗━━┛";
 
         let mut file = File::create(Self::INPUT_FILE_NAME)?;
-        file.write(template.as_bytes())?;
+        file.write_all(template.as_bytes())?;
 
         Ok(())
 
