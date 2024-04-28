@@ -104,6 +104,7 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     }
 }
 
+
 /// Square impls
 impl<const N: usize> Matrix<N, N> {
     #[allow(non_snake_case)]
@@ -116,25 +117,26 @@ impl<const N: usize> Matrix<N, N> {
         }
         out
     }
-    pub fn inverse(&self) -> Option<Self> {
+    pub fn inverse>(&self) -> Option<Self> {
         // Applying these steps to our original matrix will reduce it to the identity, meaning 'inverse' will now be self^(-1)
         let mut m = self.clone();
         let mut inverse = Matrix::<N, N>::ID(); // Starts as ID, will become our result
 
-        //const AUG_WIDTH: usize = N; // ????
-        //let mut augmented = Matrix::<N, {2*N}>::ZERO();
+        const A: usize = 2*N;
+        let mut augmented = Matrix::<N, A>::ZERO();
 
         // Transform to row echelon form
         //   Align by pivot
         m = m.sort_by_pivot_position();
-        if m[0][0] < FLOAT_EPSILON { return None; } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
-        if m[N - 1].0.iter().all(|&e| e < FLOAT_EPSILON) { return None; } // Last row is zero, rank isn't full, no inverse exists
+        if are_equal(m[0][0], 0.0) { return dbg!(None); } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
+        if m[N - 1].0.iter().all(|&e| are_equal(e, 0.0)) { return dbg!(None); } // Last row is zero, rank isn't full, no inverse exists
 
         for j in 0..N {
             println!("Pre\n{m}");
             m = m.sort_by_pivot_position();
             println!("Post\n{m}");
-            if m[j][j] < FLOAT_EPSILON { return None; }  // Row full of zeros, no inverse! (assuming sorted-by-pivot rows)
+            dbg!(j);
+            if are_equal(m[j][j], 0.0) { return dbg!(None); }  // Row full of zeros, no inverse! (assuming sorted-by-pivot rows)
             m[j] = (1.0 / m[j][j]) * m[j]; // Set pivot to 1
             inverse[j] = (1.0 / m[j][j]) * inverse[j];
 
@@ -591,4 +593,9 @@ fn three_by_three_inverse_again() {
         [1.0625, -0.25, -0.34375].into()
     ]);
     compare_mats(a.inverse().unwrap(), inv_a);
+}
+
+
+fn are_equal(a: f64, b: f64) -> bool {
+    (a - b).abs() < FLOAT_EPSILON
 }
