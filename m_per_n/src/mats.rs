@@ -117,33 +117,37 @@ impl<const N: usize> Matrix<N, N> {
         }
         out
     }
-    pub fn inverse>(&self) -> Option<Self> {
+    pub fn inverse(&self) -> Option<Self> {
         // Applying these steps to our original matrix will reduce it to the identity, meaning 'inverse' will now be self^(-1)
-        let mut m = self.clone();
-        let mut inverse = Matrix::<N, N>::ID(); // Starts as ID, will become our result
+        let mut identity = Matrix::<N, N>::ID(); 
 
         const A: usize = 2*N;
         let mut augmented = Matrix::<N, A>::ZERO();
+        for i in 0..N {
+            for j in 0..N {
+                augmented[i][j] = self[i][j];
+                augmented[i][j + N] = identity[i][j];
+            }
+        }
 
         // Transform to row echelon form
         //   Align by pivot
-        m = m.sort_by_pivot_position();
-        if are_equal(m[0][0], 0.0) { return dbg!(None); } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
-        if m[N - 1].0.iter().all(|&e| are_equal(e, 0.0)) { return dbg!(None); } // Last row is zero, rank isn't full, no inverse exists
+        augmented = augmented.sort_by_pivot_position();
+
+        if are_equal(augmented[0][0], 0.0) { return dbg!(None); } // If the first pivot isn't on the first column, there must be a column of zeros. Rank isn't full, no inverse available
+        if augmented[N - 1].0.iter().take(N).all(|&e| are_equal(e, 0.0)) { return dbg!(None); } // Last row is zero, rank isn't full, no inverse exists
 
         for j in 0..N {
-            println!("Pre\n{m}");
-            m = m.sort_by_pivot_position();
-            println!("Post\n{m}");
+            println!("Pre\n{augmented}");
+            augmented = augmented.sort_by_pivot_position();
+            println!("Post\n{augmented}");
             dbg!(j);
-            if are_equal(m[j][j], 0.0) { return dbg!(None); }  // Row full of zeros, no inverse! (assuming sorted-by-pivot rows)
-            m[j] = (1.0 / m[j][j]) * m[j]; // Set pivot to 1
-            inverse[j] = (1.0 / m[j][j]) * inverse[j];
+            if are_equal(augmented[j][j], 0.0) { return dbg!(None); }  // Row full of zeros, no inverse! (assuaugmenteding sorted-by-pivot rows)
+            augmented[j] = (1.0 / augmented[j][j]) * augmented[j]; // Set pivot to 1
 
             for i in (j+1)..N { // Set all numbers below first pivot to 1
-                println!("{m}");
-                m[i] = m[i] - (m[i][j]*m[j]);
-                inverse[i] = inverse[i] - (m[i][j]*inverse[j]);
+                println!("{augmented}");
+                augmented[i] = augmented[i] - (augmented[i][j]*augmented[j]);
             }
         }
 
@@ -154,10 +158,17 @@ impl<const N: usize> Matrix<N, N> {
         for j in (0..N).into_iter().rev() {
             for i in (0..N).into_iter().rev() {
                 if i == j { continue; }
-                m[i] = m[i] - m[i][j]*m[j];
-                inverse[i] = inverse[i] - m[i][j]*inverse[j];
+                augmented[i] = augmented[i] - augmented[i][j]*augmented[j];
             }
-            println!("{m}");
+            println!("{augmented}");
+        }
+
+        // Extract answer
+        let mut inverse = Matrix::<N, N>::ZERO();
+        for i in 0..N {
+            for j in 0..N {
+                inverse[i][j] = augmented[i][j + N];
+            }
         }
 
 
