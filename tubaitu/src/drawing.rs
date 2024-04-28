@@ -28,6 +28,33 @@ fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64{
     max_dist
 }
 
+#[derive(Copy, Clone, Default)]
+struct OrderedPiece {
+    distance: f64,
+    piece: DrawablePiece,
+}
+
+impl PartialEq for OrderedPiece {
+    fn eq(&self, other: &Self) -> bool {
+            (self.distance - other.distance).abs() < FLOAT_EPSILON
+    }
+}
+
+impl Eq for OrderedPiece {}
+
+impl PartialOrd for OrderedPiece {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for OrderedPiece {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.distance < other.distance {Ordering::Less}
+        else if self.distance > other.distance {Ordering::Greater}
+        else {Ordering::Equal}
+    }
+}
+
 #[derive(Copy, Clone)]
 struct Quadrilateral {
     distance: f64,
@@ -220,19 +247,14 @@ impl DrawablePiece {
     fn draw(&self, camera_pos: Vec3, camera_dir: Vec3, light_dir: Vec3) -> String {
         let vertices = self.get_vertex_positions();
         let projected_vertices = Self::project_points(vertices, camera_pos, camera_dir);
-        /*for vertex in vertices {
-            println!("{}, {}, {}", vertex.x, vertex.y, vertex.z);
-        }
-        for vertex in projected_vertices.0 {
-            println!("{}, {}", vertex[0], vertex[1]);
-        }*/
+
         let mut projected_faces = self.get_polygons_with_brightness(light_dir, camera_pos, vertices, projected_vertices);
         // Sorts the polygons from furthest to nearest.
         projected_faces.sort_by(|a,b| b.cmp(a));
         
         let mut buffer = String::new();
 
-        buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
+        
         for face in projected_faces {
             buffer.push_str("<polygon points=\"");
             for i in 0..4 {
@@ -243,7 +265,6 @@ impl DrawablePiece {
             let color: usize = (face.brightness*255.0) as usize;
             buffer.push_str(&format!("\" fill=\"#{color:02x}{color:02x}{color:02x}\" stroke=\"none\"/>\n"));
         }
-        buffer.push_str("</svg>\n");
 
         buffer
     }
@@ -325,12 +346,27 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     let light_pos = Vec3::new(10.0,20.0,-30.0);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let mut buffer: String = String::new();
+    let mut ordered_pieces:[OrderedPiece;8] = [OrderedPiece::default();8];
     
-
-    for piece in pieces {
-        buffer.push_str(&piece.draw(cam_pos, cam_dir, light_dir));
+    for (i, piece) in pieces.iter().enumerate() {
+        let distance = (Vec3::new(piece.center.x, piece.center.y, piece.center.z) - cam_pos).abs();
+        ordered_pieces[i] = OrderedPiece{distance, piece: *piece};
     }
+
+    ordered_pieces.sort_by(|a, b| b.cmp(a));
+
+
+    let mut buffer: String = String::new();
+
+    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
+
+
+    for piece in ordered_pieces {
+        buffer.push_str(&piece.piece.draw(cam_pos, cam_dir, light_dir));
+    }
+
+    buffer.push_str("</svg>\n");
+
     buffer
 }
 
