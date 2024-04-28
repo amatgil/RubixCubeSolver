@@ -3,7 +3,7 @@ use crate::*;
 #[allow(clippy::upper_case_acronyms)]
 
 /// Assigning variants (numbers from the discriminants) based on their three colors. These are always valid, even when unsolved, because the centers never move
-/// Numbering goes from 0..7, after which come the edges (Different enum, ThreeByEdge)
+/// Numbering goes from 0..7, after which come the edges (Different enum, `ThreeByEdge`)
 #[repr(u8)]
 pub enum ThreeByCorner {
     WRB = 0,
@@ -58,7 +58,7 @@ pub const DOWN_CORNER_CYCLE:  [ThreeByCorner; 4] = [ThreeByCorner::WBO, ThreeByC
 /// | Right | Blue         |
 /// | Front | Orange       |
 /// | Back  | Red          |
-pub(crate) fn make_three_by_three_move(cube: &mut Cube3, m: &Move) {
+pub(crate) fn make_three_by_three_move(cube: &mut Cube3, m: Move) {
     // Cycle arestes
     match m {
         Move { side: MoveSide::R, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, RIGHT_EDGE_CYCLE.map(|v| v as usize), m),

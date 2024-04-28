@@ -58,26 +58,26 @@ impl Piece {
 	[right, front, top, left, back, down]
     }
 
-    pub fn rotate(&mut self, mov: &Move) {
+    pub fn rotate(&mut self, mov: Move) {
 	let [right, front, top, left, back, down] = self.to_color_sequence();
 	let new_colors: [Color; 6] = match mov {
-	    &Move { side: MoveSide::R, prime: false }
-	    | &Move { side: MoveSide::L, prime: true }
+	    Move { side: MoveSide::R, prime: false }
+	    | Move { side: MoveSide::L, prime: true }
 	    => [right, down, front, left, top, back],
-	    &Move { side: MoveSide::L, prime: false }
-	    | &Move { side: MoveSide::R, prime: true }
+	    Move { side: MoveSide::L, prime: false }
+	    | Move { side: MoveSide::R, prime: true }
 	    => [right, top, back, left, down, front],
-	    &Move { side: MoveSide::U, prime: false }
-	    | &Move { side: MoveSide::D, prime: true }
+	    Move { side: MoveSide::U, prime: false }
+	    | Move { side: MoveSide::D, prime: true }
 	    => [back, right, top, front, left, down],
-	    &Move { side: MoveSide::D, prime: false }
-	    | &Move { side: MoveSide::U, prime: true }
+	    Move { side: MoveSide::D, prime: false }
+	    | Move { side: MoveSide::U, prime: true }
 	    => [front, left, top, back, right, down],
-	    &Move { side: MoveSide::F, prime: false }
-	    | &Move { side: MoveSide::B, prime: true }
+	    Move { side: MoveSide::F, prime: false }
+	    | Move { side: MoveSide::B, prime: true }
 	    => [top, front, left, down, back, right],
-	    &Move { side: MoveSide::B, prime: false }
-	    | &Move { side: MoveSide::F, prime: true }
+	    Move { side: MoveSide::B, prime: false }
+	    | Move { side: MoveSide::F, prime: true }
 	    => [down, front, right, top, back, left],
 	};
 

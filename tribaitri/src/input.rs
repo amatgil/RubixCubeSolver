@@ -27,15 +27,15 @@ pub fn write_three_file() -> Result<(), Box<dyn std::error::Error>>{
     Ok(())
 }
 
-fn get_next_color(input: &mut impl Iterator<Item = char>, error_s: String) -> Result<Color, Box<dyn Error>> {
-    let c = input.next().ok_or(error_s.clone())?;
+fn get_next_color(input: &mut impl Iterator<Item = char>, error_s: &str) -> Result<Color, Box<dyn Error>> {
+    let c = input.next().ok_or(error_s.to_string())?;
 
     let col = Color::from(c);
     col.ok_or(format!("{c} is not a valid color").into())
 }
 
-fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> Result<(), String>{
-    for _ in 0..n { input.next().ok_or(e.clone())?; }
+fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: &str) -> Result<(), String>{
+    for _ in 0..n { input.next().ok_or(e.to_string())?; }
     Ok(())
 }
 

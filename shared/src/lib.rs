@@ -74,7 +74,7 @@ fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
     let mut t = Vec::new();
     for mov in moviments {
         let mut alt = x.clone();
-        alt.make_move(&mov);
+        alt.make_move(mov);
         t.push((mov, alt))
     }
     t
@@ -82,7 +82,7 @@ fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
 
 pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn moves_of_adjacency() -> Vec<Move>;
-    fn make_move(&mut self, movimement: &Move);
+    fn make_move(&mut self, movimement: Move);
     const INPUT_FILE_NAME: &'static str;
     fn write_blank_slate() -> Result<(), Box<dyn Error>>;
     fn read_from_slate() -> Result<Self, Box<dyn Error>>;
@@ -113,7 +113,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         let time_taken = starting_instant.elapsed();
 
         for m in &r.0 {
-            cube.make_move(m)
+            cube.make_move(*m)
         }
         println!("Final state:\n{cube}");
 
@@ -161,7 +161,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("[INFO]: Checking correctness...");
         let mut checking_cube = cube.clone();
         for m in &r.0 {
-            checking_cube.make_move(m)
+            checking_cube.make_move(*m)
         }
 
         println!("Starting cube:\n{cube}\n");
@@ -236,7 +236,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("[INFO]: Verifying solution...");
         let mut test_cube = self.clone();
         for m in &path_from_unsolved {
-            test_cube.make_move(m);
+            test_cube.make_move(*m);
         }
         if test_cube == Self::default() { println!("[INFO]: Verification succeeded") }
         else { println!("[ERROR]: Verification incorrect, missing moves for linking rotation") }
@@ -246,16 +246,16 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn cycle_elements<const N: usize>(
         pieces: &mut [Piece; N],
         mut seq: [usize; 4],
-        mov @ Move { side: _, prime }: &Move,
+        mov @ Move { side: _, prime }: Move,
     ) {
-        if *prime { seq = reverse_seq(seq); }
+        if prime { seq = reverse_seq(seq); }
         cycle_items(pieces, seq); // Move the pieces
         for i in seq { pieces[i].rotate(mov) } // Rotate the pieces we just cycled around
     }
 
     fn scramble(moves: &MoveSeq) -> Self {
         let mut c = Self::default();
-        for m in moves.iter() { c.make_move(m) }
+        for m in moves.iter() { c.make_move(*m) }
         c
     }
     fn random_scramble(length: usize) -> (Self, MoveSeq) {

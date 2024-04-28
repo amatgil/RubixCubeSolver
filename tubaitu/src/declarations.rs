@@ -13,8 +13,8 @@ impl std::cmp::PartialEq for Cube2 {
         for o in &get_orientation_generators() {
             for r in &get_rotation_generators() {
                 let mut alternate_cube = *self;
-                for m1 in o { alternate_cube.make_move(m1) }
-                for m2 in r { alternate_cube.make_move(m2) }
+                for m1 in o { alternate_cube.make_move(*m1) }
+                for m2 in r { alternate_cube.make_move(*m2) }
                 if alternate_cube.pieces == other.pieces { return true; }
             }
         }
@@ -60,7 +60,7 @@ impl std::fmt::Display for Cube2 {
 	    for x in 0..CUBE_PRINT_WIDTH - 1 { buffer[xy_to_idx(x, y)] = CUBE_PRINT_HORIZ_DIVIDER_TMP } 
 	}
 	for y in [0, CUBE_PRINT_HEIGHT - 1] {
-	    for x in 4..=6 - 1 { buffer[xy_to_idx(x, y)] = CUBE_PRINT_HORIZ_DIVIDER_TMP } 
+	    for x in 4..6  { buffer[xy_to_idx(x, y)] = CUBE_PRINT_HORIZ_DIVIDER_TMP } 
 	}
 
 	// Verticals
@@ -87,12 +87,12 @@ impl std::fmt::Display for Cube2 {
 	    for y in [3, 6] { buffer[xy_to_idx(x, y)] = CUBE_PRINT_CROSS_DIVIDER_TMP; }
 	}
 
-        print_add_face(&mut buffer, &self.pieces, 2, FACE_UP_SEQ_PRINT,    4,  1);
-        print_add_face(&mut buffer, &self.pieces, 3, FACE_LEFT_SEQ_PRINT,  1,  4);
-        print_add_face(&mut buffer, &self.pieces, 1, FACE_FRONT_SEQ_PRINT, 4,  4);
-        print_add_face(&mut buffer, &self.pieces, 0, FACE_RIGHT_SEQ_PRINT, 7,  4);
-        print_add_face(&mut buffer, &self.pieces, 4, FACE_BACK_SEQ_PRINT,  10, 4);
-        print_add_face(&mut buffer, &self.pieces, 5, FACE_DOWN_SEQ_PRINT,  4,  7);
+        print_add_face(&mut buffer, self.pieces, 2, FACE_UP_SEQ_PRINT,    4,  1);
+        print_add_face(&mut buffer, self.pieces, 3, FACE_LEFT_SEQ_PRINT,  1,  4);
+        print_add_face(&mut buffer, self.pieces, 1, FACE_FRONT_SEQ_PRINT, 4,  4);
+        print_add_face(&mut buffer, self.pieces, 0, FACE_RIGHT_SEQ_PRINT, 7,  4);
+        print_add_face(&mut buffer, self.pieces, 4, FACE_BACK_SEQ_PRINT,  10, 4);
+        print_add_face(&mut buffer, self.pieces, 5, FACE_DOWN_SEQ_PRINT,  4,  7);
 
 	let s = std::str::from_utf8(&buffer).expect("invalid utf-8 sequence (should be impossible)");
 
@@ -111,14 +111,14 @@ impl std::fmt::Display for Cube2 {
 	    }
 	}).collect();
 
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 
 }
 
 fn print_add_face(
     buffer: &mut [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT],
-    p: &[Piece; 8],
+    p: [Piece; 8],
     n: usize,
     seq: [usize; 4],
     start_x: usize,

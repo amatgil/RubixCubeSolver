@@ -241,7 +241,7 @@ impl DrawablePiece {
                 buffer.push_str(&format!("{x},{y} "));
             }
             let color: usize = (face.brightness*255.0) as usize;
-            buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color,color,color));
+            buffer.push_str(&format!("\" fill=\"#{color:02x}{color:02x}{color:02x}\" stroke=\"none\"/>\n"));
         }
         buffer.push_str("</svg>\n");
 
@@ -293,7 +293,7 @@ impl Cube2 {
     }
 }
 
-pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: Vec<Move>, n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
+pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: &[Move], n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
     let mut cube: Cube2 = *starting_cube;
 
     for (i, mov) in moves.iter().enumerate() {
@@ -302,12 +302,12 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: Vec<Move>,
             let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
             let filename = format!("{file_prefix}_{:>04}", i + inbetween_index);
 
-            let svg: String = get_svg(&cube, mov, lerp_t);
+            let svg: String = get_svg(cube, *mov, lerp_t);
             
             let mut file: fs::File = fs::File::create(filename)?;
             file.write_all(svg.as_bytes())?;
         }
-        cube.make_move(mov);
+        cube.make_move(*mov);
     }
 
     todo!()
@@ -315,7 +315,7 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: Vec<Move>,
 }
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding svg as a String. This is a self-contained frame representing the cube in the given state.
-fn get_svg(cube: &Cube2, mov: &Move, lerp_t: f64) -> String {
+fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     let pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
     // Recorda que el radi és DRAWING_PIECE_RADIUS
     format!("{cube} with {mov:?} at with lerp value {lerp_t}");
@@ -329,7 +329,7 @@ fn get_svg(cube: &Cube2, mov: &Move, lerp_t: f64) -> String {
     
 
     for piece in pieces {
-        buffer = buffer + &piece.draw(cam_pos, cam_dir, light_dir);
+        buffer.push_str(&piece.draw(cam_pos, cam_dir, light_dir));
     }
     buffer
 }

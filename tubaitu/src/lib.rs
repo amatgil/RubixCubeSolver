@@ -51,7 +51,7 @@ impl Solvable for Cube2 {
         let input = fs::read_to_string(Cube2::INPUT_FILE_NAME)?;
         read_tubaitu_from_string(&input)
     }
-    fn make_move(&mut self, m: &Move) {
+    fn make_move(&mut self, m: Move) {
         match m.side {
             MoveSide::R => Self::cycle_elements::<8>(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
             MoveSide::L => Self::cycle_elements::<8>(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),

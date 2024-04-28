@@ -227,9 +227,8 @@ impl<const NF: usize, const NC: usize> PartialEq for Matrix<NF, NC> {
 fn compare_mats<const NF: usize, const NC: usize>(a: Matrix<NF, NC>, b: Matrix<NF, NC>) {
     for y in 0..NF {
         for x in 0..NC {
-            if !are_equal(a.0[y][x],b.0[y][x]) {
-                panic!("{a:?} is unequal from {b:?} at index ({x}, {y})");
-            }
+            assert!(!are_equal(a.0[y][x], b.0[y][x]),
+                    "{a:?} is unequal from {b:?} at index ({x}, {y})");
         }
     }
 }

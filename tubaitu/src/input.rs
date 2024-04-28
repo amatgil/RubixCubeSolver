@@ -82,15 +82,15 @@ impl Cube2 {
     }
 }
 
-fn get_next_color(input: &mut impl Iterator<Item = char>, error_s: String) -> Result<Color, Box<dyn Error>> {
-    let c = input.next().ok_or(error_s.clone())?;
+fn get_next_color(input: &mut impl Iterator<Item = char>, error_s: &str) -> Result<Color, Box<dyn Error>> {
+    let c = input.next().ok_or(error_s.to_string())?;
 
     let col = Color::from(c);
     col.ok_or(format!("{c} is not a valid color").into())
 }
 
-fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: String) -> Result<(), String>{
-    for _ in 0..n { input.next().ok_or(e.clone())?; }
+fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: &str) -> Result<(), String>{
+    for _ in 0..n { input.next().ok_or(e.to_string())?; }
     Ok(())
 }
 
@@ -101,76 +101,76 @@ pub fn read_tubaitu_from_string(input: &str) -> Result<Cube2, Box<dyn Error>> {
 
     let mut input = input.chars();
 
-    skip_n_chars(&mut input, 8, error_s.to_string())?;
-    skip_n_chars(&mut input, 4, error_s.to_string())?;
+    skip_n_chars(&mut input, 8, &error_s)?;
+    skip_n_chars(&mut input, 4, &error_s)?;
 
     // TOP FACE
-    let top_left  = get_next_color(&mut input, error_s.to_string())?;
-    let top_right = get_next_color(&mut input, error_s.to_string())?;
+    let top_left  = get_next_color(&mut input, &error_s)?;
+    let top_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 6, error_s.to_string())?;
+    skip_n_chars(&mut input, 6, &error_s)?;
 
-    let bottom_left  = get_next_color(&mut input, error_s.to_string())?;
-    let bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    let bottom_left  = get_next_color(&mut input, &error_s)?;
+    let bottom_right = get_next_color(&mut input, &error_s)?;
     s.top.0 = [top_left, bottom_left, bottom_right, top_right];
 
-    skip_n_chars(&mut input, 17, error_s.to_string())?;
+    skip_n_chars(&mut input, 17, &error_s)?;
 
 
     // Tops
-    let left_top_left  = get_next_color(&mut input, error_s.to_string())?;
-    let left_top_right = get_next_color(&mut input, error_s.to_string())?;
+    let left_top_left  = get_next_color(&mut input, &error_s)?;
+    let left_top_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 1, error_s.to_string())?;
+    skip_n_chars(&mut input, 1, &error_s)?;
 
-    let front_top_left  = get_next_color(&mut input, error_s.to_string())?;
-    let front_top_right = get_next_color(&mut input, error_s.to_string())?;
+    let front_top_left  = get_next_color(&mut input, &error_s)?;
+    let front_top_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 1, error_s.to_string())?;
+    skip_n_chars(&mut input, 1, &error_s)?;
 
-    let right_top_left  = get_next_color(&mut input, error_s.to_string())?;
-    let right_top_right = get_next_color(&mut input, error_s.to_string())?;
+    let right_top_left  = get_next_color(&mut input, &error_s)?;
+    let right_top_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 1, error_s.to_string())?;
+    skip_n_chars(&mut input, 1, &error_s)?;
 
-    let back_top_left  = get_next_color(&mut input, error_s.to_string())?;
-    let back_top_right = get_next_color(&mut input, error_s.to_string())?;
+    let back_top_left  = get_next_color(&mut input, &error_s)?;
+    let back_top_right = get_next_color(&mut input, &error_s)?;
 
     // Bottoms
-    skip_n_chars(&mut input, 3, error_s.to_string())?;
+    skip_n_chars(&mut input, 3, &error_s)?;
 
-    let left_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
-    let left_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    let left_bottom_left  = get_next_color(&mut input, &error_s)?;
+    let left_bottom_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 1, error_s.to_string())?;
+    skip_n_chars(&mut input, 1, &error_s)?;
 
-    let front_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
-    let front_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    let front_bottom_left  = get_next_color(&mut input, &error_s)?;
+    let front_bottom_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 1, error_s.to_string())?;
+    skip_n_chars(&mut input, 1, &error_s)?;
 
-    let right_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
-    let right_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    let right_bottom_left  = get_next_color(&mut input, &error_s)?;
+    let right_bottom_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 1, error_s.to_string())?;
+    skip_n_chars(&mut input, 1, &error_s)?;
 
-    let back_bottom_left = get_next_color(&mut input, error_s.to_string())?;
-    let back_bottom_right  = get_next_color(&mut input, error_s.to_string())?;
+    let back_bottom_left = get_next_color(&mut input, &error_s)?;
+    let back_bottom_right  = get_next_color(&mut input, &error_s)?;
 
     s.left.0 = [left_top_left, left_bottom_left, left_bottom_right, left_top_right];
     s.right.0 = [right_top_left, right_bottom_left, right_bottom_right, right_top_right];
     s.front.0 = [front_top_left, front_bottom_left, front_bottom_right, front_top_right];
     s.back.0 = [back_bottom_right, back_top_right, back_top_left, back_bottom_left];
 
-    skip_n_chars(&mut input, 20, error_s.to_string())?;
+    skip_n_chars(&mut input, 20, &error_s)?;
 
-    let down_top_left  = get_next_color(&mut input, error_s.to_string())?;
-    let down_top_right = get_next_color(&mut input, error_s.to_string())?;
+    let down_top_left  = get_next_color(&mut input, &error_s)?;
+    let down_top_right = get_next_color(&mut input, &error_s)?;
 
-    skip_n_chars(&mut input, 6, error_s.to_string())?;
+    skip_n_chars(&mut input, 6, &error_s)?;
 
-    let down_bottom_left  = get_next_color(&mut input, error_s.to_string())?;
-    let down_bottom_right = get_next_color(&mut input, error_s.to_string())?;
+    let down_bottom_left  = get_next_color(&mut input, &error_s)?;
+    let down_bottom_right = get_next_color(&mut input, &error_s)?;
 
     s.down.0 = [down_top_left, down_bottom_left, down_bottom_right, down_top_right];
 

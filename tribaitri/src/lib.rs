@@ -19,7 +19,7 @@ use input::*;
 /// | Front | Orange       |
 /// | Back  | Red          |
 ///
-/// Internally, it is represented by the 6 edges and 14 corners only. Their indicies are defined by the corresponding ThreeByCorner and ThreeByEdge enums.
+/// Internally, it is represented by the 6 edges and 14 corners only. Their indicies are defined by the corresponding `ThreeByCorner` and `ThreeByEdge` enums.
 /// Note that equality is direct here, unlike a 2x2: there are no symmetries to speak of because the centers ground us
 /// The Default cube is the solved `YO` cube
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Default)]
@@ -40,7 +40,7 @@ impl Solvable for Cube3 {
             Move::new("D"), Move::new("D'")
         ])
     }
-    fn make_move(&mut self, m: &Move) {
+    fn make_move(&mut self, m: Move) {
         make_three_by_three_move(self, m);
     }
 
@@ -155,7 +155,7 @@ impl Display for Cube3 {
 	}
 
 	for y in [0, CUBE_PRINT_HEIGHT - 1] {
-	    for x in 5..=8 - 1 { buffer[xy_to_idx(x, y)] = b'-' } 
+	    for x in 5..8  { buffer[xy_to_idx(x, y)] = b'-' } 
 	}
 
         print_add_face(&mut buffer, &self.pieces, 2, UP_PRINTING_CYCLE,    5, 1, Color::Yellow);
@@ -166,7 +166,7 @@ impl Display for Cube3 {
         print_add_face(&mut buffer, &self.pieces, 4, BACK_PRINTING_CYCLE, 13, 5, Color::Red);
 
 	let s = std::str::from_utf8(&buffer).expect("invalid utf-8 sequence (should be impossible)");
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 #[rustfmt::skip]
