@@ -75,7 +75,6 @@ fn inverse_helper<const N: usize, const N_TIMES_TWO: usize>(m: &Matrix<N, N>) ->
 }
 
 impl_inverse_for_size! {
-    0, 0;
     1, 2;
     2, 4;
     3, 6;
