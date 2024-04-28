@@ -116,66 +116,6 @@ impl<const N: usize> Matrix<N, N> {
         }
         out
     }
-    pub fn inverse<const N_TIMES_TWO: usize>(&self) -> Option<Self> {
-        assert!(N_TIMES_TWO == 2*N);
-        // Applying these steps to our original matrix will reduce it to the identity, meaning 'inverse' will now be self^(-1)
-        let identity = Matrix::<N, N>::ID(); 
-
-        let mut aug = Matrix::<N, N_TIMES_TWO>::ZERO();
-        for i in 0..N {
-            for j in 0..N {
-                aug[i][j] = self[i][j];
-                aug[i][j + N] = identity[i][j];
-            }
-        }
-
-        // Transform to row echelon form
-        //   Align by pivot
-        aug = aug.sort_by_pivot_position();
-
-        // If the first pivot isn't on the first column or there's a row full of zeros, there must be a column of zeros. Rank isn't full, no inverse available
-        if are_equal(aug[0][0], 0.0) || aug[N - 1].0.iter().take(N).all(|&e| are_equal(e, 0.0)) {
-            return dbg!(None);
-        } 
-
-        for j in 0..N {
-            println!("Pre\n{aug}");
-            aug = aug.sort_by_pivot_position();
-            println!("Post\n{aug}");
-            dbg!(j);
-            if are_equal(aug[j][j], 0.0) { return dbg!(None); }  // Row full of zeros, no inverse! (aug sorted-by-pivot rows)
-            aug[j] = (1.0 / aug[j][j]) * aug[j]; // Set pivot to 1
-
-            for i in (j+1)..N { // Set all numbers below first pivot to 1
-                println!("{aug}");
-                aug[i] = aug[i] - (aug[i][j]*aug[j]);
-            }
-        }
-
-        println!("Reducing time:");
-        println!("{aug}");
-
-        // Transform to reduced row echelon form (applying both to the original and ID to get our inverse)
-        for j in (0..N).into_iter().rev() {
-            for i in (0..N).into_iter().rev() {
-                if i == j { continue; }
-                aug[i] = aug[i] - aug[i][j]*aug[j];
-            }
-            println!("{aug}");
-        }
-
-        // Extract answer
-        let mut inverse = Matrix::<N, N>::ZERO();
-        for i in 0..N {
-            for j in 0..N {
-                inverse[i][j] = aug[i][j + N];
-            }
-        }
-
-
-        // inverse is now our solution
-        Some(inverse)
-    }
 
     /// Use Laplace's definition to compute the determinant
     pub fn determinant(&self) -> f64 {
@@ -447,11 +387,11 @@ fn matrix_identity() {
 
 #[test]
 fn inverse_of_id() {
-    compare_mats(Matrix::<1, 1>::ID().inverse::<2>().unwrap(), Matrix::<1, 1>::ID());
-    compare_mats(Matrix::<2, 2>::ID().inverse::<4>().unwrap(), Matrix::<2, 2>::ID());
-    compare_mats(Matrix::<3, 3>::ID().inverse::<6>().unwrap(), Matrix::<3, 3>::ID());
-    compare_mats(Matrix::<4, 4>::ID().inverse::<8>().unwrap(), Matrix::<4, 4>::ID());
-    compare_mats(Matrix::<5, 5>::ID().inverse::<10>().unwrap(), Matrix::<5, 5>::ID());
+    compare_mats(Matrix::<1, 1>::ID().inverse().unwrap(), Matrix::<1, 1>::ID());
+    compare_mats(Matrix::<2, 2>::ID().inverse().unwrap(), Matrix::<2, 2>::ID());
+    compare_mats(Matrix::<3, 3>::ID().inverse().unwrap(), Matrix::<3, 3>::ID());
+    compare_mats(Matrix::<4, 4>::ID().inverse().unwrap(), Matrix::<4, 4>::ID());
+    compare_mats(Matrix::<5, 5>::ID().inverse().unwrap(), Matrix::<5, 5>::ID());
 }
 
 #[test]
@@ -462,20 +402,20 @@ fn three_by_three_first() {
          [7.0, 5.0, 1.0].into(),
          [2.0, 6.0, 8.0].into()]
     );
-    let b: Matrix<3,3> = a.inverse::<6>().unwrap();
+    let b: Matrix<3,3> = a.inverse().unwrap();
     for row in b.0 {
         println!("{}, {}, {}", row[0], row[1], row[2]);
     }
-    compare_mats(a.inverse::<6>().unwrap(), b);
+    compare_mats(a.inverse().unwrap(), b);
 }
 
 #[test]
 fn inverse_zero() {
-    assert!(Matrix::<1, 1>::ZERO().inverse::<2>().is_none());
-    assert!(Matrix::<2, 2>::ZERO().inverse::<4>().is_none());
-    assert!(Matrix::<3, 3>::ZERO().inverse::<6>().is_none());
-    assert!(Matrix::<4, 4>::ZERO().inverse::<8>().is_none());
-    assert!(Matrix::<5, 5>::ZERO().inverse::<10>().is_none());
+    assert!(Matrix::<1, 1>::ZERO().inverse().is_none());
+    assert!(Matrix::<2, 2>::ZERO().inverse().is_none());
+    assert!(Matrix::<3, 3>::ZERO().inverse().is_none());
+    assert!(Matrix::<4, 4>::ZERO().inverse().is_none());
+    assert!(Matrix::<5, 5>::ZERO().inverse().is_none());
 }
 
 #[test]
@@ -488,7 +428,7 @@ fn two_by_two_normal_inverse() {
         [[-2.0, 1.0].into(),
          [1.5, -0.5].into()]
     );
-    compare_mats(a.inverse::<4>().unwrap(), a_prime);
+    compare_mats(a.inverse().unwrap(), a_prime);
 }
 
 #[test]
@@ -497,7 +437,7 @@ fn two_by_two_no_inverse() {
         [[1.0, 2.0].into(),
          [2.0, 4.0].into()]
     );
-    assert!(a.inverse::<4>().is_none())
+    assert!(a.inverse().is_none())
 }
 
 #[test]
@@ -507,7 +447,7 @@ fn three_by_three_normal_inverse() {
          [1.0, 2.0, -3.0].into(),
          [3.0, 4.0, 2.0].into()]
     );
-    let mult = a * a.inverse::<6>().unwrap();
+    let mult = a * a.inverse().unwrap();
     compare_mats(mult, Matrix::<3, 3>::ID());
 }
 
@@ -519,7 +459,7 @@ fn three_by_three_no_inverse() {
          [3.0, 4.0, 6.0].into()]
     );
 
-    assert!(a.inverse::<6>().is_none())
+    assert!(a.inverse().is_none())
 }
 
 #[test]
@@ -561,7 +501,7 @@ fn two_by_two_inverse() {
         [0.5, 0.5].into(),
         [0.25, -0.25].into()
     ]);
-    compare_mats(a.inverse::<4>().unwrap(), inv_a);
+    compare_mats(a.inverse().unwrap(), inv_a);
 }
 
 #[test]
@@ -574,7 +514,7 @@ fn two_by_two_inverse_again() {
         [-0.25, 0.25].into(),
         [-0.3125, 0.0625].into()
     ]);
-    compare_mats(a.inverse::<4>().unwrap(), inv_a);
+    compare_mats(a.inverse().unwrap(), inv_a);
 }
 
 #[test]
@@ -589,7 +529,7 @@ fn three_by_three_inverse() {
         [0.125, 0.125, -0.25].into(),
         [0.125, -0.125, 0.0].into()
     ]);
-    compare_mats(a.inverse::<6>().unwrap(), inv_a);
+    compare_mats(a.inverse().unwrap(), inv_a);
 }
 
 #[test]
@@ -604,10 +544,10 @@ fn three_by_three_inverse_again() {
         [-0.5, 0.0, 0.25].into(),
         [1.0625, -0.25, -0.34375].into()
     ]);
-    compare_mats(a.inverse::<6>().unwrap(), inv_a);
+    compare_mats(a.inverse().unwrap(), inv_a);
 }
 
 
-fn are_equal(a: f64, b: f64) -> bool {
+pub fn are_equal(a: f64, b: f64) -> bool {
     (a - b).abs() < FLOAT_EPSILON
 }
