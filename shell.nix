@@ -12,6 +12,7 @@ let
     clang
     mold
     gnuplot
+    heaptrack
 
   ];
 in

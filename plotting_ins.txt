@@ -4,4 +4,4 @@ set ylabel "Final solve length"
 set grid
 set termina png
 set output "tribaigraph.png"
-plot [:] [:20] "tribai_plot.data" title ""
+plot "tribai_plot.data" title ""
