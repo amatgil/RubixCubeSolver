@@ -14,9 +14,12 @@ members = [
 tubaitu = { path = "./tubaitu" }
 tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
+rayon = "1.10.0"
 
 [profile.release]
 opt-level = 3
 debug = false
 strip = true
-lto = "thin"
+codegen-units = 1
+lto = true
+overflow-checks = false

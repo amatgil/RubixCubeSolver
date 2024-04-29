@@ -243,6 +243,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
 
         path_from_unsolved.into()
     }
+
     fn cycle_elements<const N: usize>(
         pieces: &mut [Piece; N],
         mut seq: [usize; 4],

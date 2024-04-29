@@ -3,5 +3,5 @@ set xlabel "Initial scramble quarter-move count"
 set ylabel "Final solve length"
 set grid
 set termina png
-set output "graph.png"
-plot [:] [:20] "tubaitu_plot_data.txt" title ""
+set output "tribaigraph.png"
+plot [:] [:20] "tribai_plot.data" title ""
