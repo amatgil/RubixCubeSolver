@@ -16,8 +16,10 @@ pub use ui::*;
 
 pub const FLOAT_EPSILON: f64 = 0.0001;
 
+#[derive(Clone)]
 struct State<C> {
-    past_moves: Vec<Move>,
+    past_state: Option<(Rc<State<C>>, Move)>, 
+    length_of_path: usize,
     cube: C,
 }
 impl<C: Solvable> Hash for State<C> {
@@ -36,15 +38,13 @@ fn advance_bfs<C: Solvable>(
     visited: &mut HashSet<Rc<State<C>>>,
     queue: &mut VecDeque<Rc<State<C>>>,
 ) {
-    let current_depth = queue.back().unwrap().past_moves.len();
-    while let Some(rc_state) = queue.pop_front() {
-        if rc_state.past_moves.len() > current_depth { return; }
-        let past_moves = &rc_state.past_moves;
-        let x = &rc_state.cube;
-        for (m, y) in find_adjacents(x) {
-            let new_moves = append_move(past_moves, m);
+    let current_depth = queue.back().unwrap().length_of_path;
+    while let Some(state) = queue.pop_front() {
+        if state.length_of_path > current_depth { return; }
+        for (m, y) in find_adjacents(&state.cube) {
             let new_state = Rc::new(State {
-                past_moves: new_moves.clone(),
+                past_state: Some((Rc::clone(&state), m)),
+                length_of_path: state.length_of_path + 1,
                 cube: y,
             });
             if !have_we_seen_this_state_before(visited, new_state.clone()) {
@@ -184,16 +184,18 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("]");
     }
 
-    fn solve(&self) -> MoveSeq {
+    fn solve(&self, n: usize) -> MoveSeq {
         let first_state_unsolved = Rc::new(State {
-            past_moves: Vec::new(),
             cube: self.clone(),
+            past_state: None,
+            length_of_path: 0,
         });
         let mut w_from_unsolved = HashSet::from([first_state_unsolved.clone()]);
         let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
 
         let first_state_solved = Rc::new(State {
-            past_moves: Vec::new(),
+            past_state: None,
+            length_of_path: 0,
             cube: Self::default(),
         });
         let mut w_from_solved = HashSet::from([first_state_solved.clone()]);
@@ -260,24 +262,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         c
     }
     fn random_scramble(length: usize) -> (Self, MoveSeq) {
-        fn get_move_from_n(n: usize) -> Move {
-            Move(n as u8)
-            //match n % 12 {
-            //    0 => Move::R,
-            //    1 => Move::L,
-            //    2 => Move::R,
-            //    3 => Move::B,
-            //    4 => Move::U,
-            //    5 => Move::D,
-            //    6 => Move::RP,
-            //    7 => Move::LP,
-            //    8 => Move::RP,
-            //    9 => Move::BP,
-            //    10 => Move::UP,
-            //    11 => Move::DP,
-            //    _ => unreachable!("Range reaches 12"),
-            //}
-        }
+        fn get_move_from_n(n: usize) -> Move { Move(n as u8) }
 
         let mut scramble = vec![];
         for _ in 0..length {
@@ -287,6 +272,15 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         let c = Self::scramble(&scramble.clone().into());
         (c, scramble.into())
     }
+}
+
+/// WILDLY inefficient, but only called twice so eh
+fn extract_path_from_first_state<C>(s: State<C>) -> Vec<Move> {
+    let mut v = Vec::new();
+    if let Some((past_state, m)) = s.past_state {
+    }
+
+    v
 }
 
 pub const SIDE_RIGHT: usize = 0;
