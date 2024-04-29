@@ -60,24 +60,18 @@ impl Piece {
 
     pub fn rotate(&mut self, mov: Move) {
 	let [right, front, top, left, back, down] = self.to_color_sequence();
-	let new_colors: [Color; 6] = match mov {
-	    Move { side: MoveSide::R, prime: false }
-	    | Move { side: MoveSide::L, prime: true }
-	    => [right, down, front, left, top, back],
-	    Move { side: MoveSide::L, prime: false }
-	    | Move { side: MoveSide::R, prime: true }
-	    => [right, top, back, left, down, front],
-	    Move { side: MoveSide::U, prime: false }
-	    | Move { side: MoveSide::D, prime: true }
-	    => [back, right, top, front, left, down],
-	    Move { side: MoveSide::D, prime: false }
-	    | Move { side: MoveSide::U, prime: true }
-	    => [front, left, top, back, right, down],
-	    Move { side: MoveSide::F, prime: false }
-	    | Move { side: MoveSide::B, prime: true }
+	let new_colors: [Color; 6] = match (mov.side(), mov.is_prime()) {
+            (MoveSide::R, false) | (MoveSide::L, true)
+                => [right, down, front, left, top, back],
+            (MoveSide::L, false) | (MoveSide::R, true)
+                => [right, top, back, left, down, front],
+            (MoveSide::U, false) | (MoveSide::D, true)
+                => [back, right, top, front, left, down],
+            (MoveSide::D, false) | (MoveSide::U, true)
+                => [front, left, top, back, right, down],
+            (MoveSide::F, false) | (MoveSide::B, true)
 	    => [top, front, left, down, back, right],
-	    Move { side: MoveSide::B, prime: false }
-	    | Move { side: MoveSide::F, prime: true }
+            (MoveSide::B, false) | (MoveSide::F, true)
 	    => [down, front, right, top, back, left],
 	};
 

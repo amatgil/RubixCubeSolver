@@ -351,8 +351,8 @@ fn test_drawing_piece() {
 #[test]
 fn test_drawing_cube() {
     let cube = Cube2::default();
-    let m = Move{side:MoveSide::R, prime: false};
+    let m = Move::R;
     
-    let text = get_svg(&cube,&m,0.0);
+    let text = get_svg(cube,m,0.0);
     println!("{}", text);
 }

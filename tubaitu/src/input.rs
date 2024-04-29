@@ -192,7 +192,7 @@ fn from_string_right() {
    ┃YG┃
    ┗━━┛";
 
-    let correct_cube = Cube2::scramble(&vec![Move::new("R")].into());
+    let correct_cube = Cube2::scramble(&vec![Move::R].into());
     /*let r = read_from_string(input).unwrap();
     println!("Comparing: gotten:\n{r}");
     println!("vs expected:\n{correct_cube}");

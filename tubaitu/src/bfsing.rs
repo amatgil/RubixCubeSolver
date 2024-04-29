@@ -10,7 +10,7 @@ fn basic_is_solved_test() {
     let mut cube = Cube2 { pieces: [solved_piece; 8] };
 
     assert!(is_solved(&cube));
-    cube.make_move(Move::new("R"));
+    cube.make_move(Move::R);
     assert!(!is_solved(&cube));
 }
 
@@ -34,7 +34,7 @@ fn reorient_together(a: Cube2, b: Cube2) -> Option<Vec<Move>> {
 
 #[test]
 fn only_right_solve() {
-    let mut cube = Cube2::scramble(&vec![Move::new("R")].into());
+    let mut cube = Cube2::scramble(&vec![Move::R].into());
     for m in cube.solve() { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
@@ -42,7 +42,7 @@ fn only_right_solve() {
 
 #[test]
 fn only_left_solve() {
-    let mut cube = Cube2::scramble(&vec![Move::new("L")].into());
+    let mut cube = Cube2::scramble(&vec![Move::L].into());
     for m in cube.solve() { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
@@ -51,8 +51,8 @@ fn only_left_solve() {
 #[test]
 fn double_up_solve() {
     let mut cube = Cube2::scramble(&vec![
-	Move::new("U"),
-	Move::new("U"),
+	Move::U,
+	Move::U,
     ].into());
     for m in cube.solve() { cube.make_move(m); }
 
@@ -62,8 +62,8 @@ fn double_up_solve() {
 #[test]
 fn back_up_solve() {
     let mut cube = Cube2::scramble(&vec![
-	Move::new("B"),
-	Move::new("U"),
+	Move::B,
+	Move::U,
     ].into());
     for m in cube.solve() { cube.make_move(m); }
 
@@ -73,9 +73,9 @@ fn back_up_solve() {
 #[test]
 fn redundant_solve() {
     let mut cube = Cube2::scramble(&vec![
-	Move::new("U"),
-	Move::new("U"),
-	Move::new("U"),
+	Move::U,
+	Move::U,
+	Move::U,
     ].into());
     for m in cube.solve() { cube.make_move(m); }
 
@@ -85,8 +85,8 @@ fn redundant_solve() {
 #[test]
 fn opposite_solve() {
     let mut cube = Cube2::scramble(&vec![
-	Move::new("L"),
-	Move::new("R"),
+	Move::L,
+	Move::R,
     ].into());
     for m in cube.solve() { cube.make_move(m); }
 
@@ -96,11 +96,11 @@ fn opposite_solve() {
 #[test]
 fn complicated_solve() {
     let mut cube = Cube2::scramble(&vec![
-	Move::new("R"),
-	Move::new("U"),
-	Move::new("L"),
-	Move::new("D"),
-	Move::new("F"),
+	Move::R,
+	Move::U,
+	Move::L,
+	Move::D,
+	Move::F,
     ].into());
     for m in cube.solve() { cube.make_move(m); }
 
@@ -111,22 +111,22 @@ fn complicated_solve() {
 fn reorientation() {
     let a = Cube2::default();
     let mut b = Cube2::default();
-    b.make_move(Move::new("R"));
-    b.make_move(Move::new("L'"));
+    b.make_move(Move::R);
+    b.make_move(Move::L);
 
-    let answer = vec![Move::new("R"), Move::new("L'")];
-    assert_eq!(answer, reorient_together(&a, &b).unwrap());
+    let answer = vec![Move::R, Move::L];
+    assert_eq!(answer, reorient_together(a, b).unwrap());
 }
 
 #[test]
 fn reorientation2() {
     let a = Cube2::default();
     let mut b = Cube2::default();
-    b.make_move(Move::new("U"));
-    b.make_move(Move::new("U"));
-    b.make_move(Move::new("D'"));
-    b.make_move(Move::new("D'"));
+    b.make_move(Move::U);
+    b.make_move(Move::U);
+    b.make_move(Move::D);
+    b.make_move(Move::D);
 
-    let answer = vec![Move::new("U"), Move::new("D"), Move::new("U"), Move::new("D")];
-    assert_eq!(answer, reorient_together(&a, &b).unwrap());
+    let answer = vec![Move::U, Move::D, Move::U, Move::D];
+    assert_eq!(answer, reorient_together(a, b).unwrap());
 }

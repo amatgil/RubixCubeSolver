@@ -247,9 +247,9 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn cycle_elements<const N: usize>(
         pieces: &mut [Piece; N],
         mut seq: [usize; 4],
-        mov @ Move { side: _, prime }: Move,
+        mov: Move,
     ) {
-        if prime { seq = reverse_seq(seq); }
+        if mov.is_prime() { seq = reverse_seq(seq); }
         cycle_items(pieces, seq); // Move the pieces
         for i in seq { pieces[i].rotate(mov) } // Rotate the pieces we just cycled around
     }
@@ -261,21 +261,22 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     }
     fn random_scramble(length: usize) -> (Self, MoveSeq) {
         fn get_move_from_n(n: usize) -> Move {
-            match n % 12 {
-                0 => Move::new("R"),
-                1 => Move::new("L"),
-                2 => Move::new("R"),
-                3 => Move::new("B"),
-                4 => Move::new("U"),
-                5 => Move::new("D"),
-                6 => Move::new("R'"),
-                7 => Move::new("L'"),
-                8 => Move::new("R'"),
-                9 => Move::new("B'"),
-                10 => Move::new("U'"),
-                11 => Move::new("D'"),
-                _ => unreachable!("Range reaches 12"),
-            }
+            Move(n as u8)
+            //match n % 12 {
+            //    0 => Move::R,
+            //    1 => Move::L,
+            //    2 => Move::R,
+            //    3 => Move::B,
+            //    4 => Move::U,
+            //    5 => Move::D,
+            //    6 => Move::RP,
+            //    7 => Move::LP,
+            //    8 => Move::RP,
+            //    9 => Move::BP,
+            //    10 => Move::UP,
+            //    11 => Move::DP,
+            //    _ => unreachable!("Range reaches 12"),
+            //}
         }
 
         let mut scramble = vec![];
@@ -302,12 +303,12 @@ pub const COLOR_DOWN_SEQ: [usize; 4] = [SIDE_RIGHT, SIDE_BACK, SIDE_LEFT, SIDE_F
 pub const COLOR_FRONT_SEQ: [usize; 4] = [SIDE_TOP, SIDE_RIGHT, SIDE_DOWN, SIDE_LEFT];
 pub const COLOR_BACK_SEQ: [usize; 4] = [SIDE_LEFT, SIDE_DOWN, SIDE_RIGHT, SIDE_TOP];
 
+/// A move, internally represented by a single u8 using bit magic
+///
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Move {
-    pub side: MoveSide,
-    pub prime: bool,
-}
+pub struct Move(u8);
 
+#[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MoveSide {
     R,
@@ -319,35 +320,34 @@ pub enum MoveSide {
 }
 
 impl Move {
-    pub fn new(s: &str) -> Move {
-        if s.len() > 2 {
-            panic!("{s} no és un moviment legal");
-        }
-        let ms = s.chars().nth(0).unwrap();
-        let k = s.chars().nth(1);
-        if let Some(prima) = k {
-            if prima != '\'' { panic!("{s} té un segon char que no és una prima") }
-        }
+    pub const R:  Move = Self(0);
+    pub const RP: Move = Self(1);
+    pub const F:  Move = Self(2);
+    pub const FP: Move = Self(3);
+    pub const U:  Move = Self(4);
+    pub const UP: Move = Self(5);
+    pub const L:  Move = Self(6);
+    pub const LP: Move = Self(7);
+    pub const B:  Move = Self(8);
+    pub const BP: Move = Self(9);
+    pub const D:  Move = Self(10);
+    pub const DP: Move = Self(11);
 
-        let m = match ms {
-            'R' => MoveSide::R,
-            'F' => MoveSide::F,
-            'U' => MoveSide::U,
-            'L' => MoveSide::L,
-            'B' => MoveSide::B,
-            'D' => MoveSide::D,
-            _ => panic!("{ms} is not a valid face move"),
-        };
-
-        Move {
-            side: m,
-            prime: k.is_some(),
-        }
-    }
     pub fn opposite(&self) -> Self {
-        Self {
-            prime: !self.prime,
-            ..*self
+        Self(self.0 ^ 1)
+    }
+    pub fn is_prime(&self) -> bool {
+        (self.0 & 1) != 0
+    }
+    pub fn side(&self) -> MoveSide {
+        match *self {
+            Self::R | Self::RP => MoveSide::R,
+            Self::F | Self::FP => MoveSide::F,
+            Self::U | Self::UP => MoveSide::U,
+            Self::L | Self::LP => MoveSide::L,
+            Self::B | Self::BP => MoveSide::B,
+            Self::D | Self::DP => MoveSide::D,
+            _ => unreachable!(), // TODO: Use _unchecked when tests pass
         }
     }
 }
@@ -462,31 +462,13 @@ impl Display for MoveSeq {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut stack: Vec<ExpandedMove> = vec![];
         for mov in self.0.iter() {
-            let ext = match mov {
-                Move {
-                    side: MoveSide::L,
-                    prime,
-                } => ExpandedMove::L { prime: *prime },
-                Move {
-                    side: MoveSide::R,
-                    prime,
-                } => ExpandedMove::R { prime: *prime },
-                Move {
-                    side: MoveSide::F,
-                    prime,
-                } => ExpandedMove::F { prime: *prime },
-                Move {
-                    side: MoveSide::B,
-                    prime,
-                } => ExpandedMove::B { prime: *prime },
-                Move {
-                    side: MoveSide::U,
-                    prime,
-                } => ExpandedMove::U { prime: *prime },
-                Move {
-                    side: MoveSide::D,
-                    prime,
-                } => ExpandedMove::D { prime: *prime },
+            let ext = match mov.side() {
+                MoveSide::L => ExpandedMove::L { prime: mov.is_prime() },
+                MoveSide::R => ExpandedMove::R { prime: mov.is_prime() },
+                MoveSide::F => ExpandedMove::F { prime: mov.is_prime() },
+                MoveSide::B => ExpandedMove::B { prime: mov.is_prime() },
+                MoveSide::U => ExpandedMove::U { prime: mov.is_prime() },
+                MoveSide::D => ExpandedMove::D { prime: mov.is_prime() },
             };
             stack.push(ext);
             while stack.len() > 1 {
@@ -515,7 +497,7 @@ impl Display for MoveSeq {
 impl std::fmt::Display for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         let mut out = String::new();
-        out.push(match self.side {
+        out.push(match self.side() {
             MoveSide::R => 'R',
             MoveSide::F => 'F',
             MoveSide::U => 'U',
@@ -523,7 +505,7 @@ impl std::fmt::Display for Move {
             MoveSide::B => 'B',
             MoveSide::D => 'D',
         });
-        if self.prime {
+        if self.is_prime() {
             out.push('\'')
         }
 
@@ -566,4 +548,32 @@ pub fn random_number_in_range(max: usize) -> usize {
         .try_into().unwrap();
 
     nanos % max
+}
+
+#[test]
+fn opposite_moves() {
+    assert_eq!(Move::R.opposite(), Move::RP);
+    assert_eq!(Move::RP.opposite(), Move::R);
+    assert_eq!(Move::L.opposite(), Move::LP);
+    assert_eq!(Move::LP.opposite(), Move::L);
+    assert_eq!(Move::F.opposite(), Move::FP);
+    assert_eq!(Move::FP.opposite(), Move::F);
+    assert_eq!(Move::U.opposite(), Move::UP);
+    assert_eq!(Move::UP.opposite(), Move::U);
+}
+
+#[test]
+fn primeness() {
+    assert!(!Move::R.is_prime());
+    assert!(!Move::L.is_prime());
+    assert!(!Move::F.is_prime());
+    assert!(!Move::B.is_prime());
+    assert!(!Move::U.is_prime());
+    assert!(!Move::D.is_prime());
+    assert!( Move::RP.is_prime());
+    assert!( Move::LP.is_prime());
+    assert!( Move::FP.is_prime());
+    assert!( Move::BP.is_prime());
+    assert!( Move::UP.is_prime());
+    assert!( Move::DP.is_prime());
 }

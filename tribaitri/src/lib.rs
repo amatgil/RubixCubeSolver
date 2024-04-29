@@ -32,12 +32,12 @@ impl Solvable for Cube3 {
     const INPUT_FILE_NAME: &'static str = "tribaitri_input_file";
     fn moves_of_adjacency() -> Vec<Move> {
         Vec::from([
-            Move::new("R"), Move::new("R'"),
-            Move::new("L"), Move::new("L'"),
-            Move::new("F"), Move::new("F'"),
-            Move::new("B"), Move::new("B'"),
-            Move::new("U"), Move::new("U'"),
-            Move::new("D"), Move::new("D'")
+            Move::R, Move::RP,
+            Move::L, Move::LP,
+            Move::F, Move::FP,
+            Move::B, Move::BP,
+            Move::U, Move::UP,
+            Move::D, Move::DP
         ])
     }
     fn make_move(&mut self, m: Move) {
