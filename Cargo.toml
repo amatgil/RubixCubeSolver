@@ -15,11 +15,8 @@ tubaitu = { path = "./tubaitu" }
 tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
 
-[workspace.dependencies]
-
 [profile.release]
 opt-level = 3
 debug = false
 strip = true
-lto = true
-codegen-units = 1
+lto = "thin"

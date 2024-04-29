@@ -4,3 +4,5 @@ out
 *_input_file
 output*
 *#*#*
+*.data
+*.png
