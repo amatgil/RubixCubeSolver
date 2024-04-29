@@ -12,7 +12,7 @@ fn main() {
     };
 
     match &**option {
-	"rand" => Cube3::solve_random(4),
+	"rand" => Cube3::solve_random(20, true),
 	"gen" => Cube3::write_blank_slate().unwrap(),
         "solve" => Cube3::solve_pretty(),
 	o => {

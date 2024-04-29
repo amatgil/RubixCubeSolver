@@ -11,15 +11,9 @@ fn main() {
     };
 
     match &**option {
-	"rand" => Cube2::solve_random(5),
+	"rand" => Cube2::solve_random(5, true),
 	"gen" => Cube2::write_blank_slate().unwrap(),
 	"solve" => Cube2::solve_pretty(),
-        "testing" => {
-            let mut cube = Cube2::default();
-            println!("{cube}");
-            cube.make_move(Move::F);
-            println!("{cube}");
-        }
 	o => println!("[ERROR]: option `{o} not recognized. Please use `gen`, `solve` or `rand`"),
     }
 }

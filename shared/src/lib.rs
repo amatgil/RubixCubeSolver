@@ -62,12 +62,6 @@ fn have_we_seen_this_state_before<C: Solvable>(
     seen.contains(&new) // Equality only depends on the cube
 }
 
-fn append_move(old: &[Move], m: Move) -> Vec<Move> {
-    let mut new = old.to_owned();
-    new.push(m);
-    new
-}
-
 fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
     let moviments = C::moves_of_adjacency();
 
@@ -87,7 +81,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn write_blank_slate() -> Result<(), Box<dyn Error>>;
     fn read_from_slate() -> Result<Self, Box<dyn Error>>;
 
-    fn solve_random(scramble_length: usize) {
+    fn solve_random(scramble_length: usize, prints_enabled: bool) {
         println!("[INFO]: Generating random cube (n={scramble_length})...");
         let scrambling_instant = Instant::now();
         let (mut cube, scramble) = Self::random_scramble(scramble_length);
@@ -109,10 +103,10 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("Scramble to solve:\n{cube}");
 
         let starting_instant = Instant::now();
-        let r = cube.solve();
+        let r = cube.solve(prints_enabled);
         let time_taken = starting_instant.elapsed();
 
-        for m in &r.0 {
+        for m in &r.0.0 {
             cube.make_move(*m)
         }
         println!("Final state:\n{cube}");
@@ -124,16 +118,16 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             time_taken.as_millis(),
             time_taken.as_micros()
         );
-        println!("[RESULT]: Final solution is: {r}");
+        println!("[RESULT]: Final solution is: {}", r.0);
         print!("[INFO]: Uncompressed solution: [ ");
-        for m in &r.0 {
+        for m in &r.0.0 {
             print!("{m} ");
         }
         println!("]");
 
         println!();
 
-        println!("[RESULT]: Reverse of solution: {}", r.reversed());
+        println!("[RESULT]: Reverse of solution: {}", r.0.reversed());
         print!("[INFO]: Uncompressed reverse: [ ");
         for m in r.0.iter().rev() {
             print!("{} ", m.opposite());
@@ -156,27 +150,27 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("[INFO]: `{}` has been read", Self::INPUT_FILE_NAME);
         println!("[INFO]: Interpreted cube is:\n{cube}");
         println!("[INFO]: Starting the solve...");
-        let r = cube.solve();
+        let r = cube.solve(true);
 
         println!("[INFO]: Checking correctness...");
         let mut checking_cube = cube.clone();
-        for m in &r.0 {
+        for m in &r.0.0 {
             checking_cube.make_move(*m)
         }
 
         println!("Starting cube:\n{cube}\n");
         println!("Final cube:\n{checking_cube}");
 
-        println!("[RESULT]: Final solution is: {r}");
+        println!("[RESULT]: Final solution is: {}", r.0);
         print!("[INFO]: Uncompressed solution: [ ");
-        for m in &r.0 {
+        for m in &r.0.0 {
             print!("{m} ");
         }
         println!("]");
 
         println!();
 
-        println!("[RESULT]: Reverse of solution: {}", r.reversed());
+        println!("[RESULT]: Reverse of solution: {}", r.0.reversed());
         print!("[INFO]: Uncompressed reverse: [ ");
         for m in r.0.iter().rev() {
             print!("{} ", m.opposite());
@@ -184,14 +178,14 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("]");
     }
 
-    fn solve(&self, n: usize) -> MoveSeq {
+    fn solve(&self, prints_enabled: bool) -> (MoveSeq, usize) {
         let first_state_unsolved = Rc::new(State {
             cube: self.clone(),
             past_state: None,
             length_of_path: 0,
         });
-        let mut w_from_unsolved = HashSet::from([first_state_unsolved.clone()]);
-        let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
+        let mut w_from_unsolved: HashSet<Rc<State<Self>>> = HashSet::from([first_state_unsolved.clone()]);
+        let mut queue_from_unsolved: VecDeque<Rc<State<Self>>> = VecDeque::from([first_state_unsolved]);
 
         let first_state_solved = Rc::new(State {
             past_state: None,
@@ -205,45 +199,46 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
             advance_bfs(&mut w_from_solved, &mut queue_from_solved);
         }
-        println!();
-
-        println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
-            w_from_unsolved.len(),
-            w_from_solved.len(),
-        );
-
-        // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
-        //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
-        println!(
-            "[INFO]: Number of intersecting states found is: {}",
-            w_from_solved.intersection(&w_from_unsolved).count()
-        );
+        if prints_enabled {
+            println!(); 
+            println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
+                     w_from_unsolved.len(),
+                     w_from_solved.len(),
+            );
+            // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
+            //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
+            println!(
+                "[INFO]: Number of intersecting states found is: {}",
+                w_from_solved.intersection(&w_from_unsolved).count()
+            );
+        }
+        
         let schrodinger_state: &State<_> =
             (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref();
-        let mut path_from_unsolved: Vec<Move> = w_from_unsolved
-            .get(schrodinger_state).unwrap()
-            .past_moves
-            .clone();
-        let path_from_solved: Vec<Move> = w_from_solved
-            .get(schrodinger_state).unwrap()
-            .past_moves
-            .clone();
+        let mut path_from_unsolved: Vec<Move> =
+            extract_path_from_first_state(w_from_unsolved.get(schrodinger_state).cloned());
+        let path_from_solved: Vec<Move> =
+            extract_path_from_first_state(w_from_solved.get(schrodinger_state).cloned());
 
-        println!("[INFO]: Found halves of the math: merging...");
+        if prints_enabled {
+            println!("[INFO]: Found halves of the math: merging...");
 
-        for m in path_from_solved.into_iter().rev() {
-            path_from_unsolved.push(m.opposite());
+            for m in path_from_solved.clone().into_iter().rev() {
+                path_from_unsolved.push(m.opposite());
+            }
+            println!("[INFO]: Verifying solution...");
         }
 
-        println!("[INFO]: Verifying solution...");
         let mut test_cube = self.clone();
         for m in &path_from_unsolved {
             test_cube.make_move(*m);
         }
-        if test_cube == Self::default() { println!("[INFO]: Verification succeeded") }
-        else { println!("[ERROR]: Verification incorrect, missing moves for linking rotation") }
+        if prints_enabled {
+            if test_cube == Self::default() { println!("[INFO]: Verification succeeded") }
+            else { println!("[ERROR]: Verification incorrect, missing moves for linking rotation") }
+        }
 
-        path_from_unsolved.into()
+        (path_from_unsolved.into(), w_from_solved.len() + w_from_unsolved.len()) 
     }
 
     fn cycle_elements<const N: usize>(
@@ -274,13 +269,18 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     }
 }
 
-/// WILDLY inefficient, but only called twice so eh
-fn extract_path_from_first_state<C>(s: State<C>) -> Vec<Move> {
-    let mut v = Vec::new();
-    if let Some((past_state, m)) = s.past_state {
+/// inefficient, but only called twice so eh
+fn extract_path_from_first_state<C>(s: Option<Rc<State<C>>>) -> Vec<Move> {
+    let mut v = VecDeque::new();
+    if s.is_none() { return v.into(); }
+    let mut s: Rc<State<C>> = s.unwrap();
+    while let Some((past_state, m)) = &s.past_state {
+        v.push_front(*m);
+        if past_state.past_state.is_none() { break; }
+        s = (s.past_state).clone().unwrap().0;
     }
 
-    v
+    v.into()
 }
 
 pub const SIDE_RIGHT: usize = 0;

@@ -13,6 +13,7 @@ let
     mold
     gnuplot
     heaptrack
+    valgrind
 
   ];
 in
