@@ -106,7 +106,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         let r = cube.solve(prints_enabled);
         let time_taken = starting_instant.elapsed();
 
-        for m in &r.0.0 {
+        for m in &r.0 {
             cube.make_move(*m)
         }
         println!("Final state:\n{cube}");
@@ -118,16 +118,16 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             time_taken.as_millis(),
             time_taken.as_micros()
         );
-        println!("[RESULT]: Final solution is: {}", r.0);
+        println!("[RESULT]: Final solution is: {}", r);
         print!("[INFO]: Uncompressed solution: [ ");
-        for m in &r.0.0 {
+        for m in &r.0 {
             print!("{m} ");
         }
         println!("]");
 
         println!();
 
-        println!("[RESULT]: Reverse of solution: {}", r.0.reversed());
+        println!("[RESULT]: Reverse of solution: {}", r.reversed());
         print!("[INFO]: Uncompressed reverse: [ ");
         for m in r.0.iter().rev() {
             print!("{} ", m.opposite());
@@ -154,23 +154,23 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
 
         println!("[INFO]: Checking correctness...");
         let mut checking_cube = cube.clone();
-        for m in &r.0.0 {
+        for m in &r.0 {
             checking_cube.make_move(*m)
         }
 
         println!("Starting cube:\n{cube}\n");
         println!("Final cube:\n{checking_cube}");
 
-        println!("[RESULT]: Final solution is: {}", r.0);
+        println!("[RESULT]: Final solution is: {}", r);
         print!("[INFO]: Uncompressed solution: [ ");
-        for m in &r.0.0 {
+        for m in &r.0 {
             print!("{m} ");
         }
         println!("]");
 
         println!();
 
-        println!("[RESULT]: Reverse of solution: {}", r.0.reversed());
+        println!("[RESULT]: Reverse of solution: {}", r.reversed());
         print!("[INFO]: Uncompressed reverse: [ ");
         for m in r.0.iter().rev() {
             print!("{} ", m.opposite());
@@ -178,7 +178,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("]");
     }
 
-    fn solve(&self, prints_enabled: bool) -> (MoveSeq, usize) {
+    fn solve(&self, prints_enabled: bool) -> MoveSeq {
         let first_state_unsolved = Rc::new(State {
             cube: self.clone(),
             past_state: None,
@@ -241,7 +241,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             else { println!("[ERROR]: Verification incorrect, missing moves for linking rotation") }
         }
 
-        (path_from_unsolved.into(), w_from_solved.len() + w_from_unsolved.len()) 
+        path_from_unsolved.into()
     }
 
     fn cycle_elements<const N: usize>(

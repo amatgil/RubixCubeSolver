@@ -343,7 +343,7 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 
     let mut buffer: String = String::new();
 
-    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
+    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"rubix-cube\">\n"));
 
     for piece in ordered_pieces {
         buffer.push_str(&piece.draw(camera, light_dir));
@@ -381,4 +381,5 @@ fn test_drawing_cube() {
     
     let text = get_svg(cube,m,0.0);
     println!("{}", text);
+    panic!()
 }
