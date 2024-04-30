@@ -31,6 +31,22 @@ impl Color {
             _ => None,
         }
     }
+
+	pub fn to_rgb(&self, brightness: f64) -> [usize; 3] {
+		use Color as C;
+		let color: [f64;3] = match self {
+			C::White  => [244.0, 219.0, 214.0],
+			C::Yellow => [238.0, 212.0, 159.0],
+			C::Red    => [237.0, 135.0, 150.0],
+			C::Orange => [245.0, 169.0, 127.0],
+			C::Blue   => [165.0, 173.0, 203.0],
+			C::Green  => [166.0, 218.0, 149.0],
+		};
+		[(color[0]*brightness) as usize, 
+		 (color[1]*brightness) as usize,
+		 (color[2]*brightness) as usize]
+	}
+
     pub fn opposite(&self) -> Self {
 	use Color as C;
 	match self {

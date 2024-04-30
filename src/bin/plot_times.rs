@@ -2,7 +2,7 @@
 use tubaitu::*;
 use tribaitri::*;
 
-use rayon::prelude::*;
+//use rayon::prelude::*;
 
 fn main() {
     let attempts_per_size = 3;
