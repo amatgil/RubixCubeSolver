@@ -5,6 +5,7 @@ use std::fs;
 use std::io::Write;
 use std::cmp::Ordering;
 use m_per_n::Vec3;
+use shared::colors::BACKGROUND_COL;
 
 #[derive(Clone, Debug, Copy)]
 struct Camera {
@@ -243,7 +244,7 @@ impl DrawablePiece {
             }
             
             let color: [usize; 3] = face.color.to_rgb(face.brightness);
-            buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color[0], color[1], color[2]));
+            buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n", color[0], color[1], color[2]));
         }
 
         buffer
@@ -343,7 +344,7 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 
     let mut buffer: String = String::new();
 
-    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"rubix-cube\">\n"));
+    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:{BACKGROUND_COL}\" xmlns=\"http://www.w3.org/2000/svg\" id=\"rubix-cube\">\n"));
 
     for piece in ordered_pieces {
         buffer.push_str(&piece.draw(camera, light_dir));

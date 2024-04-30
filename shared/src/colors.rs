@@ -18,6 +18,17 @@ impl std::fmt::Display for Color {
     }
 }
 
+
+// Colors:
+pub const WHITE_COL : [usize; 3] =  [244, 219, 214];
+pub const YELLOW_COL: [usize; 3] =  [238, 212, 159];
+pub const RED_COL   : [usize; 3] =  [237, 135, 150];
+pub const ORANGE_COL: [usize; 3] =  [245, 169, 127];
+pub const BLUE_COL  : [usize; 3] =  [165, 173, 203];
+pub const GREEN_COL : [usize; 3] =  [166, 218, 149];
+pub const BACKGROUND_COL: &str = "#24273a";
+
+
 impl Color {
     pub fn from(c: char) -> Option<Color> {
         use Color as C;
@@ -32,20 +43,21 @@ impl Color {
         }
     }
 
-	pub fn to_rgb(&self, brightness: f64) -> [usize; 3] {
-		use Color as C;
-		let color: [f64;3] = match self {
-			C::White  => [244.0, 219.0, 214.0],
-			C::Yellow => [238.0, 212.0, 159.0],
-			C::Red    => [237.0, 135.0, 150.0],
-			C::Orange => [245.0, 169.0, 127.0],
-			C::Blue   => [165.0, 173.0, 203.0],
-			C::Green  => [166.0, 218.0, 149.0],
-		};
-		[(color[0]*brightness) as usize, 
-		 (color[1]*brightness) as usize,
-		 (color[2]*brightness) as usize]
-	}
+    pub fn to_rgb(&self, brightness: f64) -> [usize; 3] {
+	use Color as C;
+	let color = match self {
+	    C::White  => WHITE_COL,
+	    C::Yellow => YELLOW_COL,
+	    C::Red    => RED_COL,
+	    C::Orange => ORANGE_COL,
+	    C::Blue   => BLUE_COL,
+	    C::Green  => GREEN_COL,
+	};
+
+        [(color[0] as f64 * brightness) as usize
+        ,(color[1] as f64 * brightness) as usize
+        ,(color[2] as f64 * brightness) as usize]
+    }
 
     pub fn opposite(&self) -> Self {
 	use Color as C;
