@@ -59,9 +59,7 @@ impl PartialOrd for Quadrilateral {
 }
 impl Ord for Quadrilateral {
     fn cmp(&self, other: &Self) -> Ordering {
-        if self.distance < other.distance {Ordering::Less}
-        else if self.distance > other.distance {Ordering::Greater}
-        else {Ordering::Equal}
+        self.distance.partial_cmp(&other.distance).expect("Tried to order pieces when one of the distances was NaN")
     }
 }
 
@@ -79,7 +77,7 @@ impl DrawablePiece {
         let c = self.center;
         let mut vertices = [Vec3::new(c.x, c.y, c.z); 8];
         for i in 0..8 {
-            let point = match i {
+            vertices[i] = match i {
                 P_TOP_RIGHT_FRONT    => vertices[0] + Vec3::new( r, -r,  r),  
                 P_TOP_RIGHT_BACK     => vertices[1] + Vec3::new( r,  r,  r),
                 P_TOP_LEFT_BACK      => vertices[2] + Vec3::new(-r,  r,  r),
@@ -90,7 +88,6 @@ impl DrawablePiece {
                 P_BOTTOM_LEFT_FRONT  => vertices[7] + Vec3::new(-r, -r, -r),
                 _ => unreachable!("Vertex index not valid?"),
             };
-            vertices[i] = point;
         }
         vertices
     }
@@ -183,7 +180,8 @@ impl DrawablePiece {
         let basis1 = Vec3::new(
             n.y*0.0 - n.z*n.y,
             n.z*n.x - n.x*0.0,
-            n.x*n.y - n.y*n.x);
+            n.x*n.y - n.y*n.x
+        );
         let n_i = basis1.normalize().unwrap();
 
         let basis2 = Vec3::new(
@@ -296,6 +294,7 @@ impl Cube2 {
     }
 }
 
+/// Draw the solving sequence, with `n_in_between_frames`*`moves.len()` frames
 pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: &[Move], n_in_between_frames: usize) -> Result<(), Box<dyn std::error::Error>> {
     let mut cube: Cube2 = *starting_cube;
 
@@ -353,6 +352,16 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     buffer.push_str("</svg>\n");
 
     buffer
+}
+
+
+fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
+    let mut max_dist: f64 = 0.0;
+    for vertex in vertices {
+        let dist = (vertex - point).abs();
+        if dist > max_dist { max_dist = dist }
+    }
+    max_dist
 }
 
 #[test]
