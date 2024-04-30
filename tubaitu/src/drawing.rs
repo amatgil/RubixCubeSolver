@@ -355,15 +355,6 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 }
 
 
-fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
-    let mut max_dist: f64 = 0.0;
-    for vertex in vertices {
-        let dist = (vertex - point).abs();
-        if dist > max_dist { max_dist = dist }
-    }
-    max_dist
-}
-
 #[test]
 fn test_drawing_piece() {
     
