@@ -257,7 +257,7 @@ impl DrawablePiece {
         Self::to_xy_plane(intersections,camera)
     }
 
-    fn draw(&self, camera: Camera, light_dir: Vec3, mov: Move, lerp_t: f64) -> String {
+    fn draw(&self, camera: Camera, light_dir: Vec3, mov: Move, lerp_t: f64) -> [Quadrilateral; 6] {
         let vertices = self.get_vertex_positions(mov, lerp_t);
         let projected_vertices = Self::project_points(vertices, camera);
 
@@ -265,22 +265,8 @@ impl DrawablePiece {
         // Sorts the polygons from furthest to nearest.
         projected_faces.sort_by(|a,b| b.cmp(a));
         
-        let mut buffer = String::new();
 
-        
-        for face in projected_faces {
-            buffer.push_str("<polygon points=\"");
-            for i in 0..4 {
-                let x:usize = (face.vertices[i][0]*100.0 + 0.5*WIDTH  as f64) as usize;
-                let y:usize = (face.vertices[i][1]*100.0 + 0.5*HEIGHT as f64) as usize;
-                buffer.push_str(&format!("{x},{y} "));
-            }
-            
-            let color: [usize; 3] = face.color.to_rgb(face.brightness);
-            buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color[0], color[1], color[2]));
-        }
-
-        buffer
+        projected_faces
     }
 }
 
@@ -300,7 +286,7 @@ struct DrawableCube {
 const DRAWING_PIECE_RADIUS: f64 = 10.0;
 impl Cube2 {
     fn to_points(self) -> DrawableCube {
-        let r = DRAWING_PIECE_RADIUS;
+        let r = DRAWING_PIECE_RADIUS + 0.1;
         let mut drawable_pieces = [DrawablePiece::default(); 8 ];
 
         for (piece_idx, original_piece) in self.pieces.iter().enumerate() {
@@ -353,14 +339,13 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: &[Move], n
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding svg as a String. This is a self-contained frame representing the cube in the given state.
 fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
-    let pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
+    let mut pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
     // Recorda que el radi és DRAWING_PIECE_RADIUS
     format!("{cube} with {mov:?} at with lerp value {lerp_t}");
 
     let light_pos = Vec3::new(10.0,-20.0,30.0);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let mut ordered_pieces = pieces;
     let pos =Vec3::new(10.0, -30.0,10.0)*10.0;
 
     let camera: Camera = Camera{
@@ -379,26 +364,42 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     };
 
     for i in pieces_to_cycle {
-        ordered_pieces[i].should_rotate = true;
+        pieces[i].should_rotate = true;
     }
-    
-    ordered_pieces.sort_by(|a, b| {
-        let distance1:f64 = (Vec3::new(a.center.x, a.center.y, a.center.z) - camera.pos).abs();
-        let distance2:f64 = (Vec3::new(b.center.x, b.center.y, b.center.z) - camera.pos).abs();
-        if distance1 > distance2 {Ordering::Less}
-        else if distance1 < distance2 {Ordering::Greater}
-        else {Ordering::Equal}
-       });
 
     let mut buffer: String = String::new();
 
-    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
+    let mut projected_cube:[Quadrilateral; 48] = [Quadrilateral::empty();48];
 
-
-    for piece in ordered_pieces {
-        buffer.push_str(&piece.draw(camera, light_dir, mov, lerp_t));
+    for (i, piece) in pieces.iter().enumerate() {
+        let aux = piece.draw(camera, light_dir, mov, lerp_t);
+        for j in 0..6 {
+            projected_cube[6*i+j] = aux[j];
+        }
     }
 
+    projected_cube.sort_by(|a, b| {
+        if a.distance < b.distance {Ordering::Greater}
+        else if a.distance > b.distance {Ordering::Less}
+        else {Ordering::Equal}
+    });
+
+    let mut buffer = String::new();
+
+    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
+
+    for face in projected_cube {
+        buffer.push_str("<polygon points=\"");
+        for i in 0..4 {
+            let x:usize = (face.vertices[i][0]*100.0 + 0.5*WIDTH  as f64) as usize;
+            let y:usize = (face.vertices[i][1]*100.0 + 0.5*HEIGHT as f64) as usize;
+            buffer.push_str(&format!("{x},{y} "));
+        }
+        
+        let color: [usize; 3] = face.color.to_rgb(face.brightness);
+        buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color[0], color[1], color[2]));
+    }
+    
     buffer.push_str("</svg>\n");
 
     buffer
@@ -430,7 +431,7 @@ fn test_drawing_piece() {
     let light_dir = Vec3::ZERO - light_pos;
 
     let buffer = piece.draw(camera, light_dir, Move{side: MoveSide::R, prime: false}, 0.3);
-    println!("{}", buffer);
+    //println!("{}", buffer);
 }
 
 #[test]
