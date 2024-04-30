@@ -7,14 +7,13 @@ edition = "2021"
 
 [workspace]
 members = [
-        "shared", "m_per_n", "tubaitu",  "tribaitri", 
+    "shared", "m_per_n", "tubaitu",  "tribaitri", 
 ]
 
 [dependencies]
 tubaitu = { path = "./tubaitu" }
 tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
-rayon = "1.10.0"
 
 [profile.release]
 opt-level = 3
