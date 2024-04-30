@@ -6,6 +6,14 @@ use std::io::Write;
 use std::cmp::Ordering;
 use m_per_n::Vec3;
 
+const PI: f64 = 3.14159265358979323846264338327950288419716939; // The superior circle constant!
+const WIDTH :usize = 10000;
+const HEIGHT:usize = 10000;
+const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.5;
+const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 1.0;
+const DISTANCE_CAMERA_PLANE: f64 = 1.0;
+
+
 #[derive(Clone, Debug, Copy)]
 struct Camera {
     pos: Vec3,
@@ -17,21 +25,7 @@ struct DrawablePiece {
     rotation: PieceRotation,
     center: Point,
     radius: f64,
-}
-
-const WIDTH :usize = 10000;
-const HEIGHT:usize = 10000;
-const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.5;
-const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 1.0;
-const DISTANCE_CAMERA_PLANE: f64 = 1.0;
-
-fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64{
-    let mut max_dist: f64 = 0.0;
-    for vertex in vertices {
-        let dist = (vertex - point).abs();
-        if dist > max_dist { max_dist = dist }
-    }
-    max_dist
+    should_rotate: bool,
 }
 
 #[derive(Copy, Clone)]
@@ -69,13 +63,47 @@ impl Quadrilateral {
     }
 }
 
+fn get_rotation_matrix(mov: Move, mut lerp_t: f64) -> Matrix<3,3>{
+    if mov.side == MoveSide::L 
+    || mov.side == MoveSide::D 
+    || mov.side == MoveSide::B {
+        lerp_t *= -1.0;
+    }
+
+    lerp_t *= if mov.prime {-1.0} else {1.0};
+
+    let cos = (lerp_t*PI/2.0).cos();
+    let sin = (lerp_t*PI/2.0).sin();
+    let matrix: Matrix::<3,3> = match mov.side {
+        MoveSide::R | MoveSide::L
+        => Matrix::<3,3>([MatRow::<3>([ 1.0, 0.0, 0.0]),
+                          MatRow::<3>([ 0.0, cos, sin]),
+                          MatRow::<3>([ 0.0,-sin, cos])]),
+
+        MoveSide::U | MoveSide::D 
+        =>  Matrix::<3,3>([MatRow::<3>([ cos, sin, 0.0]),
+                           MatRow::<3>([-sin, cos, 0.0]),
+                           MatRow::<3>([ 0.0, 0.0, 1.0])]),
+        
+        MoveSide::F | MoveSide::B 
+        =>  Matrix::<3,3>([MatRow::<3>([ cos , 0.0, sin]),
+                           MatRow::<3>([ 0.0 , 1.0, 0.0]),
+                           MatRow::<3>([-sin , 0.0, cos])]),
+    };
+    matrix
+}
+
 impl DrawablePiece {
     /// Returns an array of row matricies that correspond to the positions of the 
     /// pieces' vertices. 
-    fn get_vertex_positions(&self) -> [Vec3; 8] {
+    fn get_vertex_positions(&self, mov: Move, lerp_t: f64) -> [Vec3; 8] {
         let r = self.radius;
         let c = self.center;
         let mut vertices = [Vec3::new(c.x, c.y, c.z); 8];
+        let mut transformation: Matrix<3,3> = Matrix::<3,3>::ID();
+        if self.should_rotate {
+            transformation = get_rotation_matrix(mov, lerp_t);
+        }
         for i in 0..8 {
             vertices[i] = match i {
                 P_TOP_RIGHT_FRONT    => vertices[0] + Vec3::new( r, -r,  r),  
@@ -88,6 +116,12 @@ impl DrawablePiece {
                 P_BOTTOM_LEFT_FRONT  => vertices[7] + Vec3::new(-r, -r, -r),
                 _ => unreachable!("Vertex index not valid?"),
             };
+            if self.should_rotate {
+                // write vertex as column vector
+                let col_vec = Matrix::<3,1>([MatRow([vertices[i].x]), MatRow([vertices[i].y]),MatRow([vertices[i].z])]); 
+                let col_result = transformation*col_vec;
+                vertices[i] = Vec3::new(col_result[0][0],col_result[1][0],col_result[2][0]);
+            }
         }
         vertices
     }
@@ -223,8 +257,8 @@ impl DrawablePiece {
         Self::to_xy_plane(intersections,camera)
     }
 
-    fn draw(&self, camera: Camera, light_dir: Vec3) -> String {
-        let vertices = self.get_vertex_positions();
+    fn draw(&self, camera: Camera, light_dir: Vec3, mov: Move, lerp_t: f64) -> String {
+        let vertices = self.get_vertex_positions(mov, lerp_t);
         let projected_vertices = Self::project_points(vertices, camera);
 
         let mut projected_faces = self.get_polygons_with_brightness(light_dir, camera.pos, vertices, projected_vertices);
@@ -286,7 +320,8 @@ impl Cube2 {
             drawable_pieces[piece_idx] = DrawablePiece {
                 center,
                 radius: DRAWING_PIECE_RADIUS,
-                rotation
+                rotation,
+                should_rotate: false,
             };
         }
 
@@ -326,12 +361,26 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     let light_dir = Vec3::ZERO - light_pos;
 
     let mut ordered_pieces = pieces;
-    let pos =Vec3::new(10.1, -30.1,10.1)*10.0;
+    let pos =Vec3::new(10.0, -30.0,10.0)*10.0;
 
     let camera: Camera = Camera{
         pos,
         dir: Vec3::ZERO - pos,
     };
+
+    let pieces_to_cycle =  match mov.side {
+        MoveSide::R => FACE_RIGHT_SEQ_CYCLE,
+        MoveSide::L => FACE_LEFT_SEQ_CYCLE,
+        MoveSide::U => FACE_UP_SEQ_CYCLE,
+        MoveSide::D => FACE_DOWN_SEQ_CYCLE,
+        MoveSide::F => FACE_FRONT_SEQ_CYCLE,
+        MoveSide::B => FACE_BACK_SEQ_CYCLE,
+        _ => panic!(),
+    };
+
+    for i in pieces_to_cycle {
+        ordered_pieces[i].should_rotate = true;
+    }
     
     ordered_pieces.sort_by(|a, b| {
         let distance1:f64 = (Vec3::new(a.center.x, a.center.y, a.center.z) - camera.pos).abs();
@@ -345,8 +394,9 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 
     buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
 
+
     for piece in ordered_pieces {
-        buffer.push_str(&piece.draw(camera, light_dir));
+        buffer.push_str(&piece.draw(camera, light_dir, mov, lerp_t));
     }
 
     buffer.push_str("</svg>\n");
@@ -367,7 +417,7 @@ fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
 #[test]
 fn test_drawing_piece() {
     
-    let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0};
+    let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0, should_rotate: false};
 
     let pos =Vec3::new(20.0, 20.0, 20.0)*10.0;
 
@@ -379,7 +429,7 @@ fn test_drawing_piece() {
     let light_pos = Vec3::new(12.0,20.2,30.7);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let buffer = piece.draw(camera, light_dir);
+    let buffer = piece.draw(camera, light_dir, Move{side: MoveSide::R, prime: false}, 0.3);
     println!("{}", buffer);
 }
 
@@ -389,6 +439,6 @@ fn test_drawing_cube() {
     let cube = Cube2::scramble(&moves);
     let m = Move{side:MoveSide::R, prime: false};
     
-    let text = get_svg(cube,m,0.0);
+    let text = get_svg(cube,m,0.3);
     println!("{}", text);
 }
