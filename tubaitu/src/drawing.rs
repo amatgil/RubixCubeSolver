@@ -6,7 +6,13 @@ use std::io::Write;
 use std::cmp::Ordering;
 use m_per_n::Vec3;
 
-#[derive(Clone, Debug, Default, Copy)]
+#[derive(Clone, Debug, Copy)]
+struct Camera {
+    pos: Vec3,
+    dir: Vec3,
+}
+
+#[derive(Clone, Copy, Default, Debug)]
 struct DrawablePiece {
     rotation: PieceRotation,
     center: Point,
@@ -15,8 +21,8 @@ struct DrawablePiece {
 
 const WIDTH :usize = 10000;
 const HEIGHT:usize = 10000;
-const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.1;
-const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 0.8;
+const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.5;
+const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 1.0;
 const DISTANCE_CAMERA_PLANE: f64 = 1.0;
 
 fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64{
@@ -28,38 +34,12 @@ fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64{
     max_dist
 }
 
-#[derive(Copy, Clone, Default)]
-struct OrderedPiece {
-    distance: f64,
-    piece: DrawablePiece,
-}
-
-impl PartialEq for OrderedPiece {
-    fn eq(&self, other: &Self) -> bool {
-            (self.distance - other.distance).abs() < FLOAT_EPSILON
-    }
-}
-
-impl Eq for OrderedPiece {}
-
-impl PartialOrd for OrderedPiece {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl Ord for OrderedPiece {
-    fn cmp(&self, other: &Self) -> Ordering {
-        if self.distance < other.distance {Ordering::Less}
-        else if self.distance > other.distance {Ordering::Greater}
-        else {Ordering::Equal}
-    }
-}
-
 #[derive(Copy, Clone)]
 struct Quadrilateral {
     distance: f64,
     vertices: Matrix<4,2>,
     brightness: f64,
+    color: Color,
 }
 
 impl PartialEq for Quadrilateral {
@@ -87,7 +67,7 @@ impl Ord for Quadrilateral {
 
 impl Quadrilateral {
     fn empty() -> Self {
-        Quadrilateral{distance: 0.0, vertices: Matrix::ZERO(), brightness: 0.0}
+        Quadrilateral{distance: 0.0, vertices: Matrix::ZERO(), brightness: 0.0, color: Color::Blue}
     }
 }
 
@@ -137,12 +117,12 @@ impl DrawablePiece {
         let mut projected_faces:[Quadrilateral;6] = [Quadrilateral::empty();6];
         let mut faces: [[Vec3;4];6] = [[Vec3::ZERO;4];6];
 
-        faces[0] = [verts[0],verts[1],verts[5],verts[4]];
-        faces[1] = [verts[0],verts[3],verts[7],verts[4]];
-        faces[2] = [verts[0],verts[1],verts[2],verts[3]];
-        faces[3] = [verts[2],verts[3],verts[7],verts[6]];
-        faces[4] = [verts[1],verts[2],verts[6],verts[5]];
-        faces[5] = [verts[4],verts[5],verts[6],verts[7]]; 
+        faces[SIDE_RIGHT] = [verts[0],verts[1],verts[5],verts[4]];
+        faces[SIDE_FRONT] = [verts[0],verts[3],verts[7],verts[4]];
+        faces[SIDE_TOP]   = [verts[0],verts[1],verts[2],verts[3]];
+        faces[SIDE_LEFT]  = [verts[2],verts[3],verts[7],verts[6]];
+        faces[SIDE_BACK]  = [verts[1],verts[2],verts[6],verts[5]];
+        faces[SIDE_DOWN]  = [verts[4],verts[5],verts[6],verts[7]]; 
 
         projected_faces[0].vertices = Matrix::<4,2>([projected_verts[0], projected_verts[1], projected_verts[5], projected_verts[4]]);
         projected_faces[1].vertices = Matrix::<4,2>([projected_verts[0], projected_verts[3], projected_verts[7], projected_verts[4]]);
@@ -151,6 +131,8 @@ impl DrawablePiece {
         projected_faces[4].vertices = Matrix::<4,2>([projected_verts[1], projected_verts[2], projected_verts[6], projected_verts[5]]);
         projected_faces[5].vertices = Matrix::<4,2>([projected_verts[4], projected_verts[5], projected_verts[6], projected_verts[7]]);
 
+        let colors = (Piece{rotation: self.rotation}).to_color_sequence();
+                
         let center = Vec3::new(self.center.x,self.center.y, self.center.z);
         for i in 0..6 {
             projected_faces[i].distance = furthest_vertex_from_point(faces[i], camera_pos);
@@ -158,20 +140,19 @@ impl DrawablePiece {
             let normal_vector = get_normal_vector(faces[i], center);
             let dot_product = normal_vector.dot_product(light_dir.normalize().unwrap());
             projected_faces[i].brightness = MIN_BRIGHTNESS_MULTIPLIER.max(dot_product*GENERAL_BRIGHTNESS_MULTIPLIER);
+            projected_faces[i].color = colors[i];
         }
-
         projected_faces
     }
 
     fn find_intersection(
         point: Vec3,
-        camera_pos: Vec3,
-        camera_dir: Vec3
+        camera: Camera,
     ) -> Option<Vec3> {
-        let v = point - camera_pos;
-        let n = camera_dir;
+        let v = point - camera.pos;
+        let n = camera.dir;
         let p1 = point;
-        let p2 =  camera_pos + camera_dir*DISTANCE_CAMERA_PLANE;
+        let p2 =  camera.pos + camera.dir*DISTANCE_CAMERA_PLANE;
 
 
         // System of equations to find intersection point.
@@ -197,8 +178,8 @@ impl DrawablePiece {
     }
 
 
-    fn to_xy_plane(vertices: [Vec3; 8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
-        let n = camera_dir;
+    fn to_xy_plane(vertices: [Vec3; 8], camera: Camera) -> Matrix<8,2> {
+        let n = camera.dir;
         let basis1 = Vec3::new(
             n.y*0.0 - n.z*n.y,
             n.z*n.x - n.x*0.0,
@@ -220,7 +201,7 @@ impl DrawablePiece {
         let inverse_transformation:Matrix<3,3> = transformation.inverse().unwrap();
         let mut result = Matrix::<8,2>::ZERO();
 
-        let aux = camera_pos + camera_dir*DISTANCE_CAMERA_PLANE;
+        let aux = camera.pos + camera.dir*DISTANCE_CAMERA_PLANE;
         let cam_projection = MatRow::<3>([aux.x, aux.y, aux.z]);
 
         for (i, v) in vertices.iter().enumerate() {
@@ -231,24 +212,24 @@ impl DrawablePiece {
         result
     }
 
-    fn project_points(vertices: [Vec3; 8], camera_pos: Vec3, camera_dir: Vec3) -> Matrix<8,2> {
+    fn project_points(vertices: [Vec3; 8], camera: Camera) -> Matrix<8,2> {
         let mut intersections: [Vec3; 8] = [Vec3::ZERO;8];
         for i in 0..8 {
-            let vec = vertices[i] - camera_pos;
-            let intersection_option = Self::find_intersection(vertices[i], camera_pos, camera_dir);
+            let vec = vertices[i] - camera.pos;
+            let intersection_option = Self::find_intersection(vertices[i], camera);
             intersections[i] = match intersection_option {
                 Some(x) => x,
                 None    => Vec3::new(0.0,0.0,0.0),
             };
         }
-        Self::to_xy_plane(intersections,camera_pos,camera_dir)
+        Self::to_xy_plane(intersections,camera)
     }
 
-    fn draw(&self, camera_pos: Vec3, camera_dir: Vec3, light_dir: Vec3) -> String {
+    fn draw(&self, camera: Camera, light_dir: Vec3) -> String {
         let vertices = self.get_vertex_positions();
-        let projected_vertices = Self::project_points(vertices, camera_pos, camera_dir);
+        let projected_vertices = Self::project_points(vertices, camera);
 
-        let mut projected_faces = self.get_polygons_with_brightness(light_dir, camera_pos, vertices, projected_vertices);
+        let mut projected_faces = self.get_polygons_with_brightness(light_dir, camera.pos, vertices, projected_vertices);
         // Sorts the polygons from furthest to nearest.
         projected_faces.sort_by(|a,b| b.cmp(a));
         
@@ -262,8 +243,9 @@ impl DrawablePiece {
                 let y:usize = (face.vertices[i][1]*100.0 + 0.5*HEIGHT as f64) as usize;
                 buffer.push_str(&format!("{x},{y} "));
             }
-            let color: usize = (face.brightness*255.0) as usize;
-            buffer.push_str(&format!("\" fill=\"#{color:02x}{color:02x}{color:02x}\" stroke=\"none\"/>\n"));
+            
+            let color: [usize; 3] = face.color.to_rgb(face.brightness);
+            buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color[0], color[1], color[2]));
         }
 
         buffer
@@ -340,29 +322,32 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     let pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
     // Recorda que el radi és DRAWING_PIECE_RADIUS
     format!("{cube} with {mov:?} at with lerp value {lerp_t}");
-    let cam_pos = Vec3::new(20.0, 20.0, 20.0)*10.0;
-    let cam_dir = Vec3::ZERO - cam_pos;
 
-    let light_pos = Vec3::new(10.0,20.0,-30.0);
+    let light_pos = Vec3::new(10.0,-20.0,30.0);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let mut ordered_pieces:[OrderedPiece;8] = [OrderedPiece::default();8];
+    let mut ordered_pieces = pieces;
+    let pos =Vec3::new(10.1, -30.1,10.1)*10.0;
+
+    let camera: Camera = Camera{
+        pos,
+        dir: Vec3::ZERO - pos,
+    };
     
-    for (i, piece) in pieces.iter().enumerate() {
-        let distance = (Vec3::new(piece.center.x, piece.center.y, piece.center.z) - cam_pos).abs();
-        ordered_pieces[i] = OrderedPiece{distance, piece: *piece};
-    }
-
-    ordered_pieces.sort_by(|a, b| b.cmp(a));
-
+    ordered_pieces.sort_by(|a, b| {
+        let distance1:f64 = (Vec3::new(a.center.x, a.center.y, a.center.z) - camera.pos).abs();
+        let distance2:f64 = (Vec3::new(b.center.x, b.center.y, b.center.z) - camera.pos).abs();
+        if distance1 > distance2 {Ordering::Less}
+        else if distance1 < distance2 {Ordering::Greater}
+        else {Ordering::Equal}
+       });
 
     let mut buffer: String = String::new();
 
-    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
-
+    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
 
     for piece in ordered_pieces {
-        buffer.push_str(&piece.piece.draw(cam_pos, cam_dir, light_dir));
+        buffer.push_str(&piece.draw(camera, light_dir));
     }
 
     buffer.push_str("</svg>\n");
@@ -372,21 +357,27 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 
 #[test]
 fn test_drawing_piece() {
+    
     let piece = DrawablePiece{rotation: PieceRotation::WB, center: Point{x:5.0,y:5.0,z:5.0}, radius:5.0};
 
-    let cam_pos = (Vec3::new(35.5, 25.0, 10.5))*10.0;
-    let cam_dir = Vec3::ZERO - cam_pos;
+    let pos =Vec3::new(20.0, 20.0, 20.0)*10.0;
+
+    let camera: Camera = Camera{
+        pos,
+        dir: Vec3::ZERO - pos,
+    };
 
     let light_pos = Vec3::new(12.0,20.2,30.7);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let buffer = piece.draw(cam_pos, cam_dir, light_dir);
+    let buffer = piece.draw(camera, light_dir);
     println!("{}", buffer);
 }
 
 #[test]
 fn test_drawing_cube() {
-    let cube = Cube2::default();
+    let moves: MoveSeq = MoveSeq(vec![Move::new("R")]);
+    let cube = Cube2::scramble(&moves);
     let m = Move{side:MoveSide::R, prime: false};
     
     let text = get_svg(cube,m,0.0);

@@ -202,6 +202,9 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         while w_from_solved.is_disjoint(&w_from_unsolved) {
             advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
             advance_bfs(&mut w_from_solved, &mut queue_from_solved);
+            print!("\rEstats visitats: {} i {}", w_from_unsolved.len(), w_from_solved.len());
+            use std::io::Write;
+            std::io::stdout().flush().unwrap()
         }
         println!();
 
@@ -546,6 +549,7 @@ pub enum PieceRotation {
     YR, YB, YG,
     #[default] YO,
 }
+
 
 pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
     v.swap(idxs[0], idxs[1]);
