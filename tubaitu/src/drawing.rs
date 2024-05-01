@@ -394,11 +394,13 @@ pub fn draw_sequence(
         let i = i * n_in_between_frames;
         for inbetween_index in 0..n_in_between_frames {
             let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
-            let filename = file_prefix.join(format!("_{:>04}", i + inbetween_index));
+            let mut filename_str = file_prefix.to_str().unwrap().to_owned();
+            filename_str.push_str(&format!("_{:>04}", i + inbetween_index));
+            println!("Generating: {:?}", filename_str);
 
             let svg: String = get_svg(cube, *mov, lerp_t);
 
-            let mut file: fs::File = fs::File::create(filename)?;
+            let mut file: fs::File = fs::File::create::<PathBuf>(filename_str.into())?;
             file.write_all(svg.as_bytes())?;
         }
         cube.make_move(*mov);
@@ -435,8 +437,6 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     for i in pieces_to_cycle {
         pieces[i].should_rotate = true;
     }
-
-    let mut buffer: String = String::new();
 
     let mut projected_cube: [Quadrilateral; 48] = [Quadrilateral::empty(); 48];
 

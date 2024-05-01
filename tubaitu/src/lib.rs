@@ -48,10 +48,10 @@ impl Solvable for Cube2 {
 
     fn save_sequence(starting_cube: Self, moves: MoveSeq) -> Result<(), Box<dyn Error>> {
         let dir = std::env::temp_dir();
-
+        const TUBAITU_DIR_NAME: &str = "tubaitu_svgs";
 
         draw_sequence(
-            &dir.join("first_test_"),
+            &dir.join(TUBAITU_DIR_NAME).join("first_test_"),
             &starting_cube,
             moves,
             4
