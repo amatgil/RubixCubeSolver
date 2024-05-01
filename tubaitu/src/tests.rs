@@ -32,30 +32,30 @@ fn cycling_test_unchecked() {
 #[test]
 fn redundant_move_right() {
     let mut cube = Cube2::default();
-    cube.make_move(Move::new("R"));
-    cube.make_move(Move::new("R"));
-    cube.make_move(Move::new("R"));
-    cube.make_move(Move::new("R"));
+    cube.make_move(Move::R);
+    cube.make_move(Move::R);
+    cube.make_move(Move::R);
+    cube.make_move(Move::R);
     assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn redundant_move_up() {
     let mut cube = Cube2::default();
-    cube.make_move(Move::new("U"));
-    cube.make_move(Move::new("U"));
-    cube.make_move(Move::new("U"));
-    cube.make_move(Move::new("U"));
+    cube.make_move(Move::U);
+    cube.make_move(Move::U);
+    cube.make_move(Move::U);
+    cube.make_move(Move::U);
     assert_eq!(cube, Cube2::default());
 }
 
 #[test]
 fn redundant_move_double_up() {
     let mut cube = Cube2::default();
-    cube.make_move(Move::new("U"));
-    cube.make_move(Move::new("U"));
-    cube.make_move(Move::new("U'"));
-    cube.make_move(Move::new("U'"));
+    cube.make_move(Move::U);
+    cube.make_move(Move::U);
+    cube.make_move(Move::U);
+    cube.make_move(Move::U);
     assert_eq!(cube, Cube2::default());
 }
 
@@ -65,15 +65,15 @@ fn stickers_solved_input() {
     use Color as C;
     let mut s = TubaiStickers::default();
 
-    s.right  = TubaiStickerFace([C::Orange, C::Orange, C::Orange, C::Orange]);
-    s.left   = TubaiStickerFace([C::Red, C::Red, C::Red, C::Red]);
     s.top    = TubaiStickerFace([C::Yellow, C::Yellow, C::Yellow, C::Yellow]);
+    s.front = TubaiStickerFace([C::Orange, C::Orange, C::Orange, C::Orange]);
+    s.back   = TubaiStickerFace([C::Red, C::Red, C::Red, C::Red]);
     s.down   = TubaiStickerFace([C::White, C::White, C::White, C::White]);
-    s.front  = TubaiStickerFace([C::Green, C::Green, C::Green, C::Green]);
-    s.back   = TubaiStickerFace([C::Blue, C::Blue, C::Blue, C::Blue]);
+    s.left  = TubaiStickerFace([C::Green, C::Green, C::Green, C::Green]);
+    s.right   = TubaiStickerFace([C::Blue, C::Blue, C::Blue, C::Blue]);
 
     let test_cube = Cube2::from_stickers(s);
-    let solved_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::WO }; 8] };
+    let solved_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::YO }; 8] };
     dbg!(test_cube, solved_cube);
     assert!(test_cube == solved_cube)
 }
@@ -92,7 +92,7 @@ fn stickers_afterright_input() {
 
     let test_cube = Cube2::from_stickers(s);
     let mut righted_cube = Cube2 { pieces: [Piece { rotation: PieceRotation::YG }; 8] };
-    righted_cube.make_move(Move::new("R"));
+    righted_cube.make_move(Move::R);
     dbg!(righted_cube);
 
     assert!(test_cube == righted_cube)

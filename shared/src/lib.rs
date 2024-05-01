@@ -16,8 +16,10 @@ pub use ui::*;
 
 pub const FLOAT_EPSILON: f64 = 0.0001;
 
+#[derive(Clone)]
 struct State<C> {
-    past_moves: Vec<Move>,
+    past_state: Option<(Rc<State<C>>, Move)>, 
+    length_of_path: usize,
     cube: C,
 }
 impl<C: Solvable> Hash for State<C> {
@@ -36,15 +38,13 @@ fn advance_bfs<C: Solvable>(
     visited: &mut HashSet<Rc<State<C>>>,
     queue: &mut VecDeque<Rc<State<C>>>,
 ) {
-    let current_depth = queue.back().unwrap().past_moves.len();
-    while let Some(rc_state) = queue.pop_front() {
-        if rc_state.past_moves.len() > current_depth { return; }
-        let past_moves = &rc_state.past_moves;
-        let x = &rc_state.cube;
-        for (m, y) in find_adjacents(x) {
-            let new_moves = append_move(past_moves, m);
+    let current_depth = queue.back().unwrap().length_of_path;
+    while let Some(state) = queue.pop_front() {
+        if state.length_of_path > current_depth { return; }
+        for (m, y) in find_adjacents(&state.cube) {
             let new_state = Rc::new(State {
-                past_moves: new_moves.clone(),
+                past_state: Some((Rc::clone(&state), m)),
+                length_of_path: state.length_of_path + 1,
                 cube: y,
             });
             if !have_we_seen_this_state_before(visited, new_state.clone()) {
@@ -60,12 +60,6 @@ fn have_we_seen_this_state_before<C: Solvable>(
     new: Rc<State<C>>,
 ) -> bool {
     seen.contains(&new) // Equality only depends on the cube
-}
-
-fn append_move(old: &[Move], m: Move) -> Vec<Move> {
-    let mut new = old.to_owned();
-    new.push(m);
-    new
 }
 
 fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
@@ -87,7 +81,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn write_blank_slate() -> Result<(), Box<dyn Error>>;
     fn read_from_slate() -> Result<Self, Box<dyn Error>>;
 
-    fn solve_random(scramble_length: usize) {
+    fn solve_random(scramble_length: usize, prints_enabled: bool) {
         println!("[INFO]: Generating random cube (n={scramble_length})...");
         let scrambling_instant = Instant::now();
         let (mut cube, scramble) = Self::random_scramble(scramble_length);
@@ -109,7 +103,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("Scramble to solve:\n{cube}");
 
         let starting_instant = Instant::now();
-        let r = cube.solve();
+        let r = cube.solve(prints_enabled);
         let time_taken = starting_instant.elapsed();
 
         for m in &r.0 {
@@ -124,7 +118,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             time_taken.as_millis(),
             time_taken.as_micros()
         );
-        println!("[RESULT]: Final solution is: {r}");
+        println!("[RESULT]: Final solution is: {}", r);
         print!("[INFO]: Uncompressed solution: [ ");
         for m in &r.0 {
             print!("{m} ");
@@ -150,13 +144,13 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
                     "[ERROR]: Could not parse `{0}`:'{e}'. Please double check `{0}`",
                     Self::INPUT_FILE_NAME
                 );
-                std::process::exit(2);
+                std::process::exit(2)
             }
         };
         println!("[INFO]: `{}` has been read", Self::INPUT_FILE_NAME);
         println!("[INFO]: Interpreted cube is:\n{cube}");
         println!("[INFO]: Starting the solve...");
-        let r = cube.solve();
+        let r = cube.solve(true);
 
         println!("[INFO]: Checking correctness...");
         let mut checking_cube = cube.clone();
@@ -167,7 +161,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("Starting cube:\n{cube}\n");
         println!("Final cube:\n{checking_cube}");
 
-        println!("[RESULT]: Final solution is: {r}");
+        println!("[RESULT]: Final solution is: {}", r);
         print!("[INFO]: Uncompressed solution: [ ");
         for m in &r.0 {
             print!("{m} ");
@@ -184,16 +178,18 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("]");
     }
 
-    fn solve(&self) -> MoveSeq {
+    fn solve(&self, prints_enabled: bool) -> MoveSeq {
         let first_state_unsolved = Rc::new(State {
-            past_moves: Vec::new(),
             cube: self.clone(),
+            past_state: None,
+            length_of_path: 0,
         });
-        let mut w_from_unsolved = HashSet::from([first_state_unsolved.clone()]);
-        let mut queue_from_unsolved = VecDeque::from([first_state_unsolved]);
+        let mut w_from_unsolved: HashSet<Rc<State<Self>>> = HashSet::from([first_state_unsolved.clone()]);
+        let mut queue_from_unsolved: VecDeque<Rc<State<Self>>> = VecDeque::from([first_state_unsolved]);
 
         let first_state_solved = Rc::new(State {
-            past_moves: Vec::new(),
+            past_state: None,
+            length_of_path: 0,
             cube: Self::default(),
         });
         let mut w_from_solved = HashSet::from([first_state_solved.clone()]);
@@ -206,52 +202,54 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             use std::io::Write;
             std::io::stdout().flush().unwrap()
         }
-        println!();
-
-        println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
-            w_from_unsolved.len(),
-            w_from_solved.len(),
-        );
-
-        // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
-        //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
-        println!(
-            "[INFO]: Number of intersecting states found is: {}",
-            w_from_solved.intersection(&w_from_unsolved).count()
-        );
+        if prints_enabled {
+            println!(); 
+            println!("[INFO]: Found solution after exploring: {} states from unsolved and {} states from solved",
+                     w_from_unsolved.len(),
+                     w_from_solved.len(),
+            );
+            // TODO: This only prints one solution, even though we've likely found many. This should be iterated through and the "best" one picked out.
+            //       The definition of "best" should include something like length and the ratio of 'nice' moves (U, F, R) to 'weird' moves (the rest, like B')
+            println!(
+                "[INFO]: Number of intersecting states found is: {}",
+                w_from_solved.intersection(&w_from_unsolved).count()
+            );
+        }
+        
         let schrodinger_state: &State<_> =
             (*w_from_solved.intersection(&w_from_unsolved).next().unwrap()).deref();
-        let mut path_from_unsolved: Vec<Move> = w_from_unsolved
-            .get(schrodinger_state).unwrap()
-            .past_moves
-            .clone();
-        let path_from_solved: Vec<Move> = w_from_solved
-            .get(schrodinger_state).unwrap()
-            .past_moves
-            .clone();
+        let mut path_from_unsolved: Vec<Move> =
+            extract_path_from_first_state(w_from_unsolved.get(schrodinger_state).cloned());
+        let path_from_solved: Vec<Move> =
+            extract_path_from_first_state(w_from_solved.get(schrodinger_state).cloned());
 
-        println!("[INFO]: Found halves of the math: merging...");
+        if prints_enabled {
+            println!("[INFO]: Found halves of the math: merging...");
 
-        for m in path_from_solved.into_iter().rev() {
-            path_from_unsolved.push(m.opposite());
+            for m in path_from_solved.clone().into_iter().rev() {
+                path_from_unsolved.push(m.opposite());
+            }
+            println!("[INFO]: Verifying solution...");
         }
 
-        println!("[INFO]: Verifying solution...");
         let mut test_cube = self.clone();
         for m in &path_from_unsolved {
             test_cube.make_move(*m);
         }
-        if test_cube == Self::default() { println!("[INFO]: Verification succeeded") }
-        else { println!("[ERROR]: Verification incorrect, missing moves for linking rotation") }
+        if prints_enabled {
+            if test_cube == Self::default() { println!("[INFO]: Verification succeeded") }
+            else { println!("[ERROR]: Verification incorrect, missing moves for linking rotation") }
+        }
 
         path_from_unsolved.into()
     }
+
     fn cycle_elements<const N: usize>(
         pieces: &mut [Piece; N],
         mut seq: [usize; 4],
-        mov @ Move { side: _, prime }: Move,
+        mov: Move,
     ) {
-        if prime { seq = reverse_seq(seq); }
+        if mov.is_prime() { seq = reverse_seq(seq); }
         cycle_items(pieces, seq); // Move the pieces
         for i in seq { pieces[i].rotate(mov) } // Rotate the pieces we just cycled around
     }
@@ -262,23 +260,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         c
     }
     fn random_scramble(length: usize) -> (Self, MoveSeq) {
-        fn get_move_from_n(n: usize) -> Move {
-            match n % 12 {
-                0 => Move::new("R"),
-                1 => Move::new("L"),
-                2 => Move::new("R"),
-                3 => Move::new("B"),
-                4 => Move::new("U"),
-                5 => Move::new("D"),
-                6 => Move::new("R'"),
-                7 => Move::new("L'"),
-                8 => Move::new("R'"),
-                9 => Move::new("B'"),
-                10 => Move::new("U'"),
-                11 => Move::new("D'"),
-                _ => unreachable!("Range reaches 12"),
-            }
-        }
+        fn get_move_from_n(n: usize) -> Move { Move(n as u8) }
 
         let mut scramble = vec![];
         for _ in 0..length {
@@ -288,6 +270,20 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         let c = Self::scramble(&scramble.clone().into());
         (c, scramble.into())
     }
+}
+
+/// inefficient, but only called twice so eh
+fn extract_path_from_first_state<C>(s: Option<Rc<State<C>>>) -> Vec<Move> {
+    let mut v = VecDeque::new();
+    if s.is_none() { return v.into(); }
+    let mut s: Rc<State<C>> = s.unwrap();
+    while let Some((past_state, m)) = &s.past_state {
+        v.push_front(*m);
+        if past_state.past_state.is_none() { break; }
+        s = (s.past_state).clone().unwrap().0;
+    }
+
+    v.into()
 }
 
 pub const SIDE_RIGHT: usize = 0;
@@ -304,12 +300,12 @@ pub const COLOR_DOWN_SEQ: [usize; 4] = [SIDE_RIGHT, SIDE_BACK, SIDE_LEFT, SIDE_F
 pub const COLOR_FRONT_SEQ: [usize; 4] = [SIDE_TOP, SIDE_RIGHT, SIDE_DOWN, SIDE_LEFT];
 pub const COLOR_BACK_SEQ: [usize; 4] = [SIDE_LEFT, SIDE_DOWN, SIDE_RIGHT, SIDE_TOP];
 
+/// A move, internally represented by a single u8 using bit magic
+///
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Move {
-    pub side: MoveSide,
-    pub prime: bool,
-}
+pub struct Move(u8);
 
+#[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MoveSide {
     R,
@@ -321,35 +317,34 @@ pub enum MoveSide {
 }
 
 impl Move {
-    pub fn new(s: &str) -> Move {
-        if s.len() > 2 {
-            panic!("{s} no és un moviment legal");
-        }
-        let ms = s.chars().nth(0).unwrap();
-        let k = s.chars().nth(1);
-        if let Some(prima) = k {
-            if prima != '\'' { panic!("{s} té un segon char que no és una prima") }
-        }
+    pub const R:  Move = Self(0);
+    pub const RP: Move = Self(1);
+    pub const F:  Move = Self(2);
+    pub const FP: Move = Self(3);
+    pub const U:  Move = Self(4);
+    pub const UP: Move = Self(5);
+    pub const L:  Move = Self(6);
+    pub const LP: Move = Self(7);
+    pub const B:  Move = Self(8);
+    pub const BP: Move = Self(9);
+    pub const D:  Move = Self(10);
+    pub const DP: Move = Self(11);
 
-        let m = match ms {
-            'R' => MoveSide::R,
-            'F' => MoveSide::F,
-            'U' => MoveSide::U,
-            'L' => MoveSide::L,
-            'B' => MoveSide::B,
-            'D' => MoveSide::D,
-            _ => panic!("{ms} is not a valid face move"),
-        };
-
-        Move {
-            side: m,
-            prime: k.is_some(),
-        }
-    }
     pub fn opposite(&self) -> Self {
-        Self {
-            prime: !self.prime,
-            ..*self
+        Self(self.0 ^ 1)
+    }
+    pub fn is_prime(&self) -> bool {
+        (self.0 & 1) != 0
+    }
+    pub fn side(&self) -> MoveSide {
+        match *self {
+            Self::R | Self::RP => MoveSide::R,
+            Self::F | Self::FP => MoveSide::F,
+            Self::U | Self::UP => MoveSide::U,
+            Self::L | Self::LP => MoveSide::L,
+            Self::B | Self::BP => MoveSide::B,
+            Self::D | Self::DP => MoveSide::D,
+            _ => unreachable!(), // TODO: Use _unchecked when tests pass
         }
     }
 }
@@ -464,31 +459,13 @@ impl Display for MoveSeq {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut stack: Vec<ExpandedMove> = vec![];
         for mov in self.0.iter() {
-            let ext = match mov {
-                Move {
-                    side: MoveSide::L,
-                    prime,
-                } => ExpandedMove::L { prime: *prime },
-                Move {
-                    side: MoveSide::R,
-                    prime,
-                } => ExpandedMove::R { prime: *prime },
-                Move {
-                    side: MoveSide::F,
-                    prime,
-                } => ExpandedMove::F { prime: *prime },
-                Move {
-                    side: MoveSide::B,
-                    prime,
-                } => ExpandedMove::B { prime: *prime },
-                Move {
-                    side: MoveSide::U,
-                    prime,
-                } => ExpandedMove::U { prime: *prime },
-                Move {
-                    side: MoveSide::D,
-                    prime,
-                } => ExpandedMove::D { prime: *prime },
+            let ext = match mov.side() {
+                MoveSide::L => ExpandedMove::L { prime: mov.is_prime() },
+                MoveSide::R => ExpandedMove::R { prime: mov.is_prime() },
+                MoveSide::F => ExpandedMove::F { prime: mov.is_prime() },
+                MoveSide::B => ExpandedMove::B { prime: mov.is_prime() },
+                MoveSide::U => ExpandedMove::U { prime: mov.is_prime() },
+                MoveSide::D => ExpandedMove::D { prime: mov.is_prime() },
             };
             stack.push(ext);
             while stack.len() > 1 {
@@ -517,7 +494,7 @@ impl Display for MoveSeq {
 impl std::fmt::Display for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         let mut out = String::new();
-        out.push(match self.side {
+        out.push(match self.side() {
             MoveSide::R => 'R',
             MoveSide::F => 'F',
             MoveSide::U => 'U',
@@ -525,7 +502,7 @@ impl std::fmt::Display for Move {
             MoveSide::B => 'B',
             MoveSide::D => 'D',
         });
-        if self.prime {
+        if self.is_prime() {
             out.push('\'')
         }
 
@@ -569,4 +546,32 @@ pub fn random_number_in_range(max: usize) -> usize {
         .try_into().unwrap();
 
     nanos % max
+}
+
+#[test]
+fn opposite_moves() {
+    assert_eq!(Move::R.opposite(), Move::RP);
+    assert_eq!(Move::RP.opposite(), Move::R);
+    assert_eq!(Move::L.opposite(), Move::LP);
+    assert_eq!(Move::LP.opposite(), Move::L);
+    assert_eq!(Move::F.opposite(), Move::FP);
+    assert_eq!(Move::FP.opposite(), Move::F);
+    assert_eq!(Move::U.opposite(), Move::UP);
+    assert_eq!(Move::UP.opposite(), Move::U);
+}
+
+#[test]
+fn primeness() {
+    assert!(!Move::R.is_prime());
+    assert!(!Move::L.is_prime());
+    assert!(!Move::F.is_prime());
+    assert!(!Move::B.is_prime());
+    assert!(!Move::U.is_prime());
+    assert!(!Move::D.is_prime());
+    assert!( Move::RP.is_prime());
+    assert!( Move::LP.is_prime());
+    assert!( Move::FP.is_prime());
+    assert!( Move::BP.is_prime());
+    assert!( Move::UP.is_prime());
+    assert!( Move::DP.is_prime());
 }

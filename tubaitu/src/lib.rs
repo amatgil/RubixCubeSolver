@@ -52,7 +52,7 @@ impl Solvable for Cube2 {
         read_tubaitu_from_string(&input)
     }
     fn make_move(&mut self, m: Move) {
-        match m.side {
+        match m.side() {
             MoveSide::R => Self::cycle_elements::<8>(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
             MoveSide::L => Self::cycle_elements::<8>(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),
             MoveSide::U => Self::cycle_elements::<8>(&mut self.pieces, FACE_UP_SEQ_CYCLE   , m),
@@ -63,8 +63,8 @@ impl Solvable for Cube2 {
     }
     fn moves_of_adjacency() -> Vec<Move> {
         Vec::from([
-            Move::new("R"), Move::new("F"), Move::new("U"),
-            Move::new("L'"), Move::new("B'"), Move::new("D'")
+            Move::R, Move::F, Move::U,
+            Move::L, Move::B, Move::D
         ])
     }
     fn write_blank_slate() -> Result<(), Box<dyn Error>> {
@@ -92,18 +92,18 @@ impl Solvable for Cube2 {
 fn get_orientation_generators() -> [Vec<Move>; 6] {
     [
 	vec![],
-	vec![Move::new("F") , Move::new("B'")],
-	vec![Move::new("R"), Move::new("L'")],
-	vec![Move::new("F'"), Move::new("B")],
-	vec![Move::new("R'"), Move::new("L'")],
-	vec![Move::new("F"), Move::new("B"), Move::new("F"), Move::new("B")],
+	vec![Move::F, Move::B],
+	vec![Move::R, Move::L],
+	vec![Move::F, Move::B],
+	vec![Move::R, Move::L],
+	vec![Move::F, Move::B, Move::F, Move::B],
     ]
 }
 fn get_rotation_generators() -> [Vec<Move>; 4] {
     [
 	vec![],
-	vec![Move::new("U"), Move::new("D'")],
-	vec![Move::new("D"), Move::new("U'")],
-	vec![Move::new("U"), Move::new("D"), Move::new("U"), Move::new("D")],
+	vec![Move::U, Move::D],
+	vec![Move::D, Move::U],
+	vec![Move::U, Move::D, Move::U, Move::D],
     ]
 }

@@ -63,18 +63,27 @@ impl Quadrilateral {
     }
 }
 
+fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
+    let mut max_dist: f64 = 0.0;
+    for vertex in vertices {
+        let dist = (vertex - point).abs();
+        if dist > max_dist { max_dist = dist }
+    }
+    max_dist
+}
+
 fn get_rotation_matrix(mov: Move, mut lerp_t: f64) -> Matrix<3,3>{
-    if mov.side == MoveSide::L 
-    || mov.side == MoveSide::D 
-    || mov.side == MoveSide::B {
+    if mov.side() == MoveSide::L 
+    || mov.side() == MoveSide::D 
+    || mov.side() == MoveSide::B {
         lerp_t *= -1.0;
     }
 
-    lerp_t *= if mov.prime {-1.0} else {1.0};
+    lerp_t *= if mov.is_prime() {-1.0} else {1.0};
 
     let cos = (lerp_t*PI/2.0).cos();
     let sin = (lerp_t*PI/2.0).sin();
-    let matrix: Matrix::<3,3> = match mov.side {
+    let matrix: Matrix::<3,3> = match mov.side() {
         MoveSide::R | MoveSide::L
         => Matrix::<3,3>([MatRow::<3>([ 1.0, 0.0, 0.0]),
                           MatRow::<3>([ 0.0, cos, sin]),
@@ -353,7 +362,7 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
         dir: Vec3::ZERO - pos,
     };
 
-    let pieces_to_cycle =  match mov.side {
+    let pieces_to_cycle =  match mov.side() {
         MoveSide::R => FACE_RIGHT_SEQ_CYCLE,
         MoveSide::L => FACE_LEFT_SEQ_CYCLE,
         MoveSide::U => FACE_UP_SEQ_CYCLE,
@@ -386,7 +395,7 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 
     let mut buffer = String::new();
 
-    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:#363a4f\" xmlns=\"http://www.w3.org/2000/svg\" id=\"vonkoch-holder\">\n"));
+    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:{BACKGROUND_COL}\" xmlns=\"http://www.w3.org/2000/svg\" id=\"rubix-cube\">\n"));
 
     for face in projected_cube {
         buffer.push_str("<polygon points=\"");
@@ -406,15 +415,6 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 }
 
 
-fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
-    let mut max_dist: f64 = 0.0;
-    for vertex in vertices {
-        let dist = (vertex - point).abs();
-        if dist > max_dist { max_dist = dist }
-    }
-    max_dist
-}
-
 #[test]
 fn test_drawing_piece() {
     
@@ -430,15 +430,14 @@ fn test_drawing_piece() {
     let light_pos = Vec3::new(12.0,20.2,30.7);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let buffer = piece.draw(camera, light_dir, Move{side: MoveSide::R, prime: false}, 0.3);
+    let buffer = piece.draw(camera, light_dir, Move::R, 0.3);
     //println!("{}", buffer);
 }
 
 #[test]
 fn test_drawing_cube() {
-    let moves: MoveSeq = MoveSeq(vec![Move::new("R")]);
-    let cube = Cube2::scramble(&moves);
-    let m = Move{side:MoveSide::R, prime: false};
+    let cube = Cube2::default();
+    let m = Move::R;
     
     let text = get_svg(cube,m,0.3);
     println!("{}", text);

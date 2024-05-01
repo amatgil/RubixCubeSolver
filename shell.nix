@@ -11,11 +11,10 @@ let
     clippy
     clang
     mold
+    gnuplot
+    heaptrack
+    valgrind
 
-    #(rust-bin.stable.latest.default.override {
-    # extensions = [ "rust-src" ];
-    # targets = [ "wasm32-unknown-unknown" ];
-    # })
   ];
 in
 pkgs.mkShell {

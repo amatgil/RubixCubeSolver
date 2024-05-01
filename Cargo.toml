@@ -7,7 +7,7 @@ edition = "2021"
 
 [workspace]
 members = [
-        "shared", "m_per_n", "tubaitu",  "tribaitri", 
+    "shared", "m_per_n", "tubaitu",  "tribaitri", 
 ]
 
 [dependencies]
@@ -15,11 +15,10 @@ tubaitu = { path = "./tubaitu" }
 tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
 
-[workspace.dependencies]
-
 [profile.release]
 opt-level = 3
 debug = false
 strip = true
-lto = true
 codegen-units = 1
+lto = true
+overflow-checks = false

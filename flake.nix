@@ -2,7 +2,6 @@
   description = "Basic Rust development flake (per a mi)";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    #rust-overlay = { url = "github:oxalica/rust-overlay"; };
   };
   outputs = { self, nixpkgs}:
     let
@@ -15,7 +14,6 @@
         let
           pkgs = import nixpkgs {
             inherit system;
-            #overlays = [ rust-overlay.overlay ];
           };
         in
         {

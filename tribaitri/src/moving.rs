@@ -60,22 +60,22 @@ pub const DOWN_CORNER_CYCLE:  [ThreeByCorner; 4] = [ThreeByCorner::WBO, ThreeByC
 /// | Back  | Red          |
 pub(crate) fn make_three_by_three_move(cube: &mut Cube3, m: Move) {
     // Cycle arestes
-    match m {
-        Move { side: MoveSide::R, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, RIGHT_EDGE_CYCLE.map(|v| v as usize), m),
-        Move { side: MoveSide::L, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, LEFT_EDGE_CYCLE.map( |v| v as usize), m),
-        Move { side: MoveSide::F, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, FRONT_EDGE_CYCLE.map(|v| v as usize), m),
-        Move { side: MoveSide::B, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, BACK_EDGE_CYCLE.map( |v| v as usize), m),
-        Move { side: MoveSide::U, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, UP_EDGE_CYCLE.map(   |v| v as usize), m),
-        Move { side: MoveSide::D, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, DOWN_EDGE_CYCLE.map( |v| v as usize), m),
+    match m.side() {
+        MoveSide::R => Cube3::cycle_elements::<20>(&mut cube.pieces, RIGHT_EDGE_CYCLE.map(|v| v as usize), m),
+        MoveSide::L => Cube3::cycle_elements::<20>(&mut cube.pieces, LEFT_EDGE_CYCLE.map( |v| v as usize), m),
+        MoveSide::F => Cube3::cycle_elements::<20>(&mut cube.pieces, FRONT_EDGE_CYCLE.map(|v| v as usize), m),
+        MoveSide::B => Cube3::cycle_elements::<20>(&mut cube.pieces, BACK_EDGE_CYCLE.map( |v| v as usize), m),
+        MoveSide::U => Cube3::cycle_elements::<20>(&mut cube.pieces, UP_EDGE_CYCLE.map(   |v| v as usize), m),
+        MoveSide::D => Cube3::cycle_elements::<20>(&mut cube.pieces, DOWN_EDGE_CYCLE.map( |v| v as usize), m),
     }
     // Cycle edges
-    match m {
-        Move { side: MoveSide::R, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, RIGHT_CORNER_CYCLE.map(|v| v as usize), m),
-        Move { side: MoveSide::L, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, LEFT_CORNER_CYCLE.map( |v| v as usize), m),
-        Move { side: MoveSide::F, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, FRONT_CORNER_CYCLE.map(|v| v as usize), m),
-        Move { side: MoveSide::B, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, BACK_CORNER_CYCLE.map( |v| v as usize), m),
-        Move { side: MoveSide::U, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, UP_CORNER_CYCLE.map(   |v| v as usize), m),
-        Move { side: MoveSide::D, .. } => Cube3::cycle_elements::<20>(&mut cube.pieces, DOWN_CORNER_CYCLE.map( |v| v as usize), m),
+    match m.side() {
+        MoveSide::R => Cube3::cycle_elements::<20>(&mut cube.pieces, RIGHT_CORNER_CYCLE.map(|v| v as usize), m),
+        MoveSide::L => Cube3::cycle_elements::<20>(&mut cube.pieces, LEFT_CORNER_CYCLE.map( |v| v as usize), m),
+        MoveSide::F => Cube3::cycle_elements::<20>(&mut cube.pieces, FRONT_CORNER_CYCLE.map(|v| v as usize), m),
+        MoveSide::B => Cube3::cycle_elements::<20>(&mut cube.pieces, BACK_CORNER_CYCLE.map( |v| v as usize), m),
+        MoveSide::U => Cube3::cycle_elements::<20>(&mut cube.pieces, UP_CORNER_CYCLE.map(   |v| v as usize), m),
+        MoveSide::D => Cube3::cycle_elements::<20>(&mut cube.pieces, DOWN_CORNER_CYCLE.map( |v| v as usize), m),
     }
 
 }

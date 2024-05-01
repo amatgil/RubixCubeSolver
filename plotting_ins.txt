@@ -1,0 +1,7 @@
+set title "2x2 scramble complexity"
+set xlabel "Initial scramble quarter-move count"
+set ylabel "Final solve length"
+set grid
+set termina png
+set output "tribaigraph.png"
+plot "tribai_plot.data" title ""
