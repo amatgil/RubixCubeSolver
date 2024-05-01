@@ -219,6 +219,20 @@ impl<const NF: usize, const NC: usize> PartialEq for Matrix<NF, NC> {
     }
 }
 
+
+// 3D specifics
+// To and from Vec3
+impl From<Vec3> for Matrix<3, 1> {
+    fn from(v: Vec3) -> Self {
+        Matrix::<3, 1>([[v.x].into(), [v.y].into(), [v.z].into()])
+    }
+}
+impl From<Matrix<3, 1>> for Vec3 {
+    fn from(m: Matrix<3, 1>) -> Self {
+        Self {x: m[0][0], y: m[1][0], z: m[1][0] }
+    }
+}
+
 /// For tests: panics if they're unequal
 /// 
 /// This relies of float equality, so it's not public. It should only be used in controlled ways, when

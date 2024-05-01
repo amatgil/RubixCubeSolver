@@ -43,9 +43,22 @@ const FACE_DOWN_SEQ_PRINT: [usize; 4]  = [P_BOTTOM_LEFT_FRONT, P_BOTTOM_RIGHT_FR
 const FACE_FRONT_SEQ_PRINT: [usize; 4] = [P_TOP_LEFT_FRONT, P_TOP_RIGHT_FRONT, P_BOTTOM_LEFT_FRONT, P_BOTTOM_RIGHT_FRONT];
 const FACE_BACK_SEQ_PRINT: [usize; 4]  = [P_TOP_RIGHT_BACK, P_TOP_LEFT_BACK, P_BOTTOM_RIGHT_BACK, P_BOTTOM_LEFT_BACK];
 
-// TODO: Only check disjoint-ness between newly explored verticies
 impl Solvable for Cube2 {
     const INPUT_FILE_NAME: &'static str = "tubaitu_input_file";
+
+    fn save_sequence(starting_cube: Self, moves: MoveSeq) -> Result<(), Box<dyn Error>> {
+        let dir = std::env::temp_dir();
+
+
+        draw_sequence(
+            &dir.join("first_test_"),
+            &starting_cube,
+            moves,
+            4
+        )?;
+        todo!()
+
+    }
 
     fn read_from_slate() -> Result<Self, Box<dyn Error>> {
         let input = fs::read_to_string(Cube2::INPUT_FILE_NAME)?;

@@ -80,11 +80,12 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     const INPUT_FILE_NAME: &'static str;
     fn write_blank_slate() -> Result<(), Box<dyn Error>>;
     fn read_from_slate() -> Result<Self, Box<dyn Error>>;
+    fn save_sequence(starting_state: Self, moves: MoveSeq) -> Result<(), Box<dyn Error>>;
 
     fn solve_random(scramble_length: usize, prints_enabled: bool) {
         println!("[INFO]: Generating random cube (n={scramble_length})...");
         let scrambling_instant = Instant::now();
-        let (mut cube, scramble) = Self::random_scramble(scramble_length);
+        let (starting_cube, scramble) = Self::random_scramble(scramble_length);
         let time_taken_to_scramble = scrambling_instant.elapsed();
         println!(
             "[INFO]: Scrambling took: {}ms ({}μs)",
@@ -99,6 +100,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         }
         println!("])");
 
+        let mut cube = starting_cube.clone();
         println!("[INFO]: Solving...");
         println!("Scramble to solve:\n{cube}");
 
@@ -133,6 +135,8 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             print!("{} ", m.opposite());
         }
         println!("]");
+        println!("Saving solution as svgs...");
+        Self::save_sequence(starting_cube, r).unwrap();
     }
     /// Calls other Solvable methods with interspersed prints
     fn solve_pretty() {
