@@ -5,8 +5,8 @@ use std::fs;
 use std::io::Write;
 use std::cmp::Ordering;
 use m_per_n::Vec3;
+use std::f64::consts::PI; // The superior circle constant!
 
-const PI: f64 = 3.14159265358979323846264338327950288419716939; // The superior circle constant!
 const WIDTH :usize = 10000;
 const HEIGHT:usize = 10000;
 const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.5;
@@ -62,7 +62,7 @@ impl Quadrilateral {
         Quadrilateral{distance: 0.0, vertices: Matrix::ZERO(), brightness: 0.0, color: Color::Blue}
     }
 }
-
+/*
 fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
     let mut max_dist: f64 = 0.0;
     for vertex in vertices {
@@ -70,16 +70,16 @@ fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
         if dist > max_dist { max_dist = dist }
     }
     max_dist
+}*/
+
+fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
+    *vertices.map(|x| (x - point).abs()).iter().max_by(|a, b| a.total_cmp(b)).unwrap()
 }
 
 fn closest_vertex_to_point(vertices: [Vec3;4], point: Vec3) -> f64 {
-    let mut min_dist: f64 = 100000.0;
-    for vertex in vertices {
-        let dist = (vertex - point).abs();
-        if dist < min_dist { min_dist = dist }
-    }
-    min_dist
+    *vertices.map(|x| (x - point).abs()).iter().min_by(|a, b| a.total_cmp(b)).unwrap()
 }
+
 
 fn get_rotation_matrix(mov: Move, mut lerp_t: f64) -> Matrix<3,3>{
     if mov.side() == MoveSide::L 
@@ -391,7 +391,6 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
         MoveSide::D => FACE_DOWN_SEQ_CYCLE,
         MoveSide::F => FACE_FRONT_SEQ_CYCLE,
         MoveSide::B => FACE_BACK_SEQ_CYCLE,
-        _ => panic!(),
     };
 
     for i in pieces_to_cycle {
@@ -409,11 +408,7 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
         }
     }
 
-    projected_cube.sort_by(|a, b| {
-        if a.distance < b.distance {Ordering::Greater}
-        else if a.distance > b.distance {Ordering::Less}
-        else {Ordering::Equal}
-    });
+    projected_cube.sort_by(|a, b| a.cmp(b).reverse());
 
     let mut buffer = String::new();
 
