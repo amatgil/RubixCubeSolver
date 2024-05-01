@@ -72,6 +72,15 @@ fn furthest_vertex_from_point(vertices: [Vec3;4], point: Vec3) -> f64 {
     max_dist
 }
 
+fn closest_vertex_to_point(vertices: [Vec3;4], point: Vec3) -> f64 {
+    let mut min_dist: f64 = 100000.0;
+    for vertex in vertices {
+        let dist = (vertex - point).abs();
+        if dist < min_dist { min_dist = dist }
+    }
+    min_dist
+}
+
 fn get_rotation_matrix(mov: Move, mut lerp_t: f64) -> Matrix<3,3>{
     if mov.side() == MoveSide::L 
     || mov.side() == MoveSide::D 
@@ -181,6 +190,14 @@ impl DrawablePiece {
             let dot_product = normal_vector.dot_product(light_dir.normalize().unwrap());
             projected_faces[i].brightness = MIN_BRIGHTNESS_MULTIPLIER.max(dot_product*GENERAL_BRIGHTNESS_MULTIPLIER);
             projected_faces[i].color = colors[i];
+            
+            let dist_to_origin = closest_vertex_to_point(faces[i], Vec3::ZERO); 
+            let root3 = 1.8; // aprox root 3
+            if(dist_to_origin < root3*EXTRA_PIECE_DISTANCE) {
+                projected_faces[i].color = Color::White;
+                projected_faces[i].brightness = 0.0;
+            }
+            
         }
         projected_faces
     }
@@ -280,7 +297,6 @@ impl DrawablePiece {
 }
 
 fn get_normal_vector(face: [Vec3; 4], center: Vec3) -> Vec3 {
-    dbg!(face);
     let normal = (face[1] - face[0]).cross_product( face[2] - face[0]).normalize().unwrap();
     let dot_product = normal.dot_product(center-face[0]);
 
@@ -293,9 +309,10 @@ struct DrawableCube {
 }
 
 const DRAWING_PIECE_RADIUS: f64 = 10.0;
+const EXTRA_PIECE_DISTANCE: f64 = 0.8;
 impl Cube2 {
     fn to_points(self) -> DrawableCube {
-        let r = DRAWING_PIECE_RADIUS + 0.1;
+        let r = DRAWING_PIECE_RADIUS + EXTRA_PIECE_DISTANCE;
         let mut drawable_pieces = [DrawablePiece::default(); 8 ];
 
         for (piece_idx, original_piece) in self.pieces.iter().enumerate() {
@@ -341,9 +358,14 @@ pub fn draw_sequence(file_prefix: &str, starting_cube: &Cube2, moves: &[Move], n
         }
         cube.make_move(*mov);
     }
+    let filename = format!("{file_prefix}_{:>04}", n_in_between_frames*moves.len());
 
-    todo!()
-
+    let svg: String = get_svg(cube, Move::R, 0.0);
+            
+    let mut file: fs::File = fs::File::create(filename)?;
+    file.write_all(svg.as_bytes())?;
+    
+    Result::<(), Box<dyn std::error::Error>>::Ok(())
 }
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding svg as a String. This is a self-contained frame representing the cube in the given state.
@@ -406,7 +428,7 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
         }
         
         let color: [usize; 3] = face.color.to_rgb(face.brightness);
-        buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",color[0], color[1], color[2]));
+        buffer.push_str(&format!("\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n", color[0], color[1], color[2]));
     }
     
     buffer.push_str("</svg>\n");
@@ -441,4 +463,13 @@ fn test_drawing_cube() {
     
     let text = get_svg(cube,m,0.3);
     println!("{}", text);
+}
+
+#[test]
+
+fn test_video() {
+    let starting_cube = Cube2::default();
+    let moves = [Move::R, Move::U, Move::RP, Move::UP, Move::RP, Move::F, Move::R, Move::R,  
+    Move::UP, Move::RP, Move::UP, Move::R, Move::U, Move::RP, Move::FP];
+    draw_sequence("r_move_test", &starting_cube, &moves, 10);
 }
