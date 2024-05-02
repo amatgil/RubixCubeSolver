@@ -20,12 +20,12 @@ impl std::fmt::Display for Color {
 
 
 // Colors:
-pub const WHITE_COL : [usize; 3] =  [244, 219, 214];
-pub const YELLOW_COL: [usize; 3] =  [238, 212, 159];
-pub const RED_COL   : [usize; 3] =  [237, 135, 150];
-pub const ORANGE_COL: [usize; 3] =  [245, 169, 127];
-pub const BLUE_COL  : [usize; 3] =  [165, 173, 203];
-pub const GREEN_COL : [usize; 3] =  [166, 218, 149];
+pub const WHITE_COL : [usize; 3] =  [188, 192, 204];
+pub const YELLOW_COL: [usize; 3] =  [0xCC, 0xCC, 0x00];
+pub const RED_COL   : [usize; 3] =  [210, 15, 57];
+pub const ORANGE_COL: [usize; 3] =  [254, 100, 11];
+pub const BLUE_COL  : [usize; 3] =  [32, 159, 181];
+pub const GREEN_COL : [usize; 3] =  [64, 160, 43];
 pub const BACKGROUND_COL: &str = "#24273a";
 
 

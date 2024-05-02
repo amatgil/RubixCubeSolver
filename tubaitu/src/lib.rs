@@ -55,6 +55,7 @@ impl Solvable for Cube2 {
 
         draw_sequence(
             &dir.join(TUBAITU_DIR_NAME),
+            "tubaitu_snapshot_",
             &starting_cube,
             moves,
             N_IN_BETWEEN_FRAMES,

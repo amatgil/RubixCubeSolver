@@ -14,6 +14,9 @@ let
     gnuplot
     heaptrack
     valgrind
+    ffmpeg
+    imagemagick
+    mpv
 
   ];
 in

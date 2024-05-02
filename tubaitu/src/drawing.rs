@@ -4,7 +4,8 @@ use m_per_n::*;
 use m_per_n::Vec3;
 use std::cmp::Ordering;
 use std::f64::consts::PI;
-use std::fs;
+use std::fs::{create_dir, remove_dir_all};
+use std::{fs, io};
 use std::io::Write;
 use std::path::{Path, PathBuf}; // The lesser circle constant
 
@@ -401,64 +402,45 @@ pub fn draw_sequence(
     moves: MoveSeq,
     n_in_between_frames: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    fn save_file(filename: &str, cube: &Cube2, mov: Move, lerp_t: f64) -> Result<(), Box<dyn std::error::Error>> {
+        print!("\rGenerating: {:?}", filename);
+        io::stdout().flush()?;
+        let svg: String = get_svg(*cube, mov, lerp_t);
+        let mut file: fs::File = fs::File::create::<PathBuf>(filename.into())?;
+        file.write_all(svg.as_bytes())?;
+        Ok(())
+    }
+
     let mut cube: Cube2 = *starting_cube;
 
-    const SVGS_DIR_NAME: PathBuf = "images".into();
-    const IMAGES_DIR_NAME: PathBuf = "pngs".into();
+    let svgs_dir_name: PathBuf = PathBuf::from("svgs/");
+    let svgs_dir: PathBuf = directory.join(svgs_dir_name.clone()).into();
+    let hanging_after_frames = 100;
 
-    match std::fs::create_dir(directory) {
-        Ok(_) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
-        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}")).into(),
-    }?;
-
-    match std::fs::create_dir(directory.join(SVGS_DIR_NAME)) {
-        Ok(_) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
-        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}")).into(),
-    }?;
-
-    match std::fs::create_dir(directory.join(IMAGES_DIR_NAME)) {
-        Ok(_) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
-        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}")).into(),
-    }?;
+    create_or_empty_out_directory(directory)?;
+    create_or_empty_out_directory(&directory.join(svgs_dir_name.clone()))?;
 
     for (i, mov) in moves.iter().enumerate() {
         let i = i * n_in_between_frames;
         for inbetween_index in 0..n_in_between_frames {
-            let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
-            let svgs_dir: PathBuf = directory.join(SVGS_DIR_NAME).into();
-
-            let mut filename_str = svgs_dir.to_str().unwrap().to_owned();
-            filename_str.push_str(file_prefix);
-            filename_str.push_str(&format!("_{:>04}", i + inbetween_index));
-            filename_str.push_str(".svg");
-            println!("Generating: {:?}", filename_str);
-
-            let svg: String = get_svg(cube, *mov, lerp_t);
-
-            let mut file: fs::File = fs::File::create::<PathBuf>(filename_str.into())?;
-            file.write_all(svg.as_bytes())?;
+            let mut filename_str = svgs_dir.to_str().unwrap().to_owned();        // Base dir
+            filename_str.push_str(file_prefix);                                  // Name
+            filename_str.push_str(&format!("_{:>04}", i + inbetween_index));     // Numbering
+            filename_str.push_str(".svg");                                       // Extension
+            save_file(&filename_str, &cube, *mov, inbetween_index as f64 / n_in_between_frames as f64)?;
         }
         cube.make_move(*mov);
     }
 
-    let hanging_after_frames = 100;
     for hang_i in 0.. hanging_after_frames {
-        let mut file_prefix: PathBuf = file_prefix.join("images/").into();
-        file_prefix = file_prefix.join("first_test_");
-        let mut filename_str = file_prefix.to_str().unwrap().to_owned();
-        filename_str.push_str(&format!("_{:>04}", hang_i + moves.len()*n_in_between_frames));
-        filename_str.push_str(".svg");
-        println!("Generating: {:?} (trailing)", filename_str);
-
-        let svg: String = get_svg(cube, *moves.last().unwrap(), 0.0);
-
-        let mut file: fs::File = fs::File::create::<PathBuf>(filename_str.into())?;
-        file.write_all(svg.as_bytes())?;
-
+        let mut filename_str = svgs_dir.to_str().unwrap().to_owned();                            // Base dir
+        filename_str.push_str(file_prefix);                                                      // Name
+        filename_str.push_str(&format!("_{:>04}", hang_i + moves.len() * n_in_between_frames));  // Numbering
+        filename_str.push_str(".svg");                                                           // Extension
+        save_file(&filename_str, &cube, Move::R, 0.0)?;
     }
+
+    println!();
 
     Result::<(), Box<dyn std::error::Error>>::Ok(())
 }
@@ -506,6 +488,7 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     let mut buffer = String::new();
 
     buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:{BACKGROUND_COL}\" xmlns=\"http://www.w3.org/2000/svg\" id=\"rubix-cube\">\n"));
+    buffer.push_str(&format!("<rect width=\"100%\" height=\"100%\" fill=\"{BACKGROUND_COL}\"/>"));
 
     for face in projected_cube {
         buffer.push_str("<polygon points=\"");
@@ -525,6 +508,19 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
     buffer.push_str("</svg>\n");
 
     buffer
+}
+
+fn create_or_empty_out_directory(directory: &Path) -> Result<(), Box<dyn Error>> {
+    match create_dir(directory.join(directory)) {
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+            println!("[INFO]: {directory:?} exists, emptying out...");
+            remove_dir_all(directory)?;
+            create_dir(directory.join(directory))?;
+            Ok(())
+        },
+        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}").into()),
+    }
 }
 
 #[test]

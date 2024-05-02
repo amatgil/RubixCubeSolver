@@ -135,7 +135,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
             print!("{} ", m.opposite());
         }
         println!("]");
-        println!("Saving solution as svgs...");
+        println!("[INFO]: Saving solution as svgs...");
         Self::save_sequence(starting_cube, r).unwrap();
     }
     /// Calls other Solvable methods with interspersed prints
