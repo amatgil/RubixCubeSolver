@@ -426,6 +426,22 @@ pub fn draw_sequence(
         cube.make_move(*mov);
     }
 
+    let hanging_after_frames = 100;
+    for hang_i in 0.. hanging_after_frames {
+        let mut file_prefix: PathBuf = file_prefix.join("images/").into();
+        file_prefix = file_prefix.join("first_test_");
+        let mut filename_str = file_prefix.to_str().unwrap().to_owned();
+        filename_str.push_str(&format!("_{:>04}", hang_i + moves.len()*n_in_between_frames));
+        filename_str.push_str(".svg");
+        println!("Generating: {:?} (trailing)", filename_str);
+
+        let svg: String = get_svg(cube, *moves.last().unwrap(), 0.0);
+
+        let mut file: fs::File = fs::File::create::<PathBuf>(filename_str.into())?;
+        file.write_all(svg.as_bytes())?;
+
+    }
+
     Result::<(), Box<dyn std::error::Error>>::Ok(())
 }
 
