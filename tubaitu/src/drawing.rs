@@ -395,25 +395,43 @@ impl Cube2 {
 
 /// Draw the solving sequence, with `n_in_between_frames`*`moves.len()` frames
 pub fn draw_sequence(
-    mut file_prefix: &Path,
+    directory: &Path,
+    file_prefix: &str,
     starting_cube: &Cube2,
     moves: MoveSeq,
     n_in_between_frames: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut cube: Cube2 = *starting_cube;
 
-    // match std::fs::create_dir(file_prefix) {
-    //     Ok(_) => Ok(()),
-    //     Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
-    //     Err(e) => Err(format!("Goddamn it: {} (prefix: {file_prefix:?}", e)),
-    // }?;
+    const SVGS_DIR_NAME: PathBuf = "images".into();
+    const IMAGES_DIR_NAME: PathBuf = "pngs".into();
+
+    match std::fs::create_dir(directory) {
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
+        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}")).into(),
+    }?;
+
+    match std::fs::create_dir(directory.join(SVGS_DIR_NAME)) {
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
+        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}")).into(),
+    }?;
+
+    match std::fs::create_dir(directory.join(IMAGES_DIR_NAME)) {
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
+        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}")).into(),
+    }?;
+
     for (i, mov) in moves.iter().enumerate() {
         let i = i * n_in_between_frames;
         for inbetween_index in 0..n_in_between_frames {
             let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
-            let mut file_prefix: PathBuf = file_prefix.join("images/").into();
-            file_prefix = file_prefix.join("first_test_");
-            let mut filename_str = file_prefix.to_str().unwrap().to_owned();
+            let svgs_dir: PathBuf = directory.join(SVGS_DIR_NAME).into();
+
+            let mut filename_str = svgs_dir.to_str().unwrap().to_owned();
+            filename_str.push_str(file_prefix);
             filename_str.push_str(&format!("_{:>04}", i + inbetween_index));
             filename_str.push_str(".svg");
             println!("Generating: {:?}", filename_str);
