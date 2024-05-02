@@ -229,7 +229,7 @@ impl From<Vec3> for Matrix<3, 1> {
 }
 impl From<Matrix<3, 1>> for Vec3 {
     fn from(m: Matrix<3, 1>) -> Self {
-        Self {x: m[0][0], y: m[1][0], z: m[1][0] }
+        Self {x: m[0][0], y: m[1][0], z: m[2][0] }
     }
 }
 

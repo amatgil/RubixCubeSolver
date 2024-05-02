@@ -166,18 +166,30 @@ impl DrawablePiece {
         verts: [Vec3; 8],
         projected_verts: Matrix<8, 2>,
     ) -> [Quadrilateral; 6] {
-        let root3: f64 = 3.0f64.sqrt();
+        let root3: f64 = 3.0f64.sqrt() + 0.1;
 
         // faces are the
         let mut projected_faces: [Quadrilateral; 6] = [Quadrilateral::empty(); 6];
         let mut faces: [[Vec3; 4]; 6] = [[Vec3::ZERO; 4]; 6];
 
-        faces[SIDE_RIGHT] = [verts[0], verts[1], verts[5], verts[4]];
-        faces[SIDE_FRONT] = [verts[0], verts[3], verts[7], verts[4]];
-        faces[SIDE_TOP] = [verts[0], verts[1], verts[2], verts[3]];
-        faces[SIDE_LEFT] = [verts[2], verts[3], verts[7], verts[6]];
-        faces[SIDE_BACK] = [verts[1], verts[2], verts[6], verts[5]];
-        faces[SIDE_DOWN] = [verts[4], verts[5], verts[6], verts[7]];
+        faces[SIDE_RIGHT] = [
+            verts[P_TOP_RIGHT_FRONT], verts[P_TOP_RIGHT_BACK], verts[P_BOTTOM_RIGHT_BACK], verts[P_BOTTOM_RIGHT_FRONT]
+        ];
+        faces[SIDE_FRONT] = [
+            verts[P_TOP_RIGHT_FRONT], verts[P_BOTTOM_RIGHT_FRONT], verts[P_BOTTOM_LEFT_FRONT], verts[P_TOP_LEFT_FRONT]
+        ];
+        faces[SIDE_TOP] =  [
+            verts[P_TOP_RIGHT_FRONT], verts[P_TOP_LEFT_FRONT], verts[P_TOP_LEFT_BACK], verts[P_TOP_RIGHT_BACK]
+        ];
+        faces[SIDE_LEFT] = [
+            verts[P_TOP_LEFT_FRONT], verts[P_BOTTOM_LEFT_FRONT], verts[P_BOTTOM_LEFT_BACK], verts[P_TOP_LEFT_BACK]
+        ];
+        faces[SIDE_BACK] = [
+            verts[P_TOP_RIGHT_BACK], verts[P_TOP_LEFT_BACK], verts[P_BOTTOM_LEFT_BACK], verts[P_BOTTOM_RIGHT_BACK], 
+            ];
+        faces[SIDE_DOWN] = [
+            verts[P_BOTTOM_RIGHT_FRONT], verts[P_BOTTOM_RIGHT_BACK], verts[P_BOTTOM_LEFT_BACK], verts[P_BOTTOM_LEFT_FRONT]
+        ];
 
         projected_faces[0].vertices = Matrix::<4, 2>([
             projected_verts[0],
@@ -383,19 +395,27 @@ impl Cube2 {
 
 /// Draw the solving sequence, with `n_in_between_frames`*`moves.len()` frames
 pub fn draw_sequence(
-    file_prefix: &Path,
+    mut file_prefix: &Path,
     starting_cube: &Cube2,
     moves: MoveSeq,
     n_in_between_frames: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut cube: Cube2 = *starting_cube;
 
+    // match std::fs::create_dir(file_prefix) {
+    //     Ok(_) => Ok(()),
+    //     Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
+    //     Err(e) => Err(format!("Goddamn it: {} (prefix: {file_prefix:?}", e)),
+    // }?;
     for (i, mov) in moves.iter().enumerate() {
         let i = i * n_in_between_frames;
         for inbetween_index in 0..n_in_between_frames {
             let lerp_t = inbetween_index as f64 / n_in_between_frames as f64;
+            let mut file_prefix: PathBuf = file_prefix.join("images/").into();
+            file_prefix = file_prefix.join("first_test_");
             let mut filename_str = file_prefix.to_str().unwrap().to_owned();
             filename_str.push_str(&format!("_{:>04}", i + inbetween_index));
+            filename_str.push_str(".svg");
             println!("Generating: {:?}", filename_str);
 
             let svg: String = get_svg(cube, *mov, lerp_t);
@@ -415,10 +435,10 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
                                               // Recorda que el radi és DRAWING_PIECE_RADIUS
     format!("{cube} with {mov:?} at with lerp value {lerp_t}");
 
-    let light_pos = Vec3::new(10.0, -20.0, 30.0);
+    let light_pos = Vec3::new(10.1, -20.1, 30.1);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let pos = Vec3::new(10.0, -30.0, 10.0) * 10.0;
+    let pos = Vec3::new(10.1, -30.1, 10.1) * 10.0;
 
     let camera: Camera = Camera {
         pos,
