@@ -46,6 +46,8 @@ async fn main() {
 fn window_conf() -> Conf {
     Conf {
         window_title: "tubaitu".to_owned(),
+        window_width: SCREEN_WIDTH as i32,
+        window_height: SCREEN_HEIGHT as i32,
         fullscreen: false,
         window_resizable: false,
         ..Default::default()
