@@ -12,7 +12,7 @@ pub const BACKGROUND_COL: Color = color_u8![0x24, 0x27, 0x3a, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
-#[macroquad::main("tubaitu")]
+#[macroquad::main(window_conf)]
 async fn main() {
     let mut cube = Cube2::default();
 
@@ -40,5 +40,14 @@ async fn main() {
         }
 
         next_frame().await
+    }
+}
+
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "tubaitu".to_owned(),
+        fullscreen: false,
+        window_resizable: false,
+        ..Default::default()
     }
 }
