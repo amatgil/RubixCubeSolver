@@ -39,6 +39,14 @@ async fn main() {
             }
         }
 
+        // Center for testing
+        draw_circle(
+            SCREEN_WIDTH as f32 * 0.5,
+            SCREEN_HEIGHT as f32 * 0.5,
+            20.0,
+            color_u8!(255, 0, 255, 255),
+        );
+
         next_frame().await
     }
 }
