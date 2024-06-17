@@ -445,8 +445,8 @@ pub fn draw_sequence(
     Result::<(), Box<dyn std::error::Error>>::Ok(())
 }
 
-/// Given a cube, the move being done and how far along the move is, generate the corresponding svg as a String. This is a self-contained frame representing the cube in the given state.
-fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
+/// Given a cube, the move being done and how far along the move is, generate the corresponding polys that would draw it
+fn get_polys(cube: Cube2, mov: Move, lerp_t: f64) -> Vec<Vec<Point>> {
     let mut pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
                                               // Recorda que el radi és DRAWING_PIECE_RADIUS
     format!("{cube} with {mov:?} at with lerp value {lerp_t}");
@@ -485,12 +485,10 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
 
     projected_cube.sort_by(|a, b| a.cmp(b).reverse());
 
-    let mut buffer = String::new();
-
-    buffer.push_str(&format!("<svg viewBox=\"0 0 {WIDTH} {HEIGHT} \" style=\"background-color:{BACKGROUND_COL}\" xmlns=\"http://www.w3.org/2000/svg\" id=\"rubix-cube\">\n"));
-    buffer.push_str(&format!("<rect width=\"100%\" height=\"100%\" fill=\"{BACKGROUND_COL}\"/>"));
+    let mut buffer = vec![];
 
     for face in projected_cube {
+        let mut polygon = vec![];
         buffer.push_str("<polygon points=\"");
         for i in 0..4 {
             let x: usize = (face.vertices[i][0] * 100.0 + 0.5 * WIDTH as f64) as usize;
@@ -504,8 +502,6 @@ fn get_svg(cube: Cube2, mov: Move, lerp_t: f64) -> String {
             color[0], color[1], color[2]
         ));
     }
-
-    buffer.push_str("</svg>\n");
 
     buffer
 }

@@ -12,11 +12,16 @@ let
     clang
     mold
     gnuplot
-    heaptrack
-    valgrind
-    ffmpeg
-    imagemagick
-    mpv
+
+    pkg-config
+    xorg.libX11
+    libGL
+    alsa-lib
+    xorg.libXi
+
+    (rust-bin.stable.latest.default.override {
+      targets = [ "wasm32-unknown-unknown" ];
+    })
 
   ];
 in

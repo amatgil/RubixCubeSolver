@@ -15,6 +15,7 @@ tubaitu = { path = "./tubaitu" }
 tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
 m_per_n = { path = "./m_per_n" }
+macroquad = "0.4.8"
 
 [profile.release]
 opt-level = 3
