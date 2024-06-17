@@ -11,7 +11,7 @@ fn main() {
     };
 
     match &**option {
-	"rand" => Cube2::solve_random(20, true),
+	//"rand" => Cube2::solve_random(20, true),
 	"gen" => Cube2::write_blank_slate().unwrap(),
 	"solve" => Cube2::solve_pretty(),
 	o => println!("[ERROR]: option `{o} not recognized. Please use `gen`, `solve` or `rand`"),

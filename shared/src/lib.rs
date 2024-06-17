@@ -80,64 +80,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     const INPUT_FILE_NAME: &'static str;
     fn write_blank_slate() -> Result<(), Box<dyn Error>>;
     fn read_from_slate() -> Result<Self, Box<dyn Error>>;
-    fn save_sequence(starting_state: Self, moves: MoveSeq) -> Result<(), Box<dyn Error>>;
 
-    fn solve_random(scramble_length: usize, prints_enabled: bool) {
-        println!("[INFO]: Generating random cube (n={scramble_length})...");
-        let scrambling_instant = Instant::now();
-        let (starting_cube, scramble) = Self::random_scramble(scramble_length);
-        let time_taken_to_scramble = scrambling_instant.elapsed();
-        println!(
-            "[INFO]: Scrambling took: {}ms ({}μs)",
-            time_taken_to_scramble.as_millis(),
-            time_taken_to_scramble.as_micros()
-        );
-        print!("[INFO]: Scramble is: ");
-        println!("{scramble}");
-        print!("[INFO]: (Uncompressed: [ ");
-        for m in &scramble.0 {
-            print!("{m} ");
-        }
-        println!("])");
-
-        let mut cube = starting_cube.clone();
-        println!("[INFO]: Solving...");
-        println!("Scramble to solve:\n{cube}");
-
-        let starting_instant = Instant::now();
-        let r = cube.solve(prints_enabled);
-        let time_taken = starting_instant.elapsed();
-
-        for m in &r.0 {
-            cube.make_move(*m)
-        }
-        println!("Final state:\n{cube}");
-
-        println!();
-
-        println!(
-            "[RESULT]: Solving time was: {}ms ({}μs)",
-            time_taken.as_millis(),
-            time_taken.as_micros()
-        );
-        println!("[RESULT]: Final solution is: {}", r);
-        print!("[INFO]: Uncompressed solution: [ ");
-        for m in &r.0 {
-            print!("{m} ");
-        }
-        println!("]");
-
-        println!();
-
-        println!("[RESULT]: Reverse of solution: {}", r.reversed());
-        print!("[INFO]: Uncompressed reverse: [ ");
-        for m in r.0.iter().rev() {
-            print!("{} ", m.opposite());
-        }
-        println!("]");
-        println!("[INFO]: Saving solution as svgs...");
-        Self::save_sequence(starting_cube, r).unwrap();
-    }
     /// Calls other Solvable methods with interspersed prints
     fn solve_pretty() {
         println!("[INFO]: Reading from `{}`...", Self::INPUT_FILE_NAME);

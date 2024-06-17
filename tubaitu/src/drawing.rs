@@ -394,62 +394,26 @@ impl Cube2 {
     }
 }
 
-/// Draw the solving sequence, with `n_in_between_frames`*`moves.len()` frames
-pub fn draw_sequence(
-    directory: &Path,
-    file_prefix: &str,
-    starting_cube: &Cube2,
-    moves: MoveSeq,
-    n_in_between_frames: usize,
-) -> Result<(), Box<dyn std::error::Error>> {
-    fn save_file(filename: &str, cube: &Cube2, mov: Move, lerp_t: f64) -> Result<(), Box<dyn std::error::Error>> {
-        print!("\rGenerating: {:?}", filename);
-        io::stdout().flush()?;
-        let svg: String = get_svg(*cube, mov, lerp_t);
-        let mut file: fs::File = fs::File::create::<PathBuf>(filename.into())?;
-        file.write_all(svg.as_bytes())?;
-        Ok(())
-    }
+pub struct Polygon {
+    pub points: Vec<(usize, usize)>,
+    pub color: [usize; 3],
+}
 
-    let mut cube: Cube2 = *starting_cube;
-
-    let svgs_dir_name: PathBuf = PathBuf::from("svgs/");
-    let svgs_dir: PathBuf = directory.join(svgs_dir_name.clone()).into();
-    let hanging_after_frames = 100;
-
-    create_or_empty_out_directory(directory)?;
-    create_or_empty_out_directory(&directory.join(svgs_dir_name.clone()))?;
-
-    for (i, mov) in moves.iter().enumerate() {
-        let i = i * n_in_between_frames;
-        for inbetween_index in 0..n_in_between_frames {
-            let mut filename_str = svgs_dir.to_str().unwrap().to_owned();        // Base dir
-            filename_str.push_str(file_prefix);                                  // Name
-            filename_str.push_str(&format!("_{:>04}", i + inbetween_index));     // Numbering
-            filename_str.push_str(".svg");                                       // Extension
-            save_file(&filename_str, &cube, *mov, inbetween_index as f64 / n_in_between_frames as f64)?;
-        }
-        cube.make_move(*mov);
-    }
-
-    for hang_i in 0.. hanging_after_frames {
-        let mut filename_str = svgs_dir.to_str().unwrap().to_owned();                            // Base dir
-        filename_str.push_str(file_prefix);                                                      // Name
-        filename_str.push_str(&format!("_{:>04}", hang_i + moves.len() * n_in_between_frames));  // Numbering
-        filename_str.push_str(".svg");                                                           // Extension
-        save_file(&filename_str, &cube, Move::R, 0.0)?;
-    }
-
-    println!();
-
-    Result::<(), Box<dyn std::error::Error>>::Ok(())
+#[derive(Debug, Clone)]
+pub struct PartialMove {
+    mov: Move,
+    lerp_t: f64,
 }
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding polys that would draw it
-fn get_polys(cube: Cube2, mov: Move, lerp_t: f64) -> Vec<Vec<Point>> {
+pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, height: usize) -> Vec<Polygon> {
     let mut pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
                                               // Recorda que el radi és DRAWING_PIECE_RADIUS
-    format!("{cube} with {mov:?} at with lerp value {lerp_t}");
+
+    let (mov, lerp_t) = 
+        if let Some(yougottamoveitmoveit) = part_mov {
+            (yougottamoveitmoveit.mov, yougottamoveitmoveit.lerp_t)
+        } else { (Move::R, 0.0) };
 
     let light_pos = Vec3::new(10.1, -20.1, 30.1);
     let light_dir = Vec3::ZERO - light_pos;
@@ -488,19 +452,17 @@ fn get_polys(cube: Cube2, mov: Move, lerp_t: f64) -> Vec<Vec<Point>> {
     let mut buffer = vec![];
 
     for face in projected_cube {
-        let mut polygon = vec![];
-        buffer.push_str("<polygon points=\"");
+        let mut polygon_points = vec![];
         for i in 0..4 {
-            let x: usize = (face.vertices[i][0] * 100.0 + 0.5 * WIDTH as f64) as usize;
-            let y: usize = (face.vertices[i][1] * 100.0 + 0.5 * HEIGHT as f64) as usize;
-            buffer.push_str(&format!("{x},{y} "));
+            let x: usize = (face.vertices[i][0] * 100.0 + 0.5 * width as f64) as usize;
+            let y: usize = (face.vertices[i][1] * 100.0 + 0.5 * height as f64) as usize;
+            polygon_points.push((x, y));
         }
 
-        let color: [usize; 3] = face.color.to_rgb(face.brightness);
-        buffer.push_str(&format!(
-            "\" fill=\"#{:02x}{:02x}{:02x}\" stroke=\"none\"/>\n",
-            color[0], color[1], color[2]
-        ));
+        buffer.push(Polygon {
+            points: polygon_points,
+            color: face.color.to_rgb(face.brightness),
+        });
     }
 
     buffer

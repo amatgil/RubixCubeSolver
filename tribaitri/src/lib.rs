@@ -50,10 +50,6 @@ impl Solvable for Cube3 {
     fn write_blank_slate() -> Result<(), Box<dyn std::error::Error>> {
         write_three_file()
     }
-
-    fn save_sequence(starting_state: Self, moves: MoveSeq) -> Result<(), Box<dyn std::error::Error>> {
-        todo!()
-    }
 }
 
 

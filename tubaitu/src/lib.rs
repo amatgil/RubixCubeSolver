@@ -49,21 +49,6 @@ const N_IN_BETWEEN_FRAMES: usize = 30;
 impl Solvable for Cube2 {
     const INPUT_FILE_NAME: &'static str = "tubaitu_input_file";
 
-    fn save_sequence(starting_cube: Self, moves: MoveSeq) -> Result<(), Box<dyn Error>> {
-        let dir = std::env::temp_dir();
-        const TUBAITU_DIR_NAME: &str = "tubaitu_svgs";
-
-        draw_sequence(
-            &dir.join(TUBAITU_DIR_NAME),
-            "tubaitu_snapshot_",
-            &starting_cube,
-            moves,
-            N_IN_BETWEEN_FRAMES,
-        )?;
-
-        Ok(())
-    }
-
     fn read_from_slate() -> Result<Self, Box<dyn Error>> {
         let input = fs::read_to_string(Cube2::INPUT_FILE_NAME)?;
         read_tubaitu_from_string(&input)
