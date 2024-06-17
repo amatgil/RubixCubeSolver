@@ -454,8 +454,8 @@ pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, heig
     for face in projected_cube {
         let mut polygon_points = vec![];
         for i in 0..4 {
-            let x: usize = (face.vertices[i][0] * 100.0 + 0.5 * width as f64) as usize;
-            let y: usize = (face.vertices[i][1] * 100.0 + 0.5 * height as f64) as usize;
+            let x: usize = (face.vertices[i][0] * 5.1 + 0.2 * width as f64) as usize;
+            let y: usize = (face.vertices[i][1] * 5.1 + 0.2 * height as f64) as usize;
             polygon_points.push((x, y));
         }
 
