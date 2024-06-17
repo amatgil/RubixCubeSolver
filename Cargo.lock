@@ -6,6 +6,7 @@ version = 3
 name = "cubs"
 version = "1.2.0"
 dependencies = [
+ "m_per_n",
  "shared",
  "tribaitri",
  "tubaitu",
