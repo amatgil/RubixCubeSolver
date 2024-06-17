@@ -406,7 +406,7 @@ pub struct PartialMove {
 }
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding polys that would draw it
-pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, height: usize) -> Vec<Polygon> {
+pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, height: usize, scale: f64) -> Vec<Polygon> {
     let mut pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
                                               // Recorda que el radi és DRAWING_PIECE_RADIUS
 
@@ -454,8 +454,8 @@ pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, heig
     for face in projected_cube {
         let mut polygon_points = vec![];
         for i in 0..4 {
-            let x: usize = (face.vertices[i][0] * 5.1 + 0.5 * width as f64) as usize;
-            let y: usize = (face.vertices[i][1] * 5.1 + 0.5 * height as f64) as usize;
+            let x: usize = (face.vertices[i][0] * scale + 0.5 * width as f64) as usize;
+            let y: usize = (face.vertices[i][1] * scale + 0.5 * height as f64) as usize;
             polygon_points.push((x, y));
         }
 

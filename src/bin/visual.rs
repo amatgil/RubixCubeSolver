@@ -19,7 +19,7 @@ async fn main() {
     loop {
         clear_background(BACKGROUND_COL);
 
-        let polys = get_polys(&cube, None, SCREEN_WIDTH, SCREEN_HEIGHT);
+        let polys = get_polys(&cube, None, SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
 
         for poly in polys {
             let col = poly.color;
