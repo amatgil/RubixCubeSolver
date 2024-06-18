@@ -24,28 +24,24 @@ async fn main() {
         for poly in polys {
             let col = poly.color;
             let col = color_u8![col[0], col[1], col[2], 255];
-            for ps in poly.points.windows(2) {
-                let p0 = ps[0];
-                let p1 = ps[1];
-
-                draw_line(
-                    p0.0 as f32,
-                    p0.1 as f32,
-                    p1.0 as f32,
-                    p1.1 as f32,
-                    2.0,
-                    col
-                );
-            }
+            let p0 = Vec2::new(poly.points[0].0 as f32, poly.points[0].1 as f32);
+            let p1 = Vec2::new(poly.points[1].0 as f32, poly.points[1].1 as f32);
+            let p2 = Vec2::new(poly.points[2].0 as f32, poly.points[2].1 as f32);
+            let p3 = Vec2::new(poly.points[3].0 as f32, poly.points[3].1 as f32);
+            
+            draw_triangle(
+                p0,
+                p1,
+                p2,
+                col
+            );
+            draw_triangle(
+                p0,
+                p2,
+                p3,
+                col
+            );
         }
-
-        // Center for testing
-        draw_circle(
-            SCREEN_WIDTH as f32 * 0.5,
-            SCREEN_HEIGHT as f32 * 0.5,
-            20.0,
-            color_u8!(255, 0, 255, 255),
-        );
 
         next_frame().await
     }
