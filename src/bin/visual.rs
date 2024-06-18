@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use shared::Move;
+use shared::{Move, Solvable};
 use tubaitu::{get_polys, Cube2, PartialMove};
 
 pub const WHITE_COL : Color     = color_u8![188, 192, 204, 255];
@@ -13,15 +13,78 @@ pub const BACKGROUND_COL: Color = color_u8![0x24, 0x27, 0x3a, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
+struct State {
+    cube: Cube2,
+    kind: StateKind,
+}
+
+enum StateKind {
+    Manual,
+    Solving
+}
+
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut cube = Cube2::default();
+    // Constants / initting
+    let dt = 0.05;
+    let mut state = State {
+        cube: Cube2::default(),
+        kind: StateKind::Manual,
+    };
 
-    let mut t = 0.0;
+    let mut t: f64 = 0.0;
+    let mut curr_mov = None;
+
+    // Manual
+    let mut manually_moving = false;
+    let mut manual_move = Move::R;
+
     loop {
         clear_background(BACKGROUND_COL);
 
-        let polys = get_polys(&cube, Some(PartialMove { mov: Move::U, lerp_t: t }), SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
+        match state.kind {
+            StateKind::Manual => {
+                if manually_moving {
+                    t += dt * if manual_move.is_prime() { -1.0 } else { 1.0} ;
+                    if t >= 1.0 || t <= -1.0 {
+                        manually_moving = false;
+                        t = 0.0;
+                        state.cube.make_move(manual_move);
+                    }
+
+                } else {
+                    curr_mov = 
+                        if is_key_pressed(KeyCode::R) { Some(Move::R) }
+                    else if is_key_pressed(KeyCode::L) { Some(Move::L) }
+                    else if is_key_pressed(KeyCode::U) { Some(Move::U) }
+                    else if is_key_pressed(KeyCode::D) { Some(Move::D) }
+                    else if is_key_pressed(KeyCode::U) { Some(Move::U) }
+                    else if is_key_pressed(KeyCode::F) { Some(Move::F) }
+                    else if is_key_pressed(KeyCode::B) { Some(Move::B) }
+                    else { curr_mov };
+
+                    if let Some(m) = curr_mov {
+                        if is_key_pressed(KeyCode::Left) {
+                            manually_moving = true;
+                            manual_move = m.opposite();
+                        }
+                        else if is_key_pressed(KeyCode::Right) {
+                            manual_move = m;
+                            manually_moving = true;
+                        }
+                    } else {
+                        t = 0.0;
+                    }
+                }
+            },
+            StateKind::Solving => {
+            },
+        }
+            
+
+        let polys = get_polys(&state.cube,
+                      curr_mov.and_then(|m| Some(PartialMove { mov: m, lerp_t: t })),
+                      SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
 
         for poly in polys {
             let col = poly.color;
@@ -36,7 +99,6 @@ async fn main() {
             
         }
 
-        t += 0.01;
         next_frame().await
     }
 }
