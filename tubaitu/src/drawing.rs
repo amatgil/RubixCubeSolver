@@ -401,8 +401,8 @@ pub struct Polygon {
 
 #[derive(Debug, Clone)]
 pub struct PartialMove {
-    mov: Move,
-    lerp_t: f64,
+    pub mov: Move,
+    pub lerp_t: f64,
 }
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding polys that would draw it
