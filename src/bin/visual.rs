@@ -80,7 +80,6 @@ async fn main() {
                 else if is_key_pressed(KeyCode::L) { Some(Move::L) }
                 else if is_key_pressed(KeyCode::U) { Some(Move::U) }
                 else if is_key_pressed(KeyCode::D) { Some(Move::D) }
-                else if is_key_pressed(KeyCode::U) { Some(Move::U) }
                 else if is_key_pressed(KeyCode::F) { Some(Move::F) }
                 else if is_key_pressed(KeyCode::B) { Some(Move::B) }
                 else { *selected_move };
