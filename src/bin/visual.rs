@@ -10,6 +10,8 @@ pub const BLUE_COL  : Color     = color_u8![32, 159, 181, 255];
 pub const GREEN_COL : Color     = color_u8![64, 160, 43, 255];
 pub const BACKGROUND_COL: Color = color_u8![0x24, 0x27, 0x3a, 255];
 
+pub const TEXT_COL: Color = color_u8![128, 135, 162, 255];
+
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
@@ -62,12 +64,15 @@ async fn main() {
 
         dbg!(&state.kind);
         match state.kind {
-            StateKind::Manual { mid_move: Some((mid_move, ref mut t)), .. } => {
+            StateKind::Manual { ref selected_move, mid_move: Some((mid_move, ref mut t))  } => {
+                draw_selected_move(selected_move);
+
                 *t += dt;
                 if *t >= 1.0 || *t <= -1.0 {
                     state.kind = StateKind::Manual { selected_move: None, mid_move: None };
                     state.cube.make_move(mid_move);
                 }
+
             },
             StateKind::Manual { ref mut selected_move, mid_move: None } => {
                 *selected_move = 
@@ -80,10 +85,13 @@ async fn main() {
                 else if is_key_pressed(KeyCode::B) { Some(Move::B) }
                 else { *selected_move };
 
+                draw_selected_move(selected_move);
+
                 if let &mut Some(m) = selected_move {
                     if is_key_pressed(KeyCode::Left)       { state.kind = StateKind::Manual { selected_move: *selected_move, mid_move: Some((m.opposite(), 0.0)) }}
                     else if is_key_pressed(KeyCode::Right) { state.kind = StateKind::Manual { selected_move: *selected_move, mid_move: Some((m, 0.0)) }}
                 } 
+
             },
             StateKind::Solving => {
                 todo!("No solving capabilities yet!");
@@ -112,19 +120,20 @@ async fn main() {
     }
 }
 
+fn draw_selected_move(m: &Option<Move>) {
+    let val: String = m.and_then(|o| Some(o.to_string())).or(Some("None".into())).expect("Cannot panic");
+
+    let mut text = String::from("Selected: ");
+    text.push_str(&val);
+
+    let font_size = 50.0;
+    draw_text(&text, 10.0, font_size*1.2, font_size, TEXT_COL);
+}
+
+
 fn draw_quad(p0: Vec2, p1: Vec2, p2: Vec2, p3: Vec2, col: Color) {
-    draw_triangle(
-        p0,
-        p1,
-        p2,
-        col
-    );
-    draw_triangle(
-        p0,
-        p2,
-        p3,
-        col
-    );
+    draw_triangle(p0, p1, p2, col);
+    draw_triangle(p0, p2, p3, col);
 }
 
 fn window_conf() -> Conf {
