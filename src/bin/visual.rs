@@ -13,14 +13,36 @@ pub const BACKGROUND_COL: Color = color_u8![0x24, 0x27, 0x3a, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
+#[derive(Debug, Clone, Copy)]
 struct State {
     cube: Cube2,
     kind: StateKind,
 }
 
+#[derive(Debug, Clone, Copy)]
 enum StateKind {
-    Manual,
+    Manual {
+        selected_move: Option<Move>,
+        mid_move: Option<(Move, f64)>,
+    },
     Solving
+}
+
+impl State {
+    fn curr_t(&self) -> f64 {
+        match self.kind {
+            StateKind::Manual { mid_move: Some((_, t)), .. } => t,
+            StateKind::Manual { mid_move: None, .. }         => 0.0,
+            StateKind::Solving                               => todo!("Solving not yet implemented"),
+        }
+    }
+    fn curr_mov(&self) -> Option<Move> {
+        match self.kind {
+            StateKind::Manual { mid_move: Some((m, _)), .. } => Some(m),
+            StateKind::Manual { mid_move: None, .. }         => None,
+            StateKind::Solving                               => todo!("Solving not yet implemented"),
+        }
+    }
 }
 
 #[macroquad::main(window_conf)]
@@ -29,61 +51,48 @@ async fn main() {
     let dt = 0.05;
     let mut state = State {
         cube: Cube2::default(),
-        kind: StateKind::Manual,
+        kind: StateKind::Manual {
+            selected_move: None,
+            mid_move: None
+        },
     };
-
-    let mut t: f64 = 0.0;
-    let mut curr_mov = None;
-
-    // Manual
-    let mut manually_moving = false;
-    let mut manual_move = Move::R;
 
     loop {
         clear_background(BACKGROUND_COL);
 
+        dbg!(&state.kind);
         match state.kind {
-            StateKind::Manual => {
-                if manually_moving {
-                    t += dt * if manual_move.is_prime() { -1.0 } else { 1.0} ;
-                    if t >= 1.0 || t <= -1.0 {
-                        manually_moving = false;
-                        t = 0.0;
-                        state.cube.make_move(manual_move);
-                    }
-
-                } else {
-                    curr_mov = 
-                        if is_key_pressed(KeyCode::R) { Some(Move::R) }
-                    else if is_key_pressed(KeyCode::L) { Some(Move::L) }
-                    else if is_key_pressed(KeyCode::U) { Some(Move::U) }
-                    else if is_key_pressed(KeyCode::D) { Some(Move::D) }
-                    else if is_key_pressed(KeyCode::U) { Some(Move::U) }
-                    else if is_key_pressed(KeyCode::F) { Some(Move::F) }
-                    else if is_key_pressed(KeyCode::B) { Some(Move::B) }
-                    else { curr_mov };
-
-                    if let Some(m) = curr_mov {
-                        if is_key_pressed(KeyCode::Left) {
-                            manually_moving = true;
-                            manual_move = m.opposite();
-                        }
-                        else if is_key_pressed(KeyCode::Right) {
-                            manual_move = m;
-                            manually_moving = true;
-                        }
-                    } else {
-                        t = 0.0;
-                    }
+            StateKind::Manual { mid_move: Some((mid_move, ref mut t)), .. } => {
+                *t += dt;
+                if *t >= 1.0 || *t <= -1.0 {
+                    state.kind = StateKind::Manual { selected_move: None, mid_move: None };
+                    state.cube.make_move(mid_move);
                 }
             },
+            StateKind::Manual { ref mut selected_move, mid_move: None } => {
+                *selected_move = 
+                    if is_key_pressed(KeyCode::R) { Some(Move::R) }
+                else if is_key_pressed(KeyCode::L) { Some(Move::L) }
+                else if is_key_pressed(KeyCode::U) { Some(Move::U) }
+                else if is_key_pressed(KeyCode::D) { Some(Move::D) }
+                else if is_key_pressed(KeyCode::U) { Some(Move::U) }
+                else if is_key_pressed(KeyCode::F) { Some(Move::F) }
+                else if is_key_pressed(KeyCode::B) { Some(Move::B) }
+                else { *selected_move };
+
+                if let &mut Some(m) = selected_move {
+                    if is_key_pressed(KeyCode::Left)       { state.kind = StateKind::Manual { selected_move: *selected_move, mid_move: Some((m.opposite(), 0.0)) }}
+                    else if is_key_pressed(KeyCode::Right) { state.kind = StateKind::Manual { selected_move: *selected_move, mid_move: Some((m, 0.0)) }}
+                } 
+            },
             StateKind::Solving => {
+                todo!("No solving capabilities yet!");
             },
         }
             
 
         let polys = get_polys(&state.cube,
-                      curr_mov.and_then(|m| Some(PartialMove { mov: m, lerp_t: t })),
+                      state.curr_mov().and_then(|m| Some(PartialMove { mov: m, lerp_t: state.curr_t() })),
                       SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
 
         for poly in polys {

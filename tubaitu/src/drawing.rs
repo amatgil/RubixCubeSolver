@@ -3,14 +3,8 @@ use m_per_n::*;
 
 use m_per_n::Vec3;
 use std::cmp::Ordering;
-use std::f64::consts::PI;
-use std::fs::{create_dir, remove_dir_all};
-use std::{fs, io};
-use std::io::Write;
-use std::path::{Path, PathBuf}; // The lesser circle constant
+use std::f64::consts::PI; // The lesser cercle constant
 
-const WIDTH: usize = 10000;
-const HEIGHT: usize = 10000;
 const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.5;
 const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 1.0;
 const DISTANCE_CAMERA_PLANE: f64 = 1.0;
@@ -466,19 +460,6 @@ pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, heig
     }
 
     buffer
-}
-
-fn create_or_empty_out_directory(directory: &Path) -> Result<(), Box<dyn Error>> {
-    match create_dir(directory.join(directory)) {
-        Ok(_) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-            println!("[INFO]: {directory:?} exists, emptying out...");
-            remove_dir_all(directory)?;
-            create_dir(directory.join(directory))?;
-            Ok(())
-        },
-        Err(e) => Err(format!("Could not create/open directory '{directory:?} because: '{e}").into()),
-    }
 }
 
 #[test]
