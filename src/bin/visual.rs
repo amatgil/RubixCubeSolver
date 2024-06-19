@@ -87,28 +87,20 @@ async fn main() {
     loop {
         clear_background(BACKGROUND_COL);
 
-        //dbg!(&state.kind);
-
         if is_key_pressed(scramble_bind) {
-            let len = rand::gen_range(10, 20);
-            let (_, scramble) = Cube2::random_scramble(len);
+            let (_, scramble) = Cube2::random_scramble(rand::gen_range(10, 20));
             state.kind = StateKind::Scrambling { seq: scramble.into_iter().peekable(), t: 0.0 };
         }
         else if is_key_pressed(solve_bind) { 
-            let solve = state.cube.solve(false);
+            draw_simple_text("Finding solution...");
+            let solve = state.cube.solve(true);
             state.kind = StateKind::Solving {
                 seq: solve.into_iter().peekable(),
-                t:0.0, 
+                t: 0.0, 
             };
         }
         else if is_key_pressed(reset_bind) { 
-            state = State {
-                cube: Cube2::default(),
-                kind: StateKind::Manual {
-                    selected_move: None,
-                    mid_move: None,
-                },
-            };
+            state.set_back_to_manual();
         }
 
         match state.kind {
@@ -124,7 +116,7 @@ async fn main() {
             },
             StateKind::Manual { ref mut selected_move, mid_move: None } => {
                 *selected_move = 
-                    if is_key_pressed(r_bind)  { Some(Move::R) }
+                     if is_key_pressed(r_bind) { Some(Move::R) }
                 else if is_key_pressed(l_bind) { Some(Move::L) }
                 else if is_key_pressed(u_bind) { Some(Move::U) }
                 else if is_key_pressed(d_bind) { Some(Move::D) }
@@ -160,12 +152,12 @@ async fn main() {
                 let solving_dt = 0.05;
 
                 draw_current_move_seq("Solve: ", seq);
-                if let Some(solve_move) = &mut seq.peek() { // Advance and check while we're at it
+                if let Some(solve_move) = &mut seq.peek() {
                     *t += solving_dt;
                     if *t >= 1.0 || *t <= -1.0 {
                         state.cube.make_move(solve_move.clone());
                         seq.next();
-                        state.kind = StateKind::Scrambling { seq: seq.clone() , t: 0.0 };
+                        state.kind = StateKind::Solving { seq: seq.clone() , t: 0.0 };
                     }
                 } else {
                     state.set_back_to_manual();
@@ -193,6 +185,11 @@ async fn main() {
 
         next_frame().await
     }
+}
+
+fn draw_simple_text(text: &str) {
+    let font_size = 50.0;
+    draw_text(&text, 10.0, font_size*1.2, font_size, TEXT_COL);
 }
 
 fn draw_current_move_seq(pre: &str, seq: &Peekable<vec::IntoIter<Move>>) {
