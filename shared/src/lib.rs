@@ -434,7 +434,7 @@ impl Display for MoveSeq {
             };
         }
 
-        write!(f, "[ {o} ]")
+        write!(f, "{o}")
     }
 }
 
