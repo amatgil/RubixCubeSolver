@@ -33,7 +33,10 @@ enum StateKind {
         seq: Peekable<vec::IntoIter<Move>>,
         t: f64,
     },
-    Solving
+    Solving {
+        seq: Peekable<vec::IntoIter<Move>>,
+        t: f64,
+    },
 }
 
 impl State {
@@ -41,7 +44,7 @@ impl State {
         match self.kind {
             StateKind::Manual { mid_move: Some((_, t)), .. } => t,
             StateKind::Manual { mid_move: None, .. }         => 0.0,
-            StateKind::Solving                               => todo!("Solving not yet implemented"),
+            StateKind::Solving { t, .. }                     => t,
             StateKind::Scrambling { t, .. }                  => t,
         }
     }
@@ -49,9 +52,12 @@ impl State {
         match &mut self.kind {
             StateKind::Manual { mid_move: Some((m, _)), .. } => Some(*m),
             StateKind::Manual { mid_move: None, .. }         => None,
-            StateKind::Solving                               => todo!("Solving not yet implemented"),
+            StateKind::Solving { seq, .. }                   => seq.peek().copied(),
             StateKind::Scrambling { seq, .. }                => seq.peek().copied(),
         }
+    }
+    fn set_back_to_manual(&mut self) {
+        self.kind = StateKind::Manual { selected_move: None, mid_move: None };
     }
 }
 
@@ -66,16 +72,43 @@ async fn main() {
             mid_move: None
         },
     };
+    let solve_bind    = KeyCode::Q;
+    let scramble_bind = KeyCode::S;
+    let reset_bind    = KeyCode::P;
+
+    let l_bind        = KeyCode::L;
+    let r_bind        = KeyCode::R;
+    let f_bind        = KeyCode::F;
+    let b_bind        = KeyCode::B;
+    let u_bind        = KeyCode::U;
+    let d_bind        = KeyCode::D;
+
 
     loop {
         clear_background(BACKGROUND_COL);
 
         //dbg!(&state.kind);
 
-        if is_key_pressed(KeyCode::S) {
+        if is_key_pressed(scramble_bind) {
             let len = rand::gen_range(10, 20);
             let (_, scramble) = Cube2::random_scramble(len);
             state.kind = StateKind::Scrambling { seq: scramble.into_iter().peekable(), t: 0.0 };
+        }
+        else if is_key_pressed(solve_bind) { 
+            let solve = state.cube.solve(false);
+            state.kind = StateKind::Solving {
+                seq: solve.into_iter().peekable(),
+                t:0.0, 
+            };
+        }
+        else if is_key_pressed(reset_bind) { 
+            state = State {
+                cube: Cube2::default(),
+                kind: StateKind::Manual {
+                    selected_move: None,
+                    mid_move: None,
+                },
+            };
         }
 
         match state.kind {
@@ -91,24 +124,21 @@ async fn main() {
             },
             StateKind::Manual { ref mut selected_move, mid_move: None } => {
                 *selected_move = 
-                    if is_key_pressed(KeyCode::R) { Some(Move::R) }
-                else if is_key_pressed(KeyCode::L) { Some(Move::L) }
-                else if is_key_pressed(KeyCode::U) { Some(Move::U) }
-                else if is_key_pressed(KeyCode::D) { Some(Move::D) }
-                else if is_key_pressed(KeyCode::F) { Some(Move::F) }
-                else if is_key_pressed(KeyCode::B) { Some(Move::B) }
+                    if is_key_pressed(r_bind)  { Some(Move::R) }
+                else if is_key_pressed(l_bind) { Some(Move::L) }
+                else if is_key_pressed(u_bind) { Some(Move::U) }
+                else if is_key_pressed(d_bind) { Some(Move::D) }
+                else if is_key_pressed(f_bind) { Some(Move::F) }
+                else if is_key_pressed(b_bind) { Some(Move::B) }
                 else { *selected_move };
 
                 draw_selected_move(selected_move);
 
                 if let &mut Some(m) = selected_move {
                     if is_key_pressed(KeyCode::Left)       { state.kind = StateKind::Manual { selected_move: *selected_move, mid_move: Some((m.opposite(), 0.0)) }}
-                    else if is_key_pressed(KeyCode::Right) { state.kind = StateKind::Manual { selected_move: *selected_move, mid_move: Some((m, 0.0)) }}
+                    else if is_key_pressed(KeyCode::Right) { state.kind = StateKind::Manual { selected_move: *selected_move, mid_move: Some((m,            0.0)) }}
                 } 
 
-            },
-            StateKind::Solving => {
-                todo!("No solving capabilities yet!");
             },
             StateKind::Scrambling { ref mut seq, ref mut t } => {
                 let scrambling_dt = 0.05;
@@ -117,13 +147,28 @@ async fn main() {
                 if let Some(scramble_move) = &mut seq.peek() { // Advance and check while we're at it
                     *t += scrambling_dt;
                     if *t >= 1.0 || *t <= -1.0 {
-                        dbg!("t advanced");
                         state.cube.make_move(scramble_move.clone());
                         seq.next();
                         state.kind = StateKind::Scrambling { seq: seq.clone() , t: 0.0 };
                     }
                 } else {
-                    state.kind = StateKind::Manual { selected_move: None, mid_move: None };
+                    state.set_back_to_manual();
+                }
+
+            },
+            StateKind::Solving { ref mut seq, ref mut t } => {
+                let solving_dt = 0.05;
+
+                draw_current_move_seq("Solve: ", seq);
+                if let Some(solve_move) = &mut seq.peek() { // Advance and check while we're at it
+                    *t += solving_dt;
+                    if *t >= 1.0 || *t <= -1.0 {
+                        state.cube.make_move(solve_move.clone());
+                        seq.next();
+                        state.kind = StateKind::Scrambling { seq: seq.clone() , t: 0.0 };
+                    }
+                } else {
+                    state.set_back_to_manual();
                 }
 
             }
