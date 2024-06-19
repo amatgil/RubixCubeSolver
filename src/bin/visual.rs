@@ -1,5 +1,7 @@
-use macroquad::prelude::*;
-use shared::{Move, Solvable};
+use std::{iter::Peekable, vec};
+
+use macroquad::{prelude::*, rand::rand};
+use shared::{Move, MoveSeq, Solvable};
 use tubaitu::{get_polys, Cube2, PartialMove};
 
 pub const WHITE_COL : Color     = color_u8![188, 192, 204, 255];
@@ -15,17 +17,21 @@ pub const TEXT_COL: Color = color_u8![128, 135, 162, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct State {
     cube: Cube2,
     kind: StateKind,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum StateKind {
     Manual {
         selected_move: Option<Move>,
         mid_move: Option<(Move, f64)>,
+    },
+    Scrambling {
+        seq: Peekable<vec::IntoIter<Move>>,
+        t: f64,
     },
     Solving
 }
@@ -36,13 +42,15 @@ impl State {
             StateKind::Manual { mid_move: Some((_, t)), .. } => t,
             StateKind::Manual { mid_move: None, .. }         => 0.0,
             StateKind::Solving                               => todo!("Solving not yet implemented"),
+            StateKind::Scrambling { t, .. }                  => t,
         }
     }
-    fn curr_mov(&self) -> Option<Move> {
-        match self.kind {
-            StateKind::Manual { mid_move: Some((m, _)), .. } => Some(m),
+    fn curr_mov(&mut self) -> Option<Move> {
+        match &mut self.kind {
+            StateKind::Manual { mid_move: Some((m, _)), .. } => Some(*m),
             StateKind::Manual { mid_move: None, .. }         => None,
             StateKind::Solving                               => todo!("Solving not yet implemented"),
+            StateKind::Scrambling { seq, .. }                => seq.peek().copied(),
         }
     }
 }
@@ -62,7 +70,14 @@ async fn main() {
     loop {
         clear_background(BACKGROUND_COL);
 
-        dbg!(&state.kind);
+        //dbg!(&state.kind);
+
+        if is_key_pressed(KeyCode::S) {
+            let len = rand::gen_range(10, 20);
+            let (_, scramble) = Cube2::random_scramble(len);
+            state.kind = StateKind::Scrambling { seq: scramble.into_iter().peekable(), t: 0.0 };
+        }
+
         match state.kind {
             StateKind::Manual { ref selected_move, mid_move: Some((mid_move, ref mut t))  } => {
                 draw_selected_move(selected_move);
@@ -95,12 +110,28 @@ async fn main() {
             StateKind::Solving => {
                 todo!("No solving capabilities yet!");
             },
+            StateKind::Scrambling { ref mut seq, ref mut t } => {
+                let scrambling_dt = 0.05;
+
+                draw_current_move_seq("Scrambling: ", seq);
+                if let Some(scramble_move) = &mut seq.peek() { // Advance and check while we're at it
+                    *t += scrambling_dt;
+                    if *t >= 1.0 || *t <= -1.0 {
+                        dbg!("t advanced");
+                        state.cube.make_move(scramble_move.clone());
+                        seq.next();
+                        state.kind = StateKind::Scrambling { seq: seq.clone() , t: 0.0 };
+                    }
+                } else {
+                    state.kind = StateKind::Manual { selected_move: None, mid_move: None };
+                }
+
+            }
         }
             
 
-        let polys = get_polys(&state.cube,
-                      state.curr_mov().and_then(|m| Some(PartialMove { mov: m, lerp_t: state.curr_t() })),
-                      SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
+        let curr_move = state.curr_mov().and_then(|m| Some(PartialMove { mov: m, lerp_t: state.curr_t() })); 
+        let polys = get_polys(&state.cube, curr_move, SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
 
         for poly in polys {
             let col = poly.color;
@@ -117,6 +148,19 @@ async fn main() {
 
         next_frame().await
     }
+}
+
+fn draw_current_move_seq(pre: &str, seq: &Peekable<vec::IntoIter<Move>>) {
+    let font_size = 50.0;
+
+    let seq: MoveSeq = seq.clone().collect::<Vec<Move>>().into();
+    let seq_text = seq.to_string();
+
+    let mut text = pre.to_string();
+    text.push_str(&seq_text);
+
+    draw_text(&text, 10.0, font_size*1.2, font_size, TEXT_COL);
+    
 }
 
 fn draw_selected_move(m: &Option<Move>) {
