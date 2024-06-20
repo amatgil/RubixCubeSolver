@@ -44,8 +44,6 @@ const FACE_FRONT_SEQ_PRINT: [usize; 4] = [P_TOP_LEFT_FRONT, P_TOP_RIGHT_FRONT, P
 const FACE_BACK_SEQ_PRINT: [usize; 4]  = [P_TOP_RIGHT_BACK, P_TOP_LEFT_BACK, P_BOTTOM_RIGHT_BACK, P_BOTTOM_LEFT_BACK];
 
 
-const N_IN_BETWEEN_FRAMES: usize = 30;
-
 impl Solvable for Cube2 {
     const INPUT_FILE_NAME: &'static str = "tubaitu_input_file";
 

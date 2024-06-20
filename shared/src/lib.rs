@@ -1,16 +1,11 @@
 use std::{
-    collections::{HashSet, VecDeque},
-    error::Error,
-    fmt::Display,
-    hash::Hash,
-    ops::Deref,
-    rc::Rc,
-    time::Instant,
+    collections::{HashSet, VecDeque}, error::Error, fmt::Display, hash::Hash, ops::Deref, rc::Rc, sync::mpsc::Sender, time::Instant
 };
 
 pub mod colors;
 pub use colors::*;
 
+use std::io::Write;
 pub mod ui;
 pub use ui::*;
 
@@ -97,7 +92,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("[INFO]: `{}` has been read", Self::INPUT_FILE_NAME);
         println!("[INFO]: Interpreted cube is:\n{cube}");
         println!("[INFO]: Starting the solve...");
-        let r = cube.solve(true);
+        let r = cube.solve(true, None);
 
         println!("[INFO]: Checking correctness...");
         let mut checking_cube = cube.clone();
@@ -125,7 +120,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         println!("]");
     }
 
-    fn solve(&self, prints_enabled: bool) -> MoveSeq {
+    fn solve(&self, prints_enabled: bool, mut outward_comms: Option<Sender<String>>) -> MoveSeq {
         let first_state_unsolved = Rc::new(State {
             cube: self.clone(),
             past_state: None,
@@ -145,9 +140,10 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         while w_from_solved.is_disjoint(&w_from_unsolved) {
             advance_bfs(&mut w_from_unsolved, &mut queue_from_unsolved);
             advance_bfs(&mut w_from_solved, &mut queue_from_solved);
-            print!("\rEstats visitats: {} i {}", w_from_unsolved.len(), w_from_solved.len());
-            use std::io::Write;
-            std::io::stdout().flush().unwrap()
+            let comms = format!("\r {} visitats", w_from_unsolved.len() + w_from_solved.len());
+            print!("{comms}");
+            std::io::stdout().flush().unwrap();
+            if let Some(ref mut sender) = outward_comms { sender.send(comms).expect("Should not have hung up"); }
         }
         if prints_enabled {
             println!(); 

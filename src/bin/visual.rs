@@ -1,4 +1,4 @@
-use std::{iter::Peekable, rc::Rc, thread::{self, JoinHandle}, vec};
+use std::{iter::Peekable, rc::Rc, sync::mpsc::{self, Receiver}, thread::{self, JoinHandle}, vec};
 
 use macroquad::{prelude::*, rand::rand};
 use shared::{Move, MoveSeq, Solvable};
@@ -41,6 +41,7 @@ enum StateKind {
 enum SolvingState {
     Calculating {
         handle: JoinHandle<MoveSeq>,
+        comms: (String, Receiver<String>),
     },
     Ready {
         seq: Peekable<vec::IntoIter<Move>>,
@@ -103,8 +104,9 @@ async fn main() {
             state.kind = StateKind::Scrambling { seq: scramble.into_iter().peekable(), t: 0.0 };
         }
         else if is_key_pressed(solve_bind) { 
-            let handle = thread::spawn(move || state.cube.solve(true));
-            state.kind = StateKind::Solving(SolvingState::Calculating { handle: handle.into() });
+            let (tx, rx) = mpsc::channel();
+            let handle = thread::spawn(move || state.cube.solve(true, Some(tx)));
+            state.kind = StateKind::Solving(SolvingState::Calculating { handle: handle.into(), comms: (String::new(), rx) });
         }
         else if is_key_pressed(reset_bind) { 
             state.set_back_to_manual();
@@ -155,17 +157,23 @@ async fn main() {
                 }
 
             },
-            StateKind::Solving(SolvingState::Calculating { handle })  => {
-                draw_simple_text("Finding solution...");
+            StateKind::Solving(SolvingState::Calculating { handle, comms: (mut acc_comms, rx_comms) })  => {
+                let mut text = "Finding solution: ".to_string();
+                text.push_str(&acc_comms);
+                draw_simple_text(&text);
+
                 if handle.is_finished() {
                     state.kind = StateKind::Solving(SolvingState::Ready {
                         seq: handle.join().expect("Solving cannot panic").0.into_iter().peekable(),
                         t: 0.0 });
                 }
                 else {
-                    state.kind = StateKind::Solving(SolvingState::Calculating { handle });
+                    if let Ok(new_acc_str) = rx_comms.try_recv() {
+                        acc_comms = new_acc_str;
+                    }
+                    state.kind = StateKind::Solving(SolvingState::Calculating { handle, comms: (acc_comms, rx_comms) });
                 }
-            }
+            },
             StateKind::Solving(SolvingState::Ready { ref mut seq, ref mut t }) => {
                 let solving_dt = 0.05;
 
@@ -206,7 +214,7 @@ async fn main() {
 }
 
 fn draw_simple_text(text: &str) {
-    let font_size = 50.0;
+    let font_size = 40.0;
     draw_text(&text, 10.0, font_size*1.2, font_size, TEXT_COL);
 }
 
