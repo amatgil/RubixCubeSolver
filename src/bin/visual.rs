@@ -1,8 +1,9 @@
-use std::{iter::Peekable, vec};
+use std::{iter::Peekable, rc::Rc, thread::{self, JoinHandle}, vec};
 
 use macroquad::{prelude::*, rand::rand};
 use shared::{Move, MoveSeq, Solvable};
 use tubaitu::{get_polys, Cube2, PartialMove};
+use std::fmt::Debug;
 
 pub const WHITE_COL : Color     = color_u8![188, 192, 204, 255];
 pub const YELLOW_COL: Color     = color_u8![0xCC, 0xCC, 0x00, 255];
@@ -17,13 +18,13 @@ pub const TEXT_COL: Color = color_u8![128, 135, 162, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct State {
     cube: Cube2,
     kind: StateKind,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum StateKind {
     Manual {
         selected_move: Option<Move>,
@@ -33,7 +34,15 @@ enum StateKind {
         seq: Peekable<vec::IntoIter<Move>>,
         t: f64,
     },
-    Solving {
+    Solving(SolvingState)
+}
+
+#[derive(Debug)]
+enum SolvingState {
+    Calculating {
+        handle: JoinHandle<MoveSeq>,
+    },
+    Ready {
         seq: Peekable<vec::IntoIter<Move>>,
         t: f64,
     },
@@ -42,18 +51,20 @@ enum StateKind {
 impl State {
     fn curr_t(&self) -> f64 {
         match self.kind {
-            StateKind::Manual { mid_move: Some((_, t)), .. } => t,
-            StateKind::Manual { mid_move: None, .. }         => 0.0,
-            StateKind::Solving { t, .. }                     => t,
-            StateKind::Scrambling { t, .. }                  => t,
+            StateKind::Manual { mid_move: Some((_, t)), .. }       => t,
+            StateKind::Manual { mid_move: None, .. }               => 0.0,
+            StateKind::Solving(SolvingState::Calculating { .. })   => 0.0,
+            StateKind::Solving(SolvingState::Ready { t, .. })      => t,
+            StateKind::Scrambling { t, .. }                        => t,
         }
     }
     fn curr_mov(&mut self) -> Option<Move> {
         match &mut self.kind {
-            StateKind::Manual { mid_move: Some((m, _)), .. } => Some(*m),
-            StateKind::Manual { mid_move: None, .. }         => None,
-            StateKind::Solving { seq, .. }                   => seq.peek().copied(),
-            StateKind::Scrambling { seq, .. }                => seq.peek().copied(),
+            StateKind::Manual { mid_move: Some((m, _)), .. }     => Some(*m),
+            StateKind::Manual { mid_move: None, .. }             => None,
+            StateKind::Solving(SolvingState::Calculating { .. }) => None,
+            StateKind::Solving(SolvingState::Ready { seq, .. })  => seq.peek().copied(),
+            StateKind::Scrambling { seq, .. }                    => seq.peek().copied(),
         }
     }
     fn set_back_to_manual(&mut self) {
@@ -92,12 +103,8 @@ async fn main() {
             state.kind = StateKind::Scrambling { seq: scramble.into_iter().peekable(), t: 0.0 };
         }
         else if is_key_pressed(solve_bind) { 
-            draw_simple_text("Finding solution...");
-            let solve = state.cube.solve(true);
-            state.kind = StateKind::Solving {
-                seq: solve.into_iter().peekable(),
-                t: 0.0, 
-            };
+            let handle = thread::spawn(move || state.cube.solve(true));
+            state.kind = StateKind::Solving(SolvingState::Calculating { handle: handle.into() });
         }
         else if is_key_pressed(reset_bind) { 
             state.set_back_to_manual();
@@ -148,7 +155,18 @@ async fn main() {
                 }
 
             },
-            StateKind::Solving { ref mut seq, ref mut t } => {
+            StateKind::Solving(SolvingState::Calculating { handle })  => {
+                draw_simple_text("Finding solution...");
+                if handle.is_finished() {
+                    state.kind = StateKind::Solving(SolvingState::Ready {
+                        seq: handle.join().expect("Solving cannot panic").0.into_iter().peekable(),
+                        t: 0.0 });
+                }
+                else {
+                    state.kind = StateKind::Solving(SolvingState::Calculating { handle });
+                }
+            }
+            StateKind::Solving(SolvingState::Ready { ref mut seq, ref mut t }) => {
                 let solving_dt = 0.05;
 
                 draw_current_move_seq("Solve: ", seq);
@@ -157,7 +175,7 @@ async fn main() {
                     if *t >= 1.0 || *t <= -1.0 {
                         state.cube.make_move(solve_move.clone());
                         seq.next();
-                        state.kind = StateKind::Solving { seq: seq.clone() , t: 0.0 };
+                        state.kind = StateKind::Solving(SolvingState::Ready { seq: seq.clone(), t: 0.0 });
                     }
                 } else {
                     state.set_back_to_manual();
