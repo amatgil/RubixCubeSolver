@@ -168,7 +168,7 @@ async fn main() {
                         t: 0.0 });
                 }
                 else {
-                    if let Ok(new_acc_str) = rx_comms.try_recv() {
+                    while let Ok(new_acc_str) = rx_comms.try_recv() {
                         acc_comms = new_acc_str;
                     }
                     state.kind = StateKind::Solving(SolvingState::Calculating { handle, comms: (acc_comms, rx_comms) });
