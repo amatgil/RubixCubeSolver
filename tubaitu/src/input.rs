@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error, ops::Index};
+use std::ops::Index;
 
 use crate::*;
 
@@ -80,17 +80,5 @@ impl Cube2 {
 
 	Cube2 { pieces: [ p_000, p_001, p_010, p_011, p_100, p_101, p_110, p_111  ] }
     }
-}
-
-fn get_next_color(input: &mut impl Iterator<Item = char>, error_s: &str) -> Result<Color, Box<dyn Error>> {
-    let c = input.next().ok_or(error_s.to_string())?;
-
-    let col = Color::from(c);
-    col.ok_or(format!("{c} is not a valid color").into())
-}
-
-fn skip_n_chars(input: &mut impl Iterator<Item = char>, n: usize, e: &str) -> Result<(), String>{
-    for _ in 0..n { input.next().ok_or(e.to_string())?; }
-    Ok(())
 }
 

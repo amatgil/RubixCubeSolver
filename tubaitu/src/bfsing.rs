@@ -17,7 +17,7 @@ fn basic_is_solved_test() {
 
 /// Takes in two cubes. Returns a sequence of moves that will turn the left one into the right one
 /// Not optimized for efficiency
-fn reorient_together(a: Cube2, b: Cube2) -> Option<Vec<Move>> {
+fn _reorient_together(a: Cube2, b: Cube2) -> Option<Vec<Move>> {
     for mut o in get_orientation_generators() {
         for mut r in get_rotation_generators() {
             let mut alternate_cube = a;

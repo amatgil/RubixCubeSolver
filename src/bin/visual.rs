@@ -1,6 +1,6 @@
-use std::{future::Future, iter::Peekable, rc::Rc, sync::mpsc::{self, Receiver, Sender}, thread::{self, JoinHandle}, vec};
+use std::{iter::Peekable, sync::mpsc::Receiver, vec};
 
-use macroquad::{experimental::coroutines::{start_coroutine, Coroutine}, prelude::*, rand::rand};
+use macroquad::{experimental::coroutines::Coroutine, prelude::*};
 use shared::{Move, MoveSeq, Solvable};
 use tubaitu::{get_polys, Cube2, PartialMove};
 use std::fmt::Debug;
@@ -39,7 +39,7 @@ enum StateKind {
 
 #[derive(Debug)]
 enum SolvingState {
-    Calculating { // Unused until wasm can deal with threads
+    _Calculating { // Unused until wasm can deal with threads
         coroutine: Coroutine<MoveSeq>,
         comms: (String, Receiver<String>),
     },
@@ -54,7 +54,7 @@ impl State {
         match self.kind {
             StateKind::Manual { mid_move: Some((_, t)), .. }       => t,
             StateKind::Manual { mid_move: None, .. }               => 0.0,
-            StateKind::Solving(SolvingState::Calculating { .. })   => 0.0,
+            StateKind::Solving(SolvingState::_Calculating { .. })   => 0.0,
             StateKind::Solving(SolvingState::Ready { t, .. })      => t,
             StateKind::Scrambling { t, .. }                        => t,
         }
@@ -63,7 +63,7 @@ impl State {
         match &mut self.kind {
             StateKind::Manual { mid_move: Some((m, _)), .. }     => Some(*m),
             StateKind::Manual { mid_move: None, .. }             => None,
-            StateKind::Solving(SolvingState::Calculating { .. }) => None,
+            StateKind::Solving(SolvingState::_Calculating { .. }) => None,
             StateKind::Solving(SolvingState::Ready { seq, .. })  => seq.peek().copied(),
             StateKind::Scrambling { seq, .. }                    => seq.peek().copied(),
         }
@@ -162,7 +162,7 @@ async fn main() {
                 }
 
             },
-            StateKind::Solving(SolvingState::Calculating { coroutine, comms: (mut acc_comms, rx_comms) })  => {
+            StateKind::Solving(SolvingState::_Calculating { coroutine, comms: (mut acc_comms, rx_comms) })  => {
                 let mut text = "Finding solution: ".to_string();
                 text.push_str(&acc_comms);
                 draw_simple_text(&text);
@@ -176,7 +176,7 @@ async fn main() {
                     while let Ok(new_acc_str) = rx_comms.try_recv() {
                         acc_comms = new_acc_str;
                     }
-                    state.kind = StateKind::Solving(SolvingState::Calculating { coroutine, comms: (acc_comms, rx_comms) });
+                    state.kind = StateKind::Solving(SolvingState::_Calculating { coroutine, comms: (acc_comms, rx_comms) });
                 }
             },
             StateKind::Solving(SolvingState::Ready { ref mut seq, ref mut t }) => {
@@ -218,9 +218,6 @@ async fn main() {
     }
 }
 
-async fn async_cube_solve(c: Cube2, sender: Sender<String>) -> MoveSeq {
-    c.solve(true, Some(sender))
-}
 fn draw_simple_text(text: &str) {
     let font_size = 40.0;
     draw_text(&text, 10.0, font_size*1.2, font_size, TEXT_COL);

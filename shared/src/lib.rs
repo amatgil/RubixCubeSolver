@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashSet, VecDeque}, error::Error, fmt::Display, hash::Hash, ops::Deref, rc::Rc, sync::mpsc::Sender
+    collections::{HashSet, VecDeque}, fmt::Display, hash::Hash, ops::Deref, rc::Rc, sync::mpsc::Sender
 };
 
 pub mod colors;
@@ -298,20 +298,17 @@ impl ExpandedMove {
         match (a, b) {
             (Self::Nothing, _) | (_, Self::Nothing) => None,
             (Self::L { prime: p1 }, Self::L { prime: p2 })
-            | (Self::R { prime: p1 }, Self::R { prime: p2 })
-            | (Self::F { prime: p1 }, Self::F { prime: p2 })
-            | (Self::B { prime: p1 }, Self::B { prime: p2 })
-            | (Self::B { prime: p1 }, Self::B { prime: p2 })
-                if p1 != p2 =>
-            {
-                Some(Self::Nothing)
-            }
+                | (Self::R { prime: p1 }, Self::R { prime: p2 })
+                | (Self::F { prime: p1 }, Self::F { prime: p2 })
+                | (Self::B { prime: p1 | p1 }, Self::B { prime: p2 })
+                if p1 != p2
+                => Some(Self::Nothing),
             (Self::L2, Self::L2)
-            | (Self::R2, Self::R2)
-            | (Self::F2, Self::D2)
-            | (Self::B2, Self::B2)
-            | (Self::U2, Self::U2)
-            | (Self::D2, Self::D2) => Some(Self::Nothing),
+                | (Self::R2, Self::R2)
+                | (Self::F2 | Self::D2, Self::D2)
+                | (Self::B2, Self::B2)
+                | (Self::U2, Self::U2)
+                => Some(Self::Nothing),
             (Self::L { prime: p1 }, Self::L { prime: p2 }) if p1 == p2 => Some(Self::L2),
             (Self::R { prime: p1 }, Self::R { prime: p2 }) if p1 == p2 => Some(Self::R2),
             (Self::F { prime: p1 }, Self::F { prime: p2 }) if p1 == p2 => Some(Self::F2),

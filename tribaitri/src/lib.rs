@@ -44,25 +44,6 @@ impl Solvable for Cube3 {
 
 pub const CUBE_PRINT_WIDTH: usize = 3*4 + 5 + 1;
 pub const CUBE_PRINT_HEIGHT: usize = 3*3 + 3 + 1;
-const CUBE_PRINT_HORIZ_DIVIDER_TMP: u8 = b'-';
-const CUBE_PRINT_VERTI_DIVIDER_TMP: u8 = b'|';
-const CUBE_PRINT_CROSS_DIVIDER_TMP: u8 = b'+';
-const CUBE_PRINT_TOP_L_DIVIDER_TMP: u8 = b'1';
-const CUBE_PRINT_TOP_R_DIVIDER_TMP: u8 = b'2';
-const CUBE_PRINT_BOT_L_DIVIDER_TMP: u8 = b'3';
-const CUBE_PRINT_BOT_R_DIVIDER_TMP: u8 = b'4';
-const CUBE_PRINT_NORMT_DIVIDER_TMP: u8 = b'5';
-const CUBE_PRINT_UPSDT_DIVIDER_TMP: u8 = b'6';
-
-const CUBE_PRINT_HORIZ_DIVIDER: char = '━';
-const CUBE_PRINT_VERTI_DIVIDER: char = '┃';
-const CUBE_PRINT_CROSS_DIVIDER: char = '╋';
-const CUBE_PRINT_TOP_L_DIVIDER: char = '┏';
-const CUBE_PRINT_TOP_R_DIVIDER: char = '┓';
-const CUBE_PRINT_BOT_L_DIVIDER: char = '┗';
-const CUBE_PRINT_BOT_R_DIVIDER: char = '┛';
-const CUBE_PRINT_NORMT_DIVIDER: char = '┳';
-const CUBE_PRINT_UPSDT_DIVIDER: char = '┻';
 fn xy_to_idx(x: usize, y: usize) -> usize { y*CUBE_PRINT_WIDTH + x }
 
 const RIGHT_PRINTING_CYCLE: [usize; 8] = [
