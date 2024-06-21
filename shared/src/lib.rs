@@ -1,13 +1,11 @@
 use std::{
-    collections::{HashSet, VecDeque}, error::Error, fmt::Display, hash::Hash, ops::Deref, rc::Rc, sync::mpsc::Sender, time::Instant
+    collections::{HashSet, VecDeque}, error::Error, fmt::Display, hash::Hash, ops::Deref, rc::Rc, sync::mpsc::Sender
 };
 
 pub mod colors;
 pub use colors::*;
 
 use std::io::Write;
-pub mod ui;
-pub use ui::*;
 
 pub const FLOAT_EPSILON: f64 = 0.0001;
 
@@ -72,53 +70,6 @@ fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
 pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn moves_of_adjacency() -> Vec<Move>;
     fn make_move(&mut self, movimement: Move);
-    const INPUT_FILE_NAME: &'static str;
-    fn write_blank_slate() -> Result<(), Box<dyn Error>>;
-    fn read_from_slate() -> Result<Self, Box<dyn Error>>;
-
-    /// Calls other Solvable methods with interspersed prints
-    fn solve_pretty() {
-        println!("[INFO]: Reading from `{}`...", Self::INPUT_FILE_NAME);
-        let cube: Self = match Self::read_from_slate() {
-            Ok(c) => c,
-            Err(e) => {
-                println!(
-                    "[ERROR]: Could not parse `{0}`:'{e}'. Please double check `{0}`",
-                    Self::INPUT_FILE_NAME
-                );
-                std::process::exit(2)
-            }
-        };
-        println!("[INFO]: `{}` has been read", Self::INPUT_FILE_NAME);
-        println!("[INFO]: Interpreted cube is:\n{cube}");
-        println!("[INFO]: Starting the solve...");
-        let r = cube.solve(true, None);
-
-        println!("[INFO]: Checking correctness...");
-        let mut checking_cube = cube.clone();
-        for m in &r.0 {
-            checking_cube.make_move(*m)
-        }
-
-        println!("Starting cube:\n{cube}\n");
-        println!("Final cube:\n{checking_cube}");
-
-        println!("[RESULT]: Final solution is: {}", r);
-        print!("[INFO]: Uncompressed solution: [ ");
-        for m in &r.0 {
-            print!("{m} ");
-        }
-        println!("]");
-
-        println!();
-
-        println!("[RESULT]: Reverse of solution: {}", r.reversed());
-        print!("[INFO]: Uncompressed reverse: [ ");
-        for m in r.0.iter().rev() {
-            print!("{} ", m.opposite());
-        }
-        println!("]");
-    }
 
     fn solve(&self, prints_enabled: bool, mut outward_comms: Option<Sender<String>>) -> MoveSeq {
         let first_state_unsolved = Rc::new(State {
@@ -204,10 +155,18 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     }
     fn random_scramble(length: usize) -> (Self, MoveSeq) {
         fn get_move_from_n(n: usize) -> Move { Move(n as u8) }
+        use rand::{RngCore, SeedableRng};
+        use rand::rngs::SmallRng;
+
+        #[cfg(target_family = "wasm")]
+        let mut rng = SmallRng::from_seed([42; 16]);
+
+        #[cfg(not(target_family = "wasm"))]
+        let mut rng = SmallRng::from_seed([42; 32]);
 
         let mut scramble = vec![];
         for _ in 0..length {
-            scramble.push(get_move_from_n(random_number_in_range(12)))
+            scramble.push(get_move_from_n(rng.next_u32() as usize % 12));
         }
 
         let c = Self::scramble(&scramble.clone().into());
@@ -481,15 +440,6 @@ pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
     [d, c, b, a]
 }
 
-
-pub fn random_number_in_range(max: usize) -> usize {
-    let nanos: usize = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap().subsec_nanos()
-        .try_into().unwrap();
-
-    nanos % max
-}
 
 #[test]
 fn opposite_moves() {

@@ -4,7 +4,6 @@ mod mats;
 pub use mats::*;
 
 mod mat_inverse;
-pub use mat_inverse::*;
 
 mod vec3;
 pub use vec3::*;

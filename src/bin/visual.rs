@@ -1,6 +1,6 @@
-use std::{iter::Peekable, rc::Rc, sync::mpsc::{self, Receiver}, thread::{self, JoinHandle}, vec};
+use std::{future::Future, iter::Peekable, rc::Rc, sync::mpsc::{self, Receiver, Sender}, thread::{self, JoinHandle}, vec};
 
-use macroquad::{prelude::*, rand::rand};
+use macroquad::{experimental::coroutines::{start_coroutine, Coroutine}, prelude::*, rand::rand};
 use shared::{Move, MoveSeq, Solvable};
 use tubaitu::{get_polys, Cube2, PartialMove};
 use std::fmt::Debug;
@@ -39,8 +39,8 @@ enum StateKind {
 
 #[derive(Debug)]
 enum SolvingState {
-    Calculating {
-        handle: JoinHandle<MoveSeq>,
+    Calculating { // Unused until wasm can deal with threads
+        coroutine: Coroutine<MoveSeq>,
         comms: (String, Receiver<String>),
     },
     Ready {
@@ -104,11 +104,16 @@ async fn main() {
             state.kind = StateKind::Scrambling { seq: scramble.into_iter().peekable(), t: 0.0 };
         }
         else if is_key_pressed(solve_bind) { 
-            let (tx, rx) = mpsc::channel();
-            let handle = thread::spawn(move || state.cube.solve(true, Some(tx)));
-            state.kind = StateKind::Solving(SolvingState::Calculating { handle: handle.into(), comms: (String::new(), rx) });
+            //let (tx, rx) = mpsc::channel();
+            //let coroutine = start_coroutine(async move {
+            //    state.cube.clone().solve(true, Some(tx))
+            //});
+            let seq = state.cube.solve(true, None).0.into_iter().peekable();
+            state.kind = StateKind::Solving(SolvingState::Ready { seq, t: 0.0 });
         }
         else if is_key_pressed(reset_bind) { 
+            println!("[INFO]: Resetting cube");
+            state.cube = Cube2::default();
             state.set_back_to_manual();
         }
 
@@ -117,8 +122,8 @@ async fn main() {
                 draw_selected_move(selected_move);
 
                 *t += dt;
-                if *t >= 1.0 || *t <= -1.0 {
-                    state.kind = StateKind::Manual { selected_move: None, mid_move: None };
+                if *t >= 1.0 {
+                    state.set_back_to_manual();
                     state.cube.make_move(mid_move);
                 }
 
@@ -147,7 +152,7 @@ async fn main() {
                 draw_current_move_seq("Scrambling: ", seq);
                 if let Some(scramble_move) = &mut seq.peek() { // Advance and check while we're at it
                     *t += scrambling_dt;
-                    if *t >= 1.0 || *t <= -1.0 {
+                    if *t >= 1.0 {
                         state.cube.make_move(scramble_move.clone());
                         seq.next();
                         state.kind = StateKind::Scrambling { seq: seq.clone() , t: 0.0 };
@@ -157,21 +162,21 @@ async fn main() {
                 }
 
             },
-            StateKind::Solving(SolvingState::Calculating { handle, comms: (mut acc_comms, rx_comms) })  => {
+            StateKind::Solving(SolvingState::Calculating { coroutine, comms: (mut acc_comms, rx_comms) })  => {
                 let mut text = "Finding solution: ".to_string();
                 text.push_str(&acc_comms);
                 draw_simple_text(&text);
 
-                if handle.is_finished() {
+                if coroutine.is_done() {
                     state.kind = StateKind::Solving(SolvingState::Ready {
-                        seq: handle.join().expect("Solving cannot panic").0.into_iter().peekable(),
+                        seq: coroutine.retrieve().expect("We just checked that it's done").0.into_iter().peekable(),
                         t: 0.0 });
                 }
                 else {
                     while let Ok(new_acc_str) = rx_comms.try_recv() {
                         acc_comms = new_acc_str;
                     }
-                    state.kind = StateKind::Solving(SolvingState::Calculating { handle, comms: (acc_comms, rx_comms) });
+                    state.kind = StateKind::Solving(SolvingState::Calculating { coroutine, comms: (acc_comms, rx_comms) });
                 }
             },
             StateKind::Solving(SolvingState::Ready { ref mut seq, ref mut t }) => {
@@ -180,7 +185,7 @@ async fn main() {
                 draw_current_move_seq("Solve: ", seq);
                 if let Some(solve_move) = &mut seq.peek() {
                     *t += solving_dt;
-                    if *t >= 1.0 || *t <= -1.0 {
+                    if *t >= 1.0 {
                         state.cube.make_move(solve_move.clone());
                         seq.next();
                         state.kind = StateKind::Solving(SolvingState::Ready { seq: seq.clone(), t: 0.0 });
@@ -213,6 +218,9 @@ async fn main() {
     }
 }
 
+async fn async_cube_solve(c: Cube2, sender: Sender<String>) -> MoveSeq {
+    c.solve(true, Some(sender))
+}
 fn draw_simple_text(text: &str) {
     let font_size = 40.0;
     draw_text(&text, 10.0, font_size*1.2, font_size, TEXT_COL);

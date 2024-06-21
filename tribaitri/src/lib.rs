@@ -1,13 +1,9 @@
 use std::fmt::Display;
 
-use shared::*;
 pub use shared::*;
 
 mod moving;
 use moving::*;
-
-mod input;
-use input::*;
 
 /// A 3x3x3 Rubix's cube with the following orientation:
 /// | Face  | Center Color |
@@ -29,7 +25,6 @@ pub struct Cube3 {
 
 
 impl Solvable for Cube3 {
-    const INPUT_FILE_NAME: &'static str = "tribaitri_input_file";
     fn moves_of_adjacency() -> Vec<Move> {
         Vec::from([
             Move::R, Move::RP,
@@ -42,13 +37,6 @@ impl Solvable for Cube3 {
     }
     fn make_move(&mut self, m: Move) {
         make_three_by_three_move(self, m);
-    }
-
-    fn read_from_slate() -> Result<Self, Box<dyn std::error::Error>> {
-        todo!()
-    }
-    fn write_blank_slate() -> Result<(), Box<dyn std::error::Error>> {
-        write_three_file()
     }
 }
 

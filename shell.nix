@@ -1,17 +1,15 @@
 {
   pkgs ? import <nixpkgs> { },
   lib,
+  overlays
 }:
 let
   packages = with pkgs; [
-    cargo
-    rustc
     rust-analyzer
     rustfmt
     clippy
-    clang
     mold
-    gnuplot
+    cmake
 
     pkg-config
     xorg.libX11
@@ -22,10 +20,11 @@ let
     (rust-bin.stable.latest.default.override {
       targets = [ "wasm32-unknown-unknown" ];
     })
-
   ];
+
 in
 pkgs.mkShell {
+  # Get dependencies from the main package
   nativeBuildInputs = packages;
   buildInputs = packages;
   env = {
@@ -33,3 +32,4 @@ pkgs.mkShell {
     LD_LIBRARY_PATH = "${lib.makeLibraryPath packages}";
   };
 }
+
