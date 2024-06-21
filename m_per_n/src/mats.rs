@@ -1,3 +1,4 @@
+
 use crate::*;
 
 use std::{cmp::Ordering, fmt::Display, ops::*};
@@ -33,27 +34,31 @@ impl<const NCOLS: usize> From<[f64; NCOLS]> for MatRow<NCOLS> {
 
 impl<const NCOLS: usize>  MatRow<NCOLS> {
     pub fn pivot_position(&self) -> Option<usize> {
-        self.0.iter().position(|&e| e != 0.0) // Position of first non-zero value
+        self.0.iter().position(|&e| !are_equal(e, 0.0)) // Position of first non-zero value
     }
 }
-// Elementary transformations on rows
-// - Swap two rows
+
+/* ------------------ Elementary transformations on rows ------------------ */
+
+/* --------- Swap two rows ----------- */
 impl<const NCOLS: usize>  MatRow<NCOLS> {
     pub fn swap(&mut self, rhs: &mut Self) {
         std::mem::swap(self, rhs);
     }
 }
-// - Multiply by scalar
+
+/* --------- Multiply by scalar ----------- */
 impl<const NCOLS: usize> Mul<f64> for MatRow<NCOLS> {
     type Output = Self;
     fn mul(self, lambda: f64) -> Self { MatRow::<NCOLS>(self.0.map(|i| i*lambda)) }
 }
+
 impl<const NCOLS: usize> Mul<MatRow<NCOLS>> for f64 {
     type Output = MatRow<NCOLS>;
     fn mul(self, rhs: MatRow<NCOLS>) -> Self::Output { MatRow::<NCOLS>(rhs.0.map(|i| i*self)) }
 }
 
-// Add/subtract two rows:
+/* --------- Add row to another ----------- */
 impl<const NCOLS: usize> Add for MatRow<NCOLS> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
@@ -71,6 +76,7 @@ impl<const NCOLS: usize> Sub for MatRow<NCOLS> {
     }
 }
 
+/* -------- Utility --------- */
 impl<const N: usize> Index<usize> for MatRow<N> {
     type Output = f64;
     fn index(&self, idx: usize) -> &Self::Output { &self.0[idx] }
@@ -80,7 +86,7 @@ impl<const N: usize> IndexMut<usize> for MatRow<N> {
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output { &mut self.0[idx] }
 }
 
-/// Generic (rectangular) impls
+/* --------------------- Generic (rectangular) impls ----------------- */
 impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     #[allow(non_snake_case)]
     pub const fn ZERO() -> Matrix<NF, NC> {
@@ -89,9 +95,7 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     pub fn sort_by_pivot_position(&self) -> Self {
         let mut copy = self.clone();
         let comparator = |x: &MatRow<NC>, y: &MatRow<NC>| {
-            let pos_x = x.pivot_position();
-            let pos_y = y.pivot_position();
-            match (pos_x, pos_y) {
+            match (x.pivot_position(), y.pivot_position()) {
                 (None, None) => Ordering::Equal,
                 (None, Some(_)) => Ordering::Less,
                 (Some(_), None) => Ordering::Greater,
@@ -102,9 +106,35 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
         copy.0.sort_by(comparator);
         copy
     }
+
+    // Untested for non-square
+    pub fn as_triangle(&self) -> Self {
+        let mut out: Matrix<NF, NC> = self.clone();
+        for i in 0..NF {
+            out = out.sort_by_pivot_position();                              // Make sure the pivots are aligned
+            if out[i][i] != 0.0 { out[i] = (1.0 / out[i][i]) * out[i]; }  
+            for ii in (i+1)..NF { out[ii] = out[ii] - (out[ii][i]*out[i]) }  // Set all numbers below first pivot to 0
+        }
+
+        out
+    }
+
+    // Untested for non-square
+    pub fn as_upper_triangle(&self) -> Self {
+        let mut tri = self.as_triangle();
+
+        for i in 0..NF {
+            for ii in 0..NF {
+                if ii == i { continue; } // Don't touch the pivots
+                tri[ii] = tri[ii] - tri[ii][i]*tri[i];
+            }
+        }
+
+        tri
+    }
 }
 
-/// Square impls
+/* --------------------- Square impls ----------------- */
 impl<const N: usize> Matrix<N, N> {
     #[allow(non_snake_case)]
     pub const fn ID() -> Matrix<N, N> {
@@ -117,10 +147,16 @@ impl<const N: usize> Matrix<N, N> {
         out
     }
 
-    /// Use Laplace's definition to compute the determinant
     pub fn determinant(&self) -> f64 {
-        todo!("fml")
+        let mut tri = self.clone();
+        for i in 0..N {
+            tri = tri.sort_by_pivot_position();                              // Make sure the pivots are aligned
+            for ii in (i+1)..N { tri[ii] = tri[ii] - (tri[ii][i]*tri[i]) }   // Set all numbers below first pivot to 0
+        }
+        (0..N).fold(1.0, |acc, k| dbg!(acc) * tri[k][k])
     }
+
+    // Inverse is in separate file
 }
 
 /// Matrix addition (must have the same dimensions, enforced by type-system)
@@ -198,11 +234,7 @@ impl<const NF: usize, const NC: usize> IndexMut<usize> for Matrix<NF, NC> {
 impl<const NF: usize, const NC: usize> Matrix <NF,NC>{
     pub fn transpose(&self) -> Matrix<NC,NF>{
         let mut result = Matrix::<NC,NF>::ZERO();
-        for y in 0..NC {
-            for x in 0..NF {
-                result[y][x] = self[x][y];
-            }
-        }
+        for y in 0..NC { for x in 0..NF { result[y][x] = self[x][y] } }
         result
     }
 }
@@ -241,7 +273,7 @@ impl From<Matrix<3, 1>> for Vec3 {
 fn compare_mats<const NF: usize, const NC: usize>(a: Matrix<NF, NC>, b: Matrix<NF, NC>) {
     for i in 0..NF {
         for j in 0..NC {
-            assert!(!are_equal(a.0[i][j], b.0[i][j]),
+            assert!(are_equal(a.0[i][j], b.0[i][j]),
                     "{a:?} is unequal from {b:?} at index ({i}, {j})");
         }
     }
@@ -559,7 +591,6 @@ fn three_by_three_inverse_again() {
     ]);
     compare_mats(a.inverse().unwrap(), inv_a);
 }
-
 
 pub fn are_equal(a: f64, b: f64) -> bool {
     (a - b).abs() < FLOAT_EPSILON

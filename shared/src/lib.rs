@@ -7,7 +7,7 @@ pub use colors::*;
 
 use std::io::Write;
 
-pub const FLOAT_EPSILON: f64 = 0.0001;
+pub const FLOAT_EPSILON: f64 = 0.001;
 
 #[derive(Clone)]
 struct State<C> {

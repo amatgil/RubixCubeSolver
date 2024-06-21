@@ -35,21 +35,13 @@ fn inverse_helper<const N: usize, const N_TIMES_TWO: usize>(m: &Matrix<N, N>) ->
         }
     }
 
-    for j in 0..N {
-        aug = aug.sort_by_pivot_position();                           // Make sure the pivots are aligned
-        if are_equal(aug[j][j], 0.0) { return None; }                 // Row full of zeros, no inverse! 
-        aug[j] = (1.0 / aug[j][j]) * aug[j];                          // Set pivot to 1
-        for i in (j+1)..N { aug[i] = aug[i] - (aug[i][j]*aug[j]) }    // Set all numbers below first pivot to 0
+    aug = aug.as_upper_triangle();
+
+    // Check if answer is valid
+    for i in 0..N {
+        if !are_equal(aug[i][i], 1.0) { return None; }
     }
 
-
-    // Transform to reduced row echelon form, propagating down
-    for j in 0..N {
-        for i in 0..N {
-            if i == j { continue; } // Don't touch the pivots
-            aug[i] = aug[i] - aug[i][j]*aug[j];
-        }
-    }
 
     // Extract answer
     let mut inverse = Matrix::<N, N>::ZERO();
