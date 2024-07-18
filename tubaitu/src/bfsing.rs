@@ -1,7 +1,7 @@
 use crate::*;
 
 pub fn is_solved(c: &Cube2) -> bool {
-    c.pieces.iter().fold((true, &c.pieces[0]), |(acc_b, acc_c), x| (acc_b && acc_c == x, x) ).0
+    c.pieces.iter().all(|x| x == &c.pieces[0]) // All equal head
 }
 
 #[test]

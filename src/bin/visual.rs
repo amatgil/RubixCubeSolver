@@ -1,4 +1,4 @@
-use std::{iter::Peekable, sync::mpsc::Receiver, vec};
+use std::{iter::Peekable, sync::mpsc::Receiver, time::Instant, vec};
 
 use macroquad::{experimental::coroutines::Coroutine, prelude::*};
 use shared::{Move, MoveSeq, Solvable};
@@ -54,18 +54,18 @@ impl State {
         match self.kind {
             StateKind::Manual { mid_move: Some((_, t)), .. }       => t,
             StateKind::Manual { mid_move: None, .. }               => 0.0,
-            StateKind::Solving(SolvingState::_Calculating { .. })   => 0.0,
+            StateKind::Solving(SolvingState::_Calculating { .. })  => 0.0,
             StateKind::Solving(SolvingState::Ready { t, .. })      => t,
             StateKind::Scrambling { t, .. }                        => t,
         }
     }
     fn curr_mov(&mut self) -> Option<Move> {
         match &mut self.kind {
-            StateKind::Manual { mid_move: Some((m, _)), .. }     => Some(*m),
-            StateKind::Manual { mid_move: None, .. }             => None,
+            StateKind::Manual { mid_move: Some((m, _)), .. }      => Some(*m),
+            StateKind::Manual { mid_move: None, .. }              => None,
             StateKind::Solving(SolvingState::_Calculating { .. }) => None,
-            StateKind::Solving(SolvingState::Ready { seq, .. })  => seq.peek().copied(),
-            StateKind::Scrambling { seq, .. }                    => seq.peek().copied(),
+            StateKind::Solving(SolvingState::Ready { seq, .. })   => seq.peek().copied(),
+            StateKind::Scrambling { seq, .. }                     => seq.peek().copied(),
         }
     }
     fn set_back_to_manual(&mut self) {
@@ -108,7 +108,12 @@ async fn main() {
             //let coroutine = start_coroutine(async move {
             //    state.cube.clone().solve(true, Some(tx))
             //});
+            let solving_start = Instant::now();
             let seq = state.cube.solve(true, None).0.into_iter().peekable();
+            let time_taken = solving_start.elapsed();
+
+            println!("Found solution in: {}s", time_taken.as_secs_f32());
+
             state.kind = StateKind::Solving(SolvingState::Ready { seq, t: 0.0 });
         }
         else if is_key_pressed(reset_bind) { 
