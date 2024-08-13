@@ -15,7 +15,7 @@ tubaitu = { path = "./tubaitu" }
 tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
 m_per_n = { path = "./m_per_n" }
-drawing = { path = "./tubaitu/src/drawing"}
+drawing = { path = "./tubaitu/drawing"}
 geo = "0.28.0"
 geo-booleanop = "0.3.2"
 macroquad = "0.4.8"
