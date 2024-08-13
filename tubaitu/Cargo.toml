@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 m_per_n = { path = "../m_per_n" }
 shared = { path = "../shared" }
+drawing = {path = "/drawing"}
