@@ -1,37 +1,37 @@
 use m_per_n::Vec3;
 use geo::Coord;
 
-struct Camera {
+pub struct Camera {
     pub position: Vec3,
     pub direction: Vec3,
     pub camera_plane_distance: f64,
 }
 
-struct Quadrilateral {
+pub struct Quadrilateral {
     pub vertices: [Coord; 2],
     pub color: [u8; 3],
 }
 
-struct Ray {
+pub struct Ray {
     pub point: Vec3,
     pub direction: Vec3,
 }
 
-struct Plane {
+pub struct Plane {
     pub normal_vec: Vec3,
     pub point: Vec3,
 }
 
 impl Plane {
-    fn find_intersection(ray: Ray) -> Vec3 {
+    fn find_intersection(&self, ray: Ray) -> Vec3 {
         todo!();
     }
 
-    fn from_XYZ_to_XY(point: Vec3) -> Coord {
+    fn from_XYZ_to_XY(&self, point: Vec3) -> Coord {
         todo!();
     }
     
-    fn from_XY_to_XYZ(point: Coord) -> Vec3 {
+    fn from_XY_to_XYZ(&self, point: Coord) -> Vec3 {
         todo!();
     }
 }

@@ -72,6 +72,14 @@ impl Color {
     }
 }
 
+impl PieceRotation {
+	pub fn to_color_sequence(&self) -> [Color; 6] {
+		let (top, front) = self.to_color_pair();
+		let (down, back) = (top.opposite(), front.opposite());
+		let (left, right) = self.cross_product();
+		[right, front, top, left, back, down]
+	}
+}
 
 impl Piece {
     pub fn new(top_col: Color, front_col: Color) -> Piece {

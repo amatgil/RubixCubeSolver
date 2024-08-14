@@ -1,5 +1,6 @@
 use std::{iter::Peekable, sync::mpsc::Receiver, vec};
 
+use drawing::Scene;
 use macroquad::{experimental::coroutines::Coroutine, prelude::*};
 use shared::{Move, MoveSeq, Solvable};
 use tubaitu::{get_polys, Cube2, PartialMove};
