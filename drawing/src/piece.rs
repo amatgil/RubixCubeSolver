@@ -65,7 +65,7 @@ impl DrawablePiece {
         }
     }
 
-    pub fn apply_rotation(&self, axis: u8, clockwhise: bool) {
+    pub fn apply_rotation(&self, mov: Move, lerp: f64) {
         todo!();
     }
 

@@ -1,6 +1,5 @@
 use crate::*;
 use m_per_n::Vec3;
-
 use shared::{Move};
 use tubaitu::{Cube2};
 
@@ -31,7 +30,10 @@ impl DrawableCube2 {
             };
             pieces[i] = DrawablePiece::new(center, r , piece_.rotation);
         };
-
+        let pieces_to_rotate = get_corner_cycle(mov);
+        for i in pieces_to_rotate {
+            pieces[i].apply_rotation(mov, lerp_t);
+        }
         DrawableCube2{
             pieces: pieces,
             drawing_order: [0; 8],
