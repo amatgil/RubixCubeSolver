@@ -1,8 +1,9 @@
 use crate::*;
 use shared::PieceRotation;
 use geo::{Polygon, LineString, Coord, BooleanOps, CoordsIter, Centroid};
-use m_per_n::Vec3;
+use m_per_n::{Vec3, MatRow, Matrix};
 use std::cmp::Ordering;
+use std::f64::consts::PI;
 
 #[derive(Copy, Clone)]
 pub struct DrawablePiece {
@@ -65,10 +66,44 @@ impl DrawablePiece {
         }
     }
 
-    pub fn apply_rotation(&self, mov: Move, lerp: f64) {
-        todo!();
+
+    pub fn apply_rotation(&mut self, mov: Move, mut lerp_t: f64) {
+        if mov.side() == MoveSide::L || mov.side() == MoveSide::D || mov.side() == MoveSide::B {
+            lerp_t *= -1.0;
+        }
+    
+        lerp_t *= if mov.is_prime() { -1.0 } else { 1.0 };
+    
+        let cos = (lerp_t * PI / 2.0).cos();
+        let sin = (lerp_t * PI / 2.0).sin();
+        let matrix: Matrix<3, 3> = match mov.side() {
+            MoveSide::R | MoveSide::L => Matrix::<3, 3>([
+                MatRow::<3>([1.0, 0.0, 0.0]),
+                MatRow::<3>([0.0, cos, sin]),
+                MatRow::<3>([0.0, -sin, cos]),
+            ]),
+    
+            MoveSide::U | MoveSide::D => Matrix::<3, 3>([
+                MatRow::<3>([cos, sin, 0.0]),
+                MatRow::<3>([-sin, cos, 0.0]),
+                MatRow::<3>([0.0, 0.0, 1.0]),
+            ]),
+    
+            MoveSide::F | MoveSide::B => Matrix::<3, 3>([
+                MatRow::<3>([cos, 0.0, sin]),
+                MatRow::<3>([0.0, 1.0, 0.0]),
+                MatRow::<3>([-sin, 0.0, cos]),
+            ]),
+        };
+
+        for i in 0..self.vertices.len() {
+            let col_vec: Matrix<3, 1> = self.vertices[i]._3d.into(); // Write as column vector
+            self.vertices[i]._3d = (matrix * col_vec).into();
+        }
+
     }
 
+    
     pub fn project_vertices(&self, camera: Camera, light_dir: Vec3) {
         todo!();
     }
