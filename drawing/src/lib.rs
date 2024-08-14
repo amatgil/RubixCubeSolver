@@ -19,6 +19,13 @@ pub use shared::*;
 
 const DEFAULT_CAMERA_PLANE_DISTANCE: f64 = 1.0;
 
+pub const SIDE_RIGHT: usize = 0;
+pub const SIDE_FRONT: usize = 1;
+pub const SIDE_TOP: usize = 2;
+pub const SIDE_LEFT: usize = 3;
+pub const SIDE_BACK: usize = 4;
+pub const SIDE_DOWN: usize = 5;
+
 const P_TOP_RIGHT_FRONT: usize    = 0;
 const P_TOP_RIGHT_BACK: usize     = 1;
 const P_TOP_LEFT_BACK: usize      = 2;
@@ -34,6 +41,8 @@ const FACE_UP_SEQ_CYCLE: [usize; 4]    = [P_TOP_LEFT_FRONT, P_TOP_LEFT_BACK, P_T
 const FACE_DOWN_SEQ_CYCLE: [usize; 4]  = [P_BOTTOM_LEFT_BACK, P_BOTTOM_LEFT_FRONT, P_BOTTOM_RIGHT_FRONT, P_BOTTOM_RIGHT_BACK];
 const FACE_FRONT_SEQ_CYCLE: [usize; 4] = [P_BOTTOM_LEFT_FRONT, P_TOP_LEFT_FRONT, P_TOP_RIGHT_FRONT, P_BOTTOM_RIGHT_FRONT];
 const FACE_BACK_SEQ_CYCLE: [usize; 4]  = [P_BOTTOM_LEFT_BACK, P_BOTTOM_RIGHT_BACK, P_TOP_RIGHT_BACK, P_TOP_LEFT_BACK];
+
+
 
 fn get_corner_cycle(mov: Move) -> [usize; 4] {
     match mov {

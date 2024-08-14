@@ -11,7 +11,7 @@ pub struct Vertex {
 
 #[derive(Copy, Clone, Default)]
 pub struct Stiker {
-    vertices: [Vertex; 4],
+    pub vertices: [Vertex; 4],
     normal_vec: Vec3,
     color: Color,
     brightness: f64,

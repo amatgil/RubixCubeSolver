@@ -34,24 +34,12 @@ impl DrawablePiece {
 
         let mut faces: [[Vertex; 4]; 6] = [[Vertex::default(); 4]; 6];
 
-        faces[SIDE_RIGHT] = [
-            vertices[P_TOP_RIGHT_FRONT], vertices[P_TOP_RIGHT_BACK], vertices[P_BOTTOM_RIGHT_BACK], vertices[P_BOTTOM_RIGHT_FRONT]
-        ];
-        faces[SIDE_FRONT] = [
-            vertices[P_TOP_RIGHT_FRONT], vertices[P_BOTTOM_RIGHT_FRONT], vertices[P_BOTTOM_LEFT_FRONT], vertices[P_TOP_LEFT_FRONT]
-        ];
-        faces[SIDE_TOP] =  [
-            vertices[P_TOP_RIGHT_FRONT], vertices[P_TOP_LEFT_FRONT], vertices[P_TOP_LEFT_BACK], vertices[P_TOP_RIGHT_BACK]
-        ];
-        faces[SIDE_LEFT] = [
-            vertices[P_TOP_LEFT_FRONT], vertices[P_BOTTOM_LEFT_FRONT], vertices[P_BOTTOM_LEFT_BACK], vertices[P_TOP_LEFT_BACK]
-        ];
-        faces[SIDE_BACK] = [
-            vertices[P_TOP_RIGHT_BACK], vertices[P_TOP_LEFT_BACK], vertices[P_BOTTOM_LEFT_BACK], vertices[P_BOTTOM_RIGHT_BACK], 
-            ];
-        faces[SIDE_DOWN] = [
-            vertices[P_BOTTOM_RIGHT_FRONT], vertices[P_BOTTOM_RIGHT_BACK], vertices[P_BOTTOM_LEFT_BACK], vertices[P_BOTTOM_LEFT_FRONT]
-        ];
+        for i in 0..faces.len() {
+            let positions = get_vertices_in_face(i);
+            for j in 0..positions.len() {
+                faces[i][j] = vertices[positions[j]];
+            }
+        }
 
         let mut stikers: [Stiker; 6] = [Stiker::default(); 6];
 
@@ -101,15 +89,22 @@ impl DrawablePiece {
             self.vertices[i]._3d = (matrix * col_vec).into();
         }
 
+        self.update_stikers();
+
     }
 
-    
+
     pub fn project_vertices(&self, camera: Camera, light_dir: Vec3) {
         todo!();
     }
 
-    pub fn update_stikers(&self) {
-        todo!();
+    pub fn update_stikers(&mut self) {
+        for i in 0..self.faces.len() {
+            let positions = get_vertices_in_face(i);
+            for j in 0..positions.len() {
+                self.faces[i].vertices[j] = self.vertices[j];
+            }
+        }
     }
 
     pub fn find_displaying_order(&self, camera: Camera) {
@@ -134,5 +129,17 @@ impl DrawablePiece {
 
     pub fn get_drawing_data(&self) -> Vec<Polygon> {
         todo!();
+    }
+}
+
+fn get_vertices_in_face(face: usize) -> [usize; 4] {
+    match face {
+        SIDE_RIGHT  => FACE_RIGHT_SEQ_CYCLE,
+        SIDE_LEFT  => FACE_LEFT_SEQ_CYCLE,
+        SIDE_TOP    => FACE_UP_SEQ_CYCLE,
+        SIDE_DOWN   => FACE_DOWN_SEQ_CYCLE,
+        SIDE_FRONT   => FACE_FRONT_SEQ_CYCLE,
+        SIDE_BACK   => FACE_BACK_SEQ_CYCLE,
+        _ => panic!(),
     }
 }
