@@ -257,7 +257,7 @@ impl DrawablePiece {
         n = n.normalize().unwrap();
 
         let l = d*DISTANCE_CAMERA_PLANE/(v.dot_product(n));
-        println!("distance = {}", v.dot_product(n));
+        //println!("distance = {}", v.dot_product(n));
         return Some(camera.pos + v*l);
         /* 
         let p1 = point;

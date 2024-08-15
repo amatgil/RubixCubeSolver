@@ -2,6 +2,7 @@ use std::{iter::Peekable, sync::mpsc::Receiver, vec};
 
 use drawing::Scene;
 use macroquad::{experimental::coroutines::Coroutine, prelude::*};
+use miniquad::gl::GL_LINE_STRIP;
 use shared::{Move, MoveSeq, Solvable};
 use tubaitu::{get_polys, Cube2, PartialMove};
 use std::fmt::Debug;
@@ -197,21 +198,36 @@ async fn main() {
 
             }
         }
-            
 
-        let curr_move = state.curr_mov().and_then(|m| Some(PartialMove { mov: m, lerp_t: state.curr_t() })); 
-        let polys = get_polys(&state.cube, curr_move, SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
+        let curr_move = state.curr_mov().and_then(|m| Some(PartialMove { mov: m, lerp_t: state.curr_t() }));
+        
+        let (mov, lerp_t) = 
+        if let Some(yougottamoveitmoveit) = curr_move {
+            (yougottamoveitmoveit.mov, yougottamoveitmoveit.lerp_t)
+        } else { (Move::R, 0.0) };
+
+        let mut my_scene = Scene::new(SCREEN_WIDTH, SCREEN_HEIGHT, 7.0, state.cube, mov, lerp_t);
+        let polys = my_scene.draw();
+        //let polys = get_polys(&state.cube, curr_move, SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
 
         for poly in polys {
             let col = poly.color;
 
             draw_quad(
+                Vec2::new(poly.vertices[0].x as f32, poly.vertices[0].y as f32),
+                Vec2::new(poly.vertices[1].x as f32, poly.vertices[1].y as f32),
+                Vec2::new(poly.vertices[2].x as f32, poly.vertices[2].y as f32),
+                Vec2::new(poly.vertices[3].x as f32, poly.vertices[3].y as f32),
+                color_u8![col[0], col[1], col[2], 255]
+            );
+
+            /*draw_quad(
                 Vec2::new(poly.points[0].0 as f32, poly.points[0].1 as f32),
                 Vec2::new(poly.points[1].0 as f32, poly.points[1].1 as f32),
                 Vec2::new(poly.points[2].0 as f32, poly.points[2].1 as f32),
                 Vec2::new(poly.points[3].0 as f32, poly.points[3].1 as f32),
                 color_u8![col[0], col[1], col[2], 255]
-            );
+            );*/
             
         }
 

@@ -44,7 +44,7 @@ impl DrawableCube2 {
         todo!();
     }
 
-    pub fn get_drawing_data(&self, camera: Camera, light_dir: Vec3) -> Vec<Quadrilateral> {
-        todo!();
+    pub fn get_drawing_data(&mut self, camera: &Camera, light_dir: Vec3) -> Vec<Quadrilateral> {
+        self.pieces[1].get_drawing_data(&camera, light_dir)
     }
 }

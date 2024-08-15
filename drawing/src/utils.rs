@@ -48,9 +48,10 @@ impl Camera {
     }
 }
 
+#[derive(Default)]
 pub struct Quadrilateral {
-    pub vertices: [Coord; 2],
-    pub color: [u8; 3],
+    pub vertices: [Coord; 4],
+    pub color: [usize; 3],
 }
 
 pub struct Ray {

@@ -2,14 +2,21 @@ use crate::*;
 use shared::PieceRotation;
 use geo::{Polygon, LineString, Coord, BooleanOps, CoordsIter, Centroid};
 use m_per_n::{Vec3, MatRow, Matrix};
+use std::collections::VecDeque;
 use std::cmp::Ordering;
 use std::f64::consts::PI;
+
+#[derive(Copy, Clone)]
+struct DepthNode {
+    index: usize,
+    priority: usize,
+}
 
 #[derive(Copy, Clone)]
 pub struct DrawablePiece {
     vertices: [Vertex; 8],
     faces: [Stiker; 6],
-    drawing_order: [u8; 6],
+    depth_map: [DepthNode; 6],
 }
 
 impl DrawablePiece {
@@ -45,12 +52,17 @@ impl DrawablePiece {
 
         for i in 0..stikers.len() {
             stikers[i] = Stiker::new(faces[i], rotation.to_color_sequence()[i], center);
-        } 
+        }
+
+        let mut depths = [DepthNode{priority: 0,index: 0}; 6];
+        for i in 0..6 {
+            depths[i].index = i;
+        }
 
         DrawablePiece{
             vertices:vertices,
             faces: stikers,
-            drawing_order: [0; 6],
+            depth_map: depths,
         }
     }
 
@@ -94,7 +106,7 @@ impl DrawablePiece {
     }
 
 
-    pub fn project_vertices(&mut self, camera: Camera, light_dir: Vec3) {
+    pub fn project_vertices(&mut self, camera: &Camera, light_dir: Vec3) {
 
         let transformation = camera.get_from_xyz_to_xy_matrix();
         for i in 0..self.vertices.len() {
@@ -104,18 +116,13 @@ impl DrawablePiece {
             self.vertices[i]._2d = geo::coord!{x: transformed[0][0], y: transformed[1][0]};
         }
 
-        /*for (i, v) in vertices.iter().enumerate() {
-            let column_input =
-                (Matrix::<1, 3>([MatRow::<3>([v.x, v.y, v.z]) - cam_projection])).transpose();
-            let column = inverse_transformation * column_input;
-            result[i] = MatRow::<2>([column[0][0], column[1][0]]);
-        }*/
-
         for i in 0..self.faces.len() {
             self.faces[i].update_brightness(light_dir);
         }
+
         self.update_stikers();
     }
+
 
     pub fn update_stikers(&mut self) {
         for i in 0..self.faces.len() {
@@ -126,9 +133,58 @@ impl DrawablePiece {
         }
     }
 
-    pub fn find_displaying_order(&self, camera: Camera) {
-        todo!();
+
+    pub fn generate_depth_map(&mut self, camera: &Camera) {
+        // the (usize, usize) represents a directed edge: (from, to).
+        let mut edges: Vec<(usize, usize)> = Default::default();
+        let mut behind: [Vec<usize>; 6] = Default::default();
+
+        // Generate the Polytree:
+        for i in 0..(self.faces.len()-1){
+            for j in (i+1)..self.faces.len() {
+                let comp_option = self.faces[i].cmp_dist_to_cam(self.faces[j], &camera);
+
+                if let Some(comp) = comp_option {
+                    if(comp == Ordering::Less) {
+                        behind[i].push(j);
+                        edges.push((i, j));
+                    } else {
+                        behind[j].push(i);
+                        edges.push((j, i));
+                    }
+                }
+            }
+        }
+
+        // Find the roots:
+        let mut roots: Vec<usize> = Default::default(); 
+        let mut in_degree: [usize; 6] = [0; 6];
+
+        for &(from, to) in &edges {
+            in_degree[to] += 1;
+        }
+
+        for i in 0..6 {
+            if in_degree[i] == 0 {
+                roots.push(i);
+            }
+        }
+
+        // Breadth first traversal: 
+        let mut queue: VecDeque<usize> = VecDeque::<usize>::from(roots);
+        let mut depth = 0;
+
+        while(queue.len() != 0) {
+            let node = queue.pop_front().unwrap();
+
+            for &face in &behind[node] {
+                queue.push_back(face);
+                self.depth_map[face].priority = depth;
+            }
+            depth += 1;
+        }
     }
+
 
     pub fn get_outline_polygon(&self) -> Polygon {
         todo!();
@@ -146,8 +202,20 @@ impl DrawablePiece {
         todo!();
     }
 
-    pub fn get_drawing_data(&self) -> Vec<Polygon> {
-        todo!();
+    pub fn get_drawing_data(&mut self, camera: &Camera, light_dir: Vec3) -> Vec<Quadrilateral> {
+        self.project_vertices(&camera, light_dir);
+        self.generate_depth_map(&camera);
+
+        let mut depth_map_copy = self.depth_map;
+        depth_map_copy.sort_by(|x, y| (x.priority).cmp(&y.priority));
+
+        let mut result: Vec<Quadrilateral> = Default::default();
+
+        for node in depth_map_copy {
+            result.push(self.faces[node.index].get_drawing_data());
+        }
+
+        result
     }
 }
 
