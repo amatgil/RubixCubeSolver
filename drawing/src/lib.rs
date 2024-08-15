@@ -19,6 +19,9 @@ pub use shared::*;
 
 const DEFAULT_CAMERA_PLANE_DISTANCE: f64 = 1.0;
 
+const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.5;
+const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 1.0;
+
 pub const SIDE_RIGHT: usize = 0;
 pub const SIDE_FRONT: usize = 1;
 pub const SIDE_TOP: usize = 2;

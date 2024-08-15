@@ -248,10 +248,20 @@ impl DrawablePiece {
     }
 
     fn find_intersection(point: Vec3, camera: Camera) -> Option<Vec3> {
-        let v = point - camera.pos;
-        let n = camera.dir;
+        let mut v: Vec3 = point - camera.pos;
+        let mut n: Vec3 = camera.dir;
+
+        let d = camera.dir.abs();
+
+        v = v.normalize().unwrap();
+        n = n.normalize().unwrap();
+
+        let l = d*DISTANCE_CAMERA_PLANE/(v.dot_product(n));
+        println!("distance = {}", v.dot_product(n));
+        return Some(camera.pos + v*l);
+        /* 
         let p1 = point;
-        let p2 = camera.pos + camera.dir * DISTANCE_CAMERA_PLANE;
+        let p2: Vec3 = camera.pos + camera.dir * DISTANCE_CAMERA_PLANE;
 
         // System of equations to find intersection point.
         let mut eq: Matrix<3, 4> = Matrix::<3, 4>::ZERO();
@@ -271,8 +281,14 @@ impl DrawablePiece {
         result.z = eq[2][3] / eq[2][2];
         result.y = (eq[1][3] - eq[1][2] * result.z) / eq[1][1];
         result.x = (eq[0][3] - eq[0][2] * result.z - eq[0][1] * result.y) / eq[0][0];
-
-        Some(result)
+        
+        println!("dist: {}", camera.dir.abs());
+        println!("v: {:?}", v);
+        println!("n: {:?}", n);
+        println!("point: {:?}", p1);
+        println!("result: {:?}", result);
+        println!("result_dir: {:?}", result - camera.pos);
+        Some(result)*/
     }
 
     fn to_xy_plane(vertices: [Vec3; 8], camera: Camera) -> Matrix<8, 2> {

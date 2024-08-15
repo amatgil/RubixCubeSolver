@@ -20,11 +20,10 @@ impl Scene {
         
         let cam_pos = Vec3::new(10.1, -30.1, 10.1) * 10.0;
         let cam_dir = Vec3::ZERO - cam_pos;
-        
         let camera = Camera{
             position: cam_pos,
-            direction: cam_dir,
-            camera_plane_distance: DEFAULT_CAMERA_PLANE_DISTANCE,
+            direction: cam_dir.normalize().unwrap(),
+            camera_plane_distance: cam_dir.abs(),
         };
 
         let light_dir = Vec3::ZERO - Vec3::new(10.1, -20.1, 30.1);

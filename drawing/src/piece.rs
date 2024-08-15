@@ -44,7 +44,7 @@ impl DrawablePiece {
         let mut stikers: [Stiker; 6] = [Stiker::default(); 6];
 
         for i in 0..stikers.len() {
-            stikers[i] = Stiker::new(faces[i], rotation.to_color_sequence()[i]);
+            stikers[i] = Stiker::new(faces[i], rotation.to_color_sequence()[i], center);
         } 
 
         DrawablePiece{
@@ -94,8 +94,27 @@ impl DrawablePiece {
     }
 
 
-    pub fn project_vertices(&self, camera: Camera, light_dir: Vec3) {
-        todo!();
+    pub fn project_vertices(&mut self, camera: Camera, light_dir: Vec3) {
+
+        let transformation = camera.get_from_xyz_to_xy_matrix();
+        for i in 0..self.vertices.len() {
+
+            let p = camera.intersection_with_plane(self.vertices[i]._3d);
+            let transformed = transformation * Matrix::<1,3>([MatRow::<3>([p.x, p.y, p.z])]).transpose();
+            self.vertices[i]._2d = geo::coord!{x: transformed[0][0], y: transformed[1][0]};
+        }
+
+        /*for (i, v) in vertices.iter().enumerate() {
+            let column_input =
+                (Matrix::<1, 3>([MatRow::<3>([v.x, v.y, v.z]) - cam_projection])).transpose();
+            let column = inverse_transformation * column_input;
+            result[i] = MatRow::<2>([column[0][0], column[1][0]]);
+        }*/
+
+        for i in 0..self.faces.len() {
+            self.faces[i].update_brightness(light_dir);
+        }
+        self.update_stikers();
     }
 
     pub fn update_stikers(&mut self) {
