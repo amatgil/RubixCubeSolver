@@ -1,6 +1,6 @@
 use crate::*;
 use shared::PieceRotation;
-use geo::{Polygon, LineString, Coord, BooleanOps, CoordsIter, Centroid};
+use geo::{BooleanOps, Centroid, ConvexHull, Coord, CoordsIter, LineString, Polygon, Area};
 use m_per_n::{Vec3, MatRow, Matrix};
 use std::collections::VecDeque;
 use std::cmp::Ordering;
@@ -9,11 +9,12 @@ use std::f64::consts::PI;
 #[derive(Copy, Clone)]
 struct DepthNode {
     index: usize,
-    priority: usize,
+    depth: usize,
 }
 
 #[derive(Copy, Clone)]
 pub struct DrawablePiece {
+    center: Vec3,
     vertices: [Vertex; 8],
     faces: [Stiker; 6],
     depth_map: [DepthNode; 6],
@@ -27,14 +28,14 @@ impl DrawablePiece {
 
         for i in 0..vertices.len() {
             vertices[i]._3d = match i {
-                0 => Vec3::new( r, -r,  r),
-                1 => Vec3::new( r,  r,  r),
-                2 => Vec3::new(-r,  r,  r),
-                3 => Vec3::new(-r, -r,  r),
-                4 => Vec3::new( r, -r, -r),
-                5 => Vec3::new( r,  r, -r),
-                6 => Vec3::new(-r,  r, -r),
-                7 => Vec3::new(-r, -r, -r),
+                0 => center + Vec3::new( r, -r,  r),
+                1 => center + Vec3::new( r,  r,  r),
+                2 => center + Vec3::new(-r,  r,  r),
+                3 => center + Vec3::new(-r, -r,  r),
+                4 => center + Vec3::new( r, -r, -r),
+                5 => center + Vec3::new( r,  r, -r),
+                6 => center + Vec3::new(-r,  r, -r),
+                7 => center + Vec3::new(-r, -r, -r),
                 _ => todo!(),
             }
         }
@@ -54,12 +55,13 @@ impl DrawablePiece {
             stikers[i] = Stiker::new(faces[i], rotation.to_color_sequence()[i], center);
         }
 
-        let mut depths = [DepthNode{priority: 0,index: 0}; 6];
+        let mut depths = [DepthNode{depth: 0, index: 0}; 6];
         for i in 0..6 {
             depths[i].index = i;
         }
 
         DrawablePiece{
+            center: center,
             vertices:vertices,
             faces: stikers,
             depth_map: depths,
@@ -128,8 +130,9 @@ impl DrawablePiece {
         for i in 0..self.faces.len() {
             let positions = get_vertices_in_face(i);
             for j in 0..positions.len() {
-                self.faces[i].vertices[j] = self.vertices[j];
+                self.faces[i].vertices[j] = self.vertices[positions[j]];
             }
+            self.faces[i].recalucate_normals(self.center);
         }
     }
 
@@ -152,6 +155,7 @@ impl DrawablePiece {
                         behind[j].push(i);
                         edges.push((j, i));
                     }
+                } else {
                 }
             }
         }
@@ -160,7 +164,7 @@ impl DrawablePiece {
         let mut roots: Vec<usize> = Default::default(); 
         let mut in_degree: [usize; 6] = [0; 6];
 
-        for &(from, to) in &edges {
+        for &(_, to) in &edges {
             in_degree[to] += 1;
         }
 
@@ -169,45 +173,89 @@ impl DrawablePiece {
                 roots.push(i);
             }
         }
-
+        let n_of_roots = roots.len();
         // Breadth first traversal: 
-        let mut queue: VecDeque<usize> = VecDeque::<usize>::from(roots);
-        let mut depth = 0;
+        let mut queue:  VecDeque<usize> = VecDeque::<usize>::from(roots);
+        let mut depths: VecDeque<usize> = VecDeque::<usize>::from(vec![0; n_of_roots]);
 
         while(queue.len() != 0) {
             let node = queue.pop_front().unwrap();
-
+            let depth = depths.pop_front().unwrap();
             for &face in &behind[node] {
                 queue.push_back(face);
-                self.depth_map[face].priority = depth;
+                depths.push_back(depth + 1);
+                self.depth_map[face].depth = depth + 1;
             }
-            depth += 1;
         }
     }
 
-
     pub fn get_outline_polygon(&self) -> Polygon {
-        todo!();
+        let mut verts_2d = [Coord::<f64>::zero(); 8];
+        for i in 0..self.vertices.len() {
+            verts_2d[i] = self.vertices[i]._2d;
+        }
+        let aux = Polygon::<f64>::new(LineString::from(Vec::from(verts_2d)), vec![]);
+        aux.convex_hull()
     }
 
-    pub fn get_overlap_centroid_2d(&self, piece: DrawablePiece, camera: Camera) -> Option<Coord> {
-        todo!();
+    pub fn get_overlap_centroid_2d(&self, other: &DrawablePiece) -> Option<geo::Point> {
+        let poly1 = self.get_outline_polygon();
+        let poly2 = other.get_outline_polygon();
+        
+        let intersection = poly1.intersection(&poly2);
+
+        // Return the center of the first polygon from the resulting geometry collection
+        if let Some(result) = intersection.into_iter().next() {
+            return result.centroid();
+        }
+        else {
+            return None;
+        }
     }
 
-    pub fn get_intersections_with_ray(&self, ray: Ray) -> Vec<Vec3> {
-        todo!();
+    pub fn get_intersections_with_ray(&self, ray: &Ray, ray_projection: geo::Point) -> Vec<Vec3> {
+        let mut intersections: Vec::<Vec3> = Vec::default();
+        for face in self.faces {
+            if face.projection_contains_point(ray_projection) {
+                intersections.push(face.intersection_with_ray(&ray));
+            }
+        }
+        intersections
     }
 
-    pub fn is_in_front(&self, piece: DrawablePiece, camera: Camera) -> Option<Ordering> {
-        todo!();
+    pub fn cmp_dist_to_cam(&self, other: DrawablePiece, camera: &Camera) -> Option<Ordering>{
+        if let Some(overlap_center) = self.get_overlap_centroid_2d(&other) {
+
+            let mat = camera.get_from_xy_to_xyz_matrix();
+            let input = MatRow::<3>([overlap_center.x(), overlap_center.y(), 0.0]);
+            let p = mat*Matrix::<1,3>([input; 1]).transpose();
+
+            let r = Ray {
+                point: camera.position,
+                direction: Vec3::new(p[0][0], p[1][0], p[2][0]) - camera.position,
+            };
+            
+            let intersections1 = self. get_intersections_with_ray(&r, overlap_center);
+            let intersections2 = other.get_intersections_with_ray(&r, overlap_center);
+            // Find the distance of the closest intersection for each piece:
+            let Some(t1) = intersections1.iter().map(|&x| (x-camera.position).abs()).max_by(|x, y| x.total_cmp(y)) else {return None};
+            let Some(t2) = intersections2.iter().map(|&x| (x-camera.position).abs()).max_by(|x, y| x.total_cmp(y)) else {return None};
+            
+            if ((t1 - t2).abs() < FLOAT_EPSILON) {return Some(Ordering::Equal);}
+            else if (t1 < t2) {return Some(Ordering::Less)}
+            else {return Some(Ordering::Greater)}
+        }
+        else {
+            return None;
+        }
+        
     }
 
-    pub fn get_drawing_data(&mut self, camera: &Camera, light_dir: Vec3) -> Vec<Quadrilateral> {
-        self.project_vertices(&camera, light_dir);
+    pub fn get_drawing_data(&mut self, camera: &Camera) -> Vec<Quadrilateral> {
         self.generate_depth_map(&camera);
 
         let mut depth_map_copy = self.depth_map;
-        depth_map_copy.sort_by(|x, y| (x.priority).cmp(&y.priority));
+        depth_map_copy.sort_by(|x, y| (x.depth).cmp(&y.depth).reverse());
 
         let mut result: Vec<Quadrilateral> = Default::default();
 

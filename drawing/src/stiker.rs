@@ -1,8 +1,10 @@
 use crate::*;
 use shared::Color;
-use geo::{Polygon, LineString, Coord, BooleanOps, CoordsIter, Centroid};
+use geo::{Polygon, LineString, Coord, BooleanOps, CoordsIter, Centroid, Area, Contains, Intersects};
 use m_per_n::{Vec3, Matrix, MatRow};
 use std::cmp::{Ordering};
+
+use std::panic;
 
 #[derive(Copy, Clone, Default)]
 pub struct Vertex {
@@ -13,7 +15,7 @@ pub struct Vertex {
 #[derive(Copy, Clone, Default)]
 pub struct Stiker {
     pub vertices: [Vertex; 4],
-    normal_vec: Vec3,
+    pub normal_vec: Vec3,
     color: Color,
     brightness: f64,
 }
@@ -40,6 +42,19 @@ impl Stiker {
         }
     }
 
+    pub fn recalucate_normals(&mut self, piece_center: Vec3) {
+        let mut normal_vec = if let Some(thingy) = (self.vertices[1]._3d - self.vertices[0]._3d)
+        .cross_product(self.vertices[2]._3d - self.vertices[0]._3d)
+        .normalize() {
+            (self.vertices[1]._3d - self.vertices[0]._3d).cross_product(self.vertices[2]._3d - self.vertices[0]._3d).normalize().unwrap()
+        }
+        else {Vec3::ZERO};
+
+        let dot_product = normal_vec.dot_product(piece_center - self.vertices[0]._3d);
+
+        self.normal_vec = normal_vec * if dot_product < 0.0 { -1.0 } else { 1.0 };
+    }
+
     pub fn update_brightness(&mut self, light_dir: Vec3) {
         let dot_product = self.normal_vec.dot_product(light_dir.normalize().unwrap());
         self.brightness = MIN_BRIGHTNESS_MULTIPLIER.max(dot_product * GENERAL_BRIGHTNESS_MULTIPLIER);
@@ -50,22 +65,36 @@ impl Stiker {
         for i in 0..self.vertices.len() {
             verts_2d[i] = self.vertices[i]._2d;
         }
+        println!();
         Polygon::<f64>::new(LineString::from(Vec::from(verts_2d)), vec![])
     }
 
     pub fn get_overlap_centroid_2d(&self, other: &Stiker) -> Option<geo::Point> {
         let poly1 = self.get_polygon();
         let poly2 = other.get_polygon();
-        
-        let intersection = poly1.intersection(&poly2);
 
+        // Something panics occasionally when calculating intersections :(
+        let mut intersections;
+        
+        match panic::catch_unwind(|| {poly1.intersection(&poly2)}) {
+            Ok(result) => intersections = result,
+            Err(_) => return None,
+        };
+        
         // Return the center of the first polygon from the resulting geometry collection
-        if let Some(result) = intersection.into_iter().next() {
+        if let Some(result) = intersections.into_iter().next() {
             return result.centroid();
         }
         else {
             return None;
         }
+
+        
+    }
+
+    pub fn projection_contains_point(self, point: geo::Point) -> bool {
+        let poly = self.get_polygon();
+        return poly.contains(&point);
     }
 
     pub fn cmp_dist_to_cam(&self, other: Stiker, camera: &Camera) -> Option<Ordering>{
@@ -77,7 +106,7 @@ impl Stiker {
 
             let r = Ray {
                 point: camera.position,
-                direction: Vec3::new(p[0][0],- p[1][0], p[2][0]) - camera.position,
+                direction: Vec3::new(p[0][0], p[1][0], p[2][0]) - camera.position,
             };
             
             let inter1 = self.intersection_with_ray(&r);
