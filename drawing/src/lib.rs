@@ -55,6 +55,12 @@ fn get_corner_cycle(mov: Move) -> [usize; 4] {
         Move::D => FACE_DOWN_SEQ_CYCLE,
         Move::F => FACE_FRONT_SEQ_CYCLE,
         Move::B => FACE_BACK_SEQ_CYCLE,
+        Move::RP => FACE_RIGHT_SEQ_CYCLE,
+        Move::LP => FACE_LEFT_SEQ_CYCLE,
+        Move::UP => FACE_UP_SEQ_CYCLE,
+        Move::DP => FACE_DOWN_SEQ_CYCLE,
+        Move::FP => FACE_FRONT_SEQ_CYCLE,
+        Move::BP => FACE_BACK_SEQ_CYCLE,
         _ => [0; 4],
     }
 }

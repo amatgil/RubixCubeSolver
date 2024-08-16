@@ -74,10 +74,13 @@ impl DrawablePiece {
             lerp_t *= -1.0;
         }
     
-        lerp_t *= if mov.is_prime() { -1.0 } else { 1.0 };
+        if mov.is_prime() {
+            lerp_t *= -1.0;
+        }
     
         let cos = (lerp_t * PI / 2.0).cos();
         let sin = (lerp_t * PI / 2.0).sin();
+
         let matrix: Matrix<3, 3> = match mov.side() {
             MoveSide::R | MoveSide::L => Matrix::<3, 3>([
                 MatRow::<3>([1.0, 0.0, 0.0]),
