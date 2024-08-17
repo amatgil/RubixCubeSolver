@@ -4,7 +4,7 @@ use drawing::Scene;
 use macroquad::{experimental::coroutines::Coroutine, prelude::*};
 use miniquad::gl::GL_LINE_STRIP;
 use shared::{Move, MoveSeq, Solvable};
-use tubaitu::{get_polys, Cube2, PartialMove};
+use tubaitu::{Cube2};
 use std::fmt::Debug;
 
 pub const WHITE_COL : Color     = color_u8![188, 192, 204, 255];
@@ -26,6 +26,10 @@ struct State {
     kind: StateKind,
 }
 
+struct PartialMove {
+    mov: Move,
+    lerp_t: f64,
+}
 #[derive(Debug)]
 enum StateKind {
     Manual {

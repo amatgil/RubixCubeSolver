@@ -7,9 +7,6 @@ pub use bfsing::*;
 pub mod input;
 pub use input::*;
 
-pub mod drawing;
-pub use drawing::*;
-
 pub use shared::*;
 
 #[cfg(test)]
