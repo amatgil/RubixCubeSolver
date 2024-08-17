@@ -65,7 +65,6 @@ impl Stiker {
         for i in 0..self.vertices.len() {
             verts_2d[i] = self.vertices[i]._2d;
         }
-        println!();
         Polygon::<f64>::new(LineString::from(Vec::from(verts_2d)), vec![])
     }
 
