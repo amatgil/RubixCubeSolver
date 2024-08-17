@@ -16,8 +16,8 @@ pub struct Vertex {
 pub struct Stiker {
     pub vertices: [Vertex; 4],
     pub normal_vec: Vec3,
-    color: Color,
-    brightness: f64,
+    pub color: Color,
+    pub brightness: f64,
 }
 
 impl Stiker {

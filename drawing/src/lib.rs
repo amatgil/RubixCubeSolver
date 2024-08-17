@@ -16,6 +16,8 @@ pub use utils::*;
 
 pub use shared::*;
 
+const PIECE_RADIUS: f64 = 10.0;
+const EXTRA_PIECE_DISTANCE: f64 = 0.5;
 
 const DEFAULT_CAMERA_PLANE_DISTANCE: f64 = 1.0;
 

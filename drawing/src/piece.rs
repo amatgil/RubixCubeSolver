@@ -1,4 +1,5 @@
 use crate::*;
+use geo_booleanop::boolean::Float;
 use shared::PieceRotation;
 use geo::{BooleanOps, Centroid, ConvexHull, Coord, CoordsIter, LineString, Polygon, Area};
 use m_per_n::{Vec3, MatRow, Matrix};
@@ -188,6 +189,17 @@ impl DrawablePiece {
                 queue.push_back(face);
                 depths.push_back(depth + 1);
                 self.depth_map[face].depth = depth + 1;
+            }
+        }
+    }
+
+    pub fn set_black_internals(&mut self) {
+        let sqrt3 = (3.0 as f64).sqrt();
+        for i in 0..self.faces.len() {
+            let Some(min_dist) = self.faces[i].vertices.iter().map(|x| x._3d.abs()).min_by(|x, y| x.total_cmp(y)) else {panic!()};
+            if (min_dist - sqrt3*EXTRA_PIECE_DISTANCE).abs() < FLOAT_EPSILON {
+                self.faces[i].color = Color::White;
+                self.faces[i].brightness = 0.0;
             }
         }
     }

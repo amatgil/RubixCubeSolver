@@ -5,7 +5,6 @@ use tubaitu::{Cube2};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 
-const PIECE_RADIUS: f64 = 10.0;
 
 #[derive(Copy, Clone)]
 struct DepthNode {
@@ -22,7 +21,7 @@ impl DrawableCube2 {
     pub fn new(cube: Cube2, mov: Move, lerp_t: f64) -> Self{
 
         let mut pieces: [DrawablePiece;8] = [DrawablePiece::new(Vec3::ZERO, 0.0 , PieceRotation::BO);8];
-        let r = PIECE_RADIUS;
+        let r = PIECE_RADIUS + EXTRA_PIECE_DISTANCE;
 
         for (i, piece_) in cube.pieces.iter().enumerate() {
             let center: Vec3 = match i {
@@ -36,7 +35,7 @@ impl DrawableCube2 {
                 7 => Vec3::new(-r, -r, -r),
                 _ => panic!()
             };
-            pieces[i] = DrawablePiece::new(center, r , piece_.rotation);
+            pieces[i] = DrawablePiece::new(center, PIECE_RADIUS , piece_.rotation);
         };
         let pieces_to_rotate = get_corner_cycle(mov);
         for i in pieces_to_rotate {
@@ -111,9 +110,16 @@ impl DrawableCube2 {
             self.pieces[i].project_vertices(camera, light_dir);
         }
     }
+    
+    pub fn set_black_internals(&mut self) {
+        for i in 0..self.pieces.len() {
+            self.pieces[i].set_black_internals();
+        }
+    }
 
     pub fn get_drawing_data(&mut self, camera: &Camera, light_dir: Vec3) -> Vec<Quadrilateral> {
         self.project_pieces(&camera, light_dir);
+        self.set_black_internals();
         self.generate_depth_map(&camera);
 
         let mut depth_map_copy = self.depth_map;
