@@ -14,6 +14,7 @@ pub use solve::Solvable;
 pub const FLOAT_EPSILON: f64 = 0.001;
 
 #[derive(Debug, Clone, Copy)]
+#[repr(usize)]
 pub enum Side {
     Right,
     Front,
@@ -65,6 +66,7 @@ impl Deref for Side {
     type Target = usize;
 
     fn deref(&self) -> &Self::Target {
+        // SAFETY: The enum is repr(usize): this is not UB
         unsafe { std::mem::transmute(self) }
     }
 }
