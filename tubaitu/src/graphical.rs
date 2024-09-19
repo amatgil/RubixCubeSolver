@@ -1,115 +1,49 @@
 use crate::*;
 use m_per_n::*;
+use shared::*;
 
 use m_per_n::Vec3;
 use std::cmp::Ordering;
 use std::f64::consts::PI; // The lesser cercle constant
 
-const MIN_BRIGHTNESS_MULTIPLIER: f64 = 0.5;
-const GENERAL_BRIGHTNESS_MULTIPLIER: f64 = 1.0;
-const DISTANCE_CAMERA_PLANE: f64 = 1.0;
 
-#[derive(Clone, Debug, Copy)]
-struct Camera {
-    pos: Vec3,
-    dir: Vec3,
+impl Drawable<8> for Cube2 {
+    type DrawablePiece = DrawablePiece;
+    fn to_points(self) -> [DrawablePiece; 8] {
+        let r = DRAWING_PIECE_RADIUS + EXTRA_PIECE_DISTANCE;
+        let mut drawable_pieces = [DrawablePiece::default(); 8];
+
+        for (piece_idx, original_piece) in self.pieces.iter().enumerate() {
+            let rotation: PieceRotation = original_piece.rotation;
+            let center: Point = match piece_idx.try_into().unwrap() {
+                PiecePosition::TopRightFront    => Point::new(r, -r, r),
+                PiecePosition::TopRightBack     => Point::new(r, r, r),
+                PiecePosition::TopLeftBack      => Point::new(-r, r, r),
+                PiecePosition::TopLeftFront     => Point::new(-r, -r, r),
+                PiecePosition::BottomRightFront => Point::new(r, -r, -r),
+                PiecePosition::BottomRightBack  => Point::new(r, r, -r),
+                PiecePosition::BottomLeftBack   => Point::new(-r, r, -r),
+                PiecePosition::BottomLeftFront  => Point::new(-r, -r, -r),
+            };
+
+            drawable_pieces[piece_idx] = DrawablePiece {
+                center,
+                radius: DRAWING_PIECE_RADIUS,
+                rotation,
+                should_rotate: false,
+            };
+        }
+
+        drawable_pieces
+    }
 }
 
 #[derive(Clone, Copy, Default, Debug)]
-struct DrawablePiece {
-    rotation: PieceRotation,
-    center: Point,
-    radius: f64,
-    should_rotate: bool,
-}
-
-#[derive(Copy, Clone)]
-struct Quadrilateral {
-    distance: f64,
-    vertices: Matrix<4, 2>,
-    brightness: f64,
-    color: Color,
-}
-
-impl PartialEq for Quadrilateral {
-    fn eq(&self, other: &Self) -> bool {
-        (self.brightness - other.brightness).abs() < FLOAT_EPSILON
-            && (self.distance - other.distance).abs() < FLOAT_EPSILON
-            && self.vertices == other.vertices
-    }
-}
-
-impl Eq for Quadrilateral {}
-
-impl PartialOrd for Quadrilateral {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl Ord for Quadrilateral {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.distance
-            .partial_cmp(&other.distance)
-            .expect("Tried to order pieces when one of the distances was NaN")
-    }
-}
-
-impl Quadrilateral {
-    fn empty() -> Self {
-        Quadrilateral {
-            distance: 0.0,
-            vertices: Matrix::ZERO(),
-            brightness: 0.0,
-            color: Color::Blue,
-        }
-    }
-}
-
-fn furthest_vertex_from_point(vertices: [Vec3; 4], point: Vec3) -> f64 {
-    *vertices
-        .map(|x| (x - point).abs())
-        .iter()
-        .max_by(|a, b| a.total_cmp(b))
-        .unwrap()
-}
-
-fn closest_vertex_to_point(vertices: [Vec3; 4], point: Vec3) -> f64 {
-    *vertices
-        .map(|x| (x - point).abs())
-        .iter()
-        .min_by(|a, b| a.total_cmp(b))
-        .unwrap()
-}
-
-fn get_rotation_matrix(mov: Move, mut lerp_t: f64) -> Matrix<3, 3> {
-    if mov.side() == MoveSide::L || mov.side() == MoveSide::D || mov.side() == MoveSide::B {
-        lerp_t *= -1.0;
-    }
-
-    lerp_t *= if mov.is_prime() { -1.0 } else { 1.0 };
-
-    let cos = (lerp_t * PI / 2.0).cos();
-    let sin = (lerp_t * PI / 2.0).sin();
-    let matrix: Matrix<3, 3> = match mov.side() {
-        MoveSide::R | MoveSide::L => Matrix::<3, 3>([
-            MatRow::<3>([1.0, 0.0, 0.0]),
-            MatRow::<3>([0.0, cos, sin]),
-            MatRow::<3>([0.0, -sin, cos]),
-        ]),
-
-        MoveSide::U | MoveSide::D => Matrix::<3, 3>([
-            MatRow::<3>([cos, sin, 0.0]),
-            MatRow::<3>([-sin, cos, 0.0]),
-            MatRow::<3>([0.0, 0.0, 1.0]),
-        ]),
-
-        MoveSide::F | MoveSide::B => Matrix::<3, 3>([
-            MatRow::<3>([cos, 0.0, sin]),
-            MatRow::<3>([0.0, 1.0, 0.0]),
-            MatRow::<3>([-sin, 0.0, cos]),
-        ]),
-    };
-    matrix
+pub struct DrawablePiece {
+    pub rotation: PieceRotation,
+    pub center: Point,
+    pub radius: f64,
+    pub should_rotate: bool,
 }
 
 impl DrawablePiece {
@@ -323,7 +257,7 @@ impl DrawablePiece {
         Self::to_xy_plane(intersections, camera)
     }
 
-    fn draw(&self, camera: Camera, light_dir: Vec3, mov: Move, lerp_t: f64) -> [Quadrilateral; 6] {
+    pub fn draw(&self, camera: Camera, light_dir: Vec3, mov: Move, lerp_t: f64) -> [Quadrilateral; 6] {
         let vertices = self.get_vertex_positions(mov, lerp_t);
         let projected_vertices = Self::project_points(vertices, camera);
 
@@ -336,54 +270,6 @@ impl DrawablePiece {
     }
 }
 
-fn get_normal_vector(face: [Vec3; 4], center: Vec3) -> Vec3 {
-    let normal = (face[1] - face[0])
-        .cross_product(face[2] - face[0])
-        .normalize()
-        .unwrap();
-    let dot_product = normal.dot_product(center - face[0]);
-
-    normal * if dot_product < 0.0 { -1.0 } else { 1.0 }
-}
-
-#[derive(Clone, Debug, Default, Copy)]
-struct DrawableCube {
-    pieces: [DrawablePiece; 8],
-}
-
-const DRAWING_PIECE_RADIUS: f64 = 10.0;
-const EXTRA_PIECE_DISTANCE: f64 = 0.8;
-impl Cube2 {
-    fn to_points(self) -> DrawableCube {
-        let r = DRAWING_PIECE_RADIUS + EXTRA_PIECE_DISTANCE;
-        let mut drawable_pieces = [DrawablePiece::default(); 8];
-
-        for (piece_idx, original_piece) in self.pieces.iter().enumerate() {
-            let rotation: PieceRotation = original_piece.rotation;
-            let center: Point = match piece_idx.try_into().unwrap() {
-                PiecePosition::TopRightFront    => Point::new(r, -r, r),
-                PiecePosition::TopRightBack     => Point::new(r, r, r),
-                PiecePosition::TopLeftBack      => Point::new(-r, r, r),
-                PiecePosition::TopLeftFront     => Point::new(-r, -r, r),
-                PiecePosition::BottomRightFront => Point::new(r, -r, -r),
-                PiecePosition::BottomRightBack  => Point::new(r, r, -r),
-                PiecePosition::BottomLeftBack   => Point::new(-r, r, -r),
-                PiecePosition::BottomLeftFront  => Point::new(-r, -r, -r),
-            };
-
-            drawable_pieces[piece_idx] = DrawablePiece {
-                center,
-                radius: DRAWING_PIECE_RADIUS,
-                rotation,
-                should_rotate: false,
-            };
-        }
-
-        DrawableCube {
-            pieces: drawable_pieces,
-        }
-    }
-}
 
 pub struct Polygon {
     pub points: Vec<(usize, usize)>,
@@ -398,8 +284,8 @@ pub struct PartialMove {
 
 /// Given a cube, the move being done and how far along the move is, generate the corresponding polys that would draw it
 pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, height: usize, scale: f64) -> Vec<Polygon> {
-    let mut pieces = cube.to_points().pieces; // Un array de 8 DrawablePieces, que contenen els seus punts
-                                              // Recorda que el radi és DRAWING_PIECE_RADIUS
+    let mut pieces = cube.to_points(); // Un array de 8 DrawablePieces, que contenen els seus punts
+                                       // Recorda que el radi és DRAWING_PIECE_RADIUS
 
     let (mov, lerp_t) = 
         if let Some(yougottamoveitmoveit) = part_mov {

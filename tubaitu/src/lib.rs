@@ -1,13 +1,13 @@
-pub mod declarations;
 use std::ops::Deref;
 
-pub use declarations::*;
+pub mod printing;
+pub use printing::*;
 
 pub mod input;
 pub use input::*;
 
-pub mod drawing;
-pub use drawing::*;
+pub mod graphical;
+pub use graphical::*;
 
 pub use shared::*;
 

@@ -2,7 +2,9 @@
 use crate::*;
 
 use std::{cmp::Ordering, fmt::Display, ops::*};
-use shared::FLOAT_EPSILON;
+
+
+pub const FLOAT_EPSILON: f64 = 0.001;
 
 impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Point {

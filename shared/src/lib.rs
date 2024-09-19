@@ -1,17 +1,19 @@
 
-pub mod colors;
+use m_per_n::Vec3;
+use std::cmp::Ordering;
+use std::f64::consts::PI; // The lesser cercle constant
 use std::ops::Deref;
 
-pub use colors::*;
 
+pub mod colors;
 mod solve;
-
+mod graphical;
 mod display;
 
 pub use display::*;
+pub use colors::*;
+pub use graphical::*;
 pub use solve::Solvable;
-
-pub const FLOAT_EPSILON: f64 = 0.001;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(usize)]
@@ -61,6 +63,7 @@ pub enum PieceRotation {
     YR, YB, YG,
     #[default] YO,
 }
+
 
 impl Deref for Side {
     type Target = usize;

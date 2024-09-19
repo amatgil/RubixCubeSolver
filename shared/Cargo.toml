@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 getrandom = { version = "0.2.15", features = ["js"] }
 rand = { version = "0.8.5", features = ["small_rng"], default-features = false  }
+m_per_n = { path = "../m_per_n" }

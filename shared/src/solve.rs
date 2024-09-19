@@ -1,4 +1,4 @@
-/// Default solving algorithm (only viable for 2x2)
+// Default solving algorithm (only viable for 2x2)
 
 use crate::*;
 
@@ -27,19 +27,12 @@ fn advance_bfs<C: Solvable>(
                 length_of_path: state.length_of_path + 1,
                 cube: y,
             });
-            if !have_we_seen_this_state_before(visited, new_state.clone()) {
+            if !visited.contains(&new_state.clone()) { // Eq only depends on cube
                 visited.insert(new_state.clone());
                 queue.push_back(new_state);
             }
         }
     }
-}
-
-fn have_we_seen_this_state_before<C: Solvable>(
-    seen: &HashSet<Rc<State<C>>>,
-    new: Rc<State<C>>,
-) -> bool {
-    seen.contains(&new) // Equality only depends on the cube
 }
 
 fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
@@ -55,14 +48,11 @@ fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
 }
 
 pub fn cycle_items<T: Clone, const N: usize, const PS: usize>(v: &mut [T; N], idxs: [usize; PS]) {
-    for i in 1..PS {
-        v.swap(idxs[0], idxs[i]);
-    }
+    for i in 1..PS { v.swap(idxs[0], idxs[i]) }
 }
 
 pub fn reverse_seq<const PS: usize>(mut ps: [usize; PS]) -> [usize; PS] {
     for i in 0..PS/2 { ps.swap(i, PS-1-i) }
-
     ps
 }
 
@@ -151,6 +141,7 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         for m in moves.iter() { c.make_move(*m) }
         c
     }
+
     fn random_scramble(length: usize) -> (Self, MoveSeq) {
         fn get_move_from_n(n: usize) -> Move { Move(n as u8) }
         use rand::{RngCore, SeedableRng};
