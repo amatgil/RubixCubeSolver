@@ -64,7 +64,7 @@ pub fn get_rotation_matrix(mov: Move, mut lerp_t: f64) -> Matrix<3, 3> {
         ]),
         MoveSide::F | MoveSide::B => Matrix::<3, 3>([
             MatRow::<3>([cos, 0.0, sin]),
-
+            MatRow::<3>([0.0,  1.0, 0.0]),
             MatRow::<3>([-sin, 0.0, cos]),
 
         ]),
