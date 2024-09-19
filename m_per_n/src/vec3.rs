@@ -30,6 +30,7 @@ impl Vec3 {
             })
         }
     }
+    #[must_use]
     pub fn cross_product(self, rhs: Vec3) -> Vec3 {
         Vec3 {
             x: self.y*rhs.z - self.z*rhs.y,

@@ -95,7 +95,7 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
         Matrix::<NF, NC>([MatRow::<NC>([0.0; NC]); NF])
     }
     pub fn sort_by_pivot_position(&self) -> Self {
-        let mut copy = self.clone();
+        let mut copy = *self;
         let comparator = |x: &MatRow<NC>, y: &MatRow<NC>| {
             match (x.pivot_position(), y.pivot_position()) {
                 (None, None) => Ordering::Equal,
@@ -110,8 +110,9 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     }
 
     // Untested for non-square
+    #[must_use]
     pub fn as_triangle(&self) -> Self {
-        let mut out: Matrix<NF, NC> = self.clone();
+        let mut out: Matrix<NF, NC> = *self;
         for i in 0..NF {
             out = out.sort_by_pivot_position();                              // Make sure the pivots are aligned
             if out[i][i] != 0.0 { out[i] = (1.0 / out[i][i]) * out[i]; }  
@@ -122,6 +123,7 @@ impl<const NF: usize, const NC: usize> Matrix<NF, NC> {
     }
 
     // Untested for non-square
+    #[must_use]
     pub fn as_upper_triangle(&self) -> Self {
         let mut tri = self.as_triangle();
 
@@ -150,7 +152,7 @@ impl<const N: usize> Matrix<N, N> {
     }
 
     pub fn determinant(&self) -> f64 {
-        let mut tri = self.clone();
+        let mut tri = *self;
         for i in 0..N {
             tri = tri.sort_by_pivot_position();                              // Make sure the pivots are aligned
             for ii in (i+1)..N { tri[ii] = tri[ii] - (tri[ii][i]*tri[i]) }   // Set all numbers below first pivot to 0
