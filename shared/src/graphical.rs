@@ -10,8 +10,22 @@ pub const DRAWING_PIECE_RADIUS: f64 = 10.0;
 pub const EXTRA_PIECE_DISTANCE: f64 = 0.8;
 
 pub trait Drawable<const PS: usize> {
-    type DrawablePiece; // 
+    type DrawablePiece;
     fn to_points(self) -> [Self::DrawablePiece; PS];
+    /// Given a cube, the move being done and how far along the move is, generate the corresponding polys that would draw it
+    fn get_polys(&self, part_mov: Option<PartialMove>, width: usize, height: usize, scale: f64) -> Vec<Polygon>;
+}
+
+
+pub struct Polygon {
+    pub points: Vec<(usize, usize)>,
+    pub color: [usize; 3],
+}
+
+#[derive(Debug, Clone)]
+pub struct PartialMove {
+    pub mov: Move,
+    pub lerp_t: f64,
 }
 
 #[derive(Clone, Debug, Copy)]

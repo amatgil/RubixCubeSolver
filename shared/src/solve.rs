@@ -58,7 +58,7 @@ pub fn reverse_seq<const PS: usize>(mut ps: [usize; PS]) -> [usize; PS] {
 
 pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
     fn moves_of_adjacency() -> Vec<Move>;
-    fn make_move(&mut self, movimement: Move);
+    fn make_move(&mut self, moviment: Move);
 
     fn solve(&self, prints_enabled: bool, mut outward_comms: Option<Sender<String>>) -> MoveSeq {
         let first_state_unsolved = Rc::new(State {

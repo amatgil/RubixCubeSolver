@@ -1,8 +1,9 @@
-use std::{iter::Peekable, sync::mpsc::Receiver, time::Instant, vec};
+use std::{default, iter::Peekable, sync::mpsc::{Receiver, Sender}, time::Instant, vec};
 
 use macroquad::{experimental::coroutines::Coroutine, prelude::*};
-use shared::{Move, MoveSeq, Solvable};
-use tubaitu::{get_polys, Cube2, PartialMove};
+use shared::{Move, MoveSeq, Solvable, Polygon, PartialMove, Drawable};
+use tubaitu::Cube2;
+use tribaitri::Cube3;
 use std::fmt::Debug;
 
 pub const WHITE_COL : Color     = color_u8![188, 192, 204, 255];
@@ -18,9 +19,46 @@ pub const TEXT_COL: Color = color_u8![128, 135, 162, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
+#[derive(Debug, Default)]
+struct Cube {
+    tu: Cube2,
+    tri: Cube3,
+    curr: Curr, 
+}
+
+#[derive(Debug, Default)]
+enum Curr { #[default] Tu, Tri }
+
+impl Cube {
+    fn solve(&self, prints_enabled: bool, outward_comms: Option<Sender<String>>) -> MoveSeq {
+        match self.curr {
+            Curr::Tu  => self.tu.solve(prints_enabled, outward_comms),
+            Curr::Tri => self.tri.solve(prints_enabled, outward_comms),
+        }
+    }
+    fn make_move(&mut self, moviment: Move) {
+        match self.curr {
+            Curr::Tu  => self.tu.make_move(moviment),
+            Curr::Tri => self.tri.make_move(moviment),
+        }
+    }
+    fn reset_current(&mut self) {
+        match self.curr {
+            Curr::Tu  => self.tu = Cube2::default(),
+            Curr::Tri => self.tri = Cube3::default(),
+        }
+    }
+    fn get_polys(&self, part_mov: Option<PartialMove>, width: usize, height: usize, scale: f64) -> Vec<Polygon> {
+        match self.curr {
+            Curr::Tu  => self.tu.get_polys(part_mov, width, height, scale),
+            Curr::Tri => self.tri.get_polys(part_mov, width, height, scale),
+        }
+    }
+}
+
 #[derive(Debug)]
 struct State {
-    cube: Cube2,
+    cube: Cube,
     kind: StateKind,
 }
 
@@ -68,6 +106,7 @@ impl State {
             StateKind::Scrambling { seq, .. }                     => seq.peek().copied(),
         }
     }
+
     fn set_back_to_manual(&mut self) {
         self.kind = StateKind::Manual { selected_move: None, mid_move: None };
     }
@@ -78,7 +117,7 @@ async fn main() {
     // Constants / initting
     let dt = 0.05;
     let mut state = State {
-        cube: Cube2::default(),
+        cube: Cube::default(),
         kind: StateKind::Manual {
             selected_move: None,
             mid_move: None
@@ -118,7 +157,7 @@ async fn main() {
         }
         else if is_key_pressed(reset_bind) { 
             println!("[INFO]: Resetting cube");
-            state.cube = Cube2::default();
+            state.cube.reset_current();
             state.set_back_to_manual();
         }
 
@@ -204,7 +243,7 @@ async fn main() {
             
 
         let curr_move = state.curr_mov().and_then(|m| Some(PartialMove { mov: m, lerp_t: state.curr_t() })); 
-        let polys = get_polys(&state.cube, curr_move, SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
+        let polys = state.cube.get_polys(curr_move, SCREEN_WIDTH, SCREEN_HEIGHT, 7.0);
 
         for poly in polys {
             let col = poly.color;

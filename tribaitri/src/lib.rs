@@ -24,6 +24,17 @@ pub struct Cube3 {
 }
 
 
+impl Drawable<27> for Cube3 {
+    type DrawablePiece = ();
+
+    fn to_points(self) -> [Self::DrawablePiece; 27] {
+        todo!()
+    }
+
+    fn get_polys(&self, part_mov: Option<PartialMove>, width: usize, height: usize, scale: f64) -> Vec<Polygon> {
+        todo!()
+    }
+}
 impl Solvable for Cube3 {
     fn moves_of_adjacency() -> Vec<Move> {
         Vec::from([
