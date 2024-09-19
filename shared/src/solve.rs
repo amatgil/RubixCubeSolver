@@ -14,18 +14,6 @@ struct State<C> {
     cube: C,
 }
 
-impl<C: Solvable> Hash for State<C> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.cube.hash(state);
-    }
-}
-impl<C: Solvable> PartialEq for State<C> {
-    fn eq(&self, rhs: &Self) -> bool {
-        self.cube == rhs.cube
-    }
-}
-impl<C: Solvable> Eq for State<C> {}
-
 fn advance_bfs<C: Solvable>(
     visited: &mut HashSet<Rc<State<C>>>,
     queue: &mut VecDeque<Rc<State<C>>>,
@@ -201,3 +189,16 @@ fn print_inline(text: &str) {
     print!("{text}");
     std::io::stdout().flush().unwrap();
 }
+
+impl<C: Solvable> Hash for State<C> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.cube.hash(state);
+    }
+}
+
+impl<C: Solvable> PartialEq for State<C> {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.cube == rhs.cube
+    }
+}
+impl<C: Solvable> Eq for State<C> {}

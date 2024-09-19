@@ -7,6 +7,25 @@ pub struct Cube2 {
 }
 
 
+fn get_orientation_generators() -> [Vec<Move>; 6] {
+    [
+	vec![],
+	vec![Move::F, Move::B],
+	vec![Move::R, Move::L],
+	vec![Move::F, Move::B],
+	vec![Move::R, Move::L],
+	vec![Move::F, Move::B, Move::F, Move::B],
+    ]
+}
+
+fn get_rotation_generators() -> [Vec<Move>; 4] {
+    [
+	vec![],
+	vec![Move::U, Move::D],
+	vec![Move::D, Move::U],
+	vec![Move::U, Move::D, Move::U, Move::D],
+    ]
+}
 
 impl std::cmp::PartialEq for Cube2 {
     fn eq(&self, other: &Self) -> bool {
@@ -25,7 +44,7 @@ impl std::cmp::Eq for Cube2 { }
 
 fn xy_to_idx(x: usize, y: usize) -> usize { y*CUBE_PRINT_WIDTH + x }
 
-// If you touch these, remember to change the magic numbers in Cube's Display impl!
+// If you touch these, remember to change the magic numbers in Cube2's Display impl!
 pub const CUBE_PRINT_WIDTH: usize = 2*4 + 5 + 1;
 pub const CUBE_PRINT_HEIGHT: usize = 2*3 + 3 + 1;
 const CUBE_PRINT_HORIZ_DIVIDER_TMP: u8 = b'-';
@@ -47,6 +66,29 @@ const CUBE_PRINT_BOT_L_DIVIDER: char = '┗';
 const CUBE_PRINT_BOT_R_DIVIDER: char = '┛';
 const CUBE_PRINT_NORMT_DIVIDER: char = '┳';
 const CUBE_PRINT_UPSDT_DIVIDER: char = '┻';
+
+fn print_add_face(
+    buffer: &mut [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT],
+    p: [Piece; 8],
+    n: usize,
+    seq: [usize; 4],
+    start_x: usize,
+    start_y: usize,
+) {
+    let (mut x, mut y) = (start_x, start_y);
+    for (i, v) in seq.into_iter().enumerate() {
+	let cols = p[v].to_color_sequence();
+	let buffer_idx = y*CUBE_PRINT_WIDTH + x;
+	buffer[buffer_idx] = cols[n].to_string().bytes().next().unwrap();
+
+	x += 1;
+	if i == 1 {
+	    x = start_x;
+	    y += 1;
+	}
+    }
+}
+
 impl std::fmt::Display for Cube2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 	let mut buffer: [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT] =
@@ -114,26 +156,4 @@ impl std::fmt::Display for Cube2 {
         write!(f, "{s}")
     }
 
-}
-
-fn print_add_face(
-    buffer: &mut [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT],
-    p: [Piece; 8],
-    n: usize,
-    seq: [usize; 4],
-    start_x: usize,
-    start_y: usize,
-) {
-    let (mut x, mut y) = (start_x, start_y);
-    for (i, v) in seq.into_iter().enumerate() {
-	let cols = p[v].to_color_sequence();
-	let buffer_idx = y*CUBE_PRINT_WIDTH + x;
-	buffer[buffer_idx] = cols[n].to_string().bytes().next().unwrap();
-
-	x += 1;
-	if i == 1 {
-	    x = start_x;
-	    y += 1;
-	}
-    }
 }

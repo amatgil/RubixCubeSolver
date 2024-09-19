@@ -60,22 +60,3 @@ impl Solvable for Cube2 {
         ])
     }
 }
-
-fn get_orientation_generators() -> [Vec<Move>; 6] {
-    [
-	vec![],
-	vec![Move::F, Move::B],
-	vec![Move::R, Move::L],
-	vec![Move::F, Move::B],
-	vec![Move::R, Move::L],
-	vec![Move::F, Move::B, Move::F, Move::B],
-    ]
-}
-fn get_rotation_generators() -> [Vec<Move>; 4] {
-    [
-	vec![],
-	vec![Move::U, Move::D],
-	vec![Move::D, Move::U],
-	vec![Move::U, Move::D, Move::U, Move::D],
-    ]
-}

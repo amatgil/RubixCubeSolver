@@ -1,6 +1,6 @@
 use shared::{Color, Move, Solvable};
 
-use crate::{cycle_items, Cube2, Piece, PieceRotation, TubaiStickerFace, TubaiStickers};
+use crate::{Cube2, Piece, PieceRotation, TubaiStickerFace, TubaiStickers};
 
 /* 
 #[test]

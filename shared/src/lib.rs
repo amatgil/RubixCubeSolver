@@ -5,8 +5,8 @@ pub use colors::*;
 mod solve;
 
 mod display;
-use display::*;
 
+pub use display::*;
 pub use solve::Solvable;
 
 pub const FLOAT_EPSILON: f64 = 0.001;
