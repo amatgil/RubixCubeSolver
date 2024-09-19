@@ -1,34 +1,33 @@
 use crate::*;
 
 // TODO: Make sure the implementation of Hash is coherent with the manual one of PartialEq
-#[derive(Debug, Clone, Copy, Hash, Default)]
+#[derive(Debug, Clone, Copy, Hash, Default, Eq)]
 pub struct Cube2 {
     pub pieces: [Piece; 8],
 }
 
-
-fn get_orientation_generators() -> [Vec<Move>; 6] {
-    [
-	vec![],
-	vec![Move::F, Move::B],
-	vec![Move::R, Move::L],
-	vec![Move::F, Move::B],
-	vec![Move::R, Move::L],
-	vec![Move::F, Move::B, Move::F, Move::B],
-    ]
-}
-
-fn get_rotation_generators() -> [Vec<Move>; 4] {
-    [
-	vec![],
-	vec![Move::U, Move::D],
-	vec![Move::D, Move::U],
-	vec![Move::U, Move::D, Move::U, Move::D],
-    ]
-}
-
 impl std::cmp::PartialEq for Cube2 {
     fn eq(&self, other: &Self) -> bool {
+        fn get_orientation_generators() -> [Vec<Move>; 6] {
+            [
+                vec![],
+                vec![Move::F, Move::B],
+                vec![Move::R, Move::L],
+                vec![Move::F, Move::B],
+                vec![Move::R, Move::L],
+                vec![Move::F, Move::B, Move::F, Move::B],
+            ]
+        }
+
+        fn get_rotation_generators() -> [Vec<Move>; 4] {
+            [
+	        vec![],
+	        vec![Move::U, Move::D],
+	        vec![Move::D, Move::U],
+	        vec![Move::U, Move::D, Move::U, Move::D],
+            ]
+        }
+
         for o in &get_orientation_generators() {
             for r in &get_rotation_generators() {
                 let mut alternate_cube = *self;
@@ -39,12 +38,12 @@ impl std::cmp::PartialEq for Cube2 {
         }
         false
     }
- }
-impl std::cmp::Eq for Cube2 { }
+}
 
 fn xy_to_idx(x: usize, y: usize) -> usize { y*CUBE_PRINT_WIDTH + x }
 
 // If you touch these, remember to change the magic numbers in Cube2's Display impl!
+// (this sucks a lot, but it works for debugging)
 pub const CUBE_PRINT_WIDTH: usize = 2*4 + 5 + 1;
 pub const CUBE_PRINT_HEIGHT: usize = 2*3 + 3 + 1;
 const CUBE_PRINT_HORIZ_DIVIDER_TMP: u8 = b'-';

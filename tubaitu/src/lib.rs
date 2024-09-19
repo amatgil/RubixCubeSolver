@@ -3,9 +3,6 @@ use std::ops::Deref;
 
 pub use declarations::*;
 
-pub mod bfsing;
-pub use bfsing::*;
-
 pub mod input;
 pub use input::*;
 
