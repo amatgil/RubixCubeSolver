@@ -124,16 +124,15 @@ impl DrawablePiece {
             transformation = get_rotation_matrix(mov, lerp_t);
         }
         for i in 0..8 {
-            vertices[i] = match i {
-                P_TOP_RIGHT_FRONT => vertices[0] + Vec3::new(r, -r, r),
-                P_TOP_RIGHT_BACK => vertices[1] + Vec3::new(r, r, r),
-                P_TOP_LEFT_BACK => vertices[2] + Vec3::new(-r, r, r),
-                P_TOP_LEFT_FRONT => vertices[3] + Vec3::new(-r, -r, r),
-                P_BOTTOM_RIGHT_FRONT => vertices[4] + Vec3::new(r, -r, -r),
-                P_BOTTOM_RIGHT_BACK => vertices[5] + Vec3::new(r, r, -r),
-                P_BOTTOM_LEFT_BACK => vertices[6] + Vec3::new(-r, r, -r),
-                P_BOTTOM_LEFT_FRONT => vertices[7] + Vec3::new(-r, -r, -r),
-                _ => unreachable!("Vertex index not valid?"),
+            vertices[i] = match i.try_into().unwrap() {
+                PiecePosition::TopRightFront    => vertices[0] + Vec3::new(r, -r, r),
+                PiecePosition::TopRightBack     => vertices[1] + Vec3::new(r, r, r),
+                PiecePosition::TopLeftBack      => vertices[2] + Vec3::new(-r, r, r),
+                PiecePosition::TopLeftFront     => vertices[3] + Vec3::new(-r, -r, r),
+                PiecePosition::BottomRightFront => vertices[4] + Vec3::new(r, -r, -r),
+                PiecePosition::BottomRightBack  => vertices[5] + Vec3::new(r, r, -r),
+                PiecePosition::BottomLeftBack   => vertices[6] + Vec3::new(-r, r, -r),
+                PiecePosition::BottomLeftFront  => vertices[7] + Vec3::new(-r, -r, -r),
             };
             if self.should_rotate {
                 let col_vec: Matrix<3, 1> = vertices[i].into(); // Write as column vector
@@ -167,23 +166,23 @@ impl DrawablePiece {
         let mut projected_faces: [Quadrilateral; 6] = [Quadrilateral::empty(); 6];
         let mut faces: [[Vec3; 4]; 6] = [[Vec3::ZERO; 4]; 6];
 
-        faces[SIDE_RIGHT] = [
-            verts[P_TOP_RIGHT_FRONT], verts[P_TOP_RIGHT_BACK], verts[P_BOTTOM_RIGHT_BACK], verts[P_BOTTOM_RIGHT_FRONT]
+        faces[*Side::Right] = [
+            verts[*P::TopRightFront],    verts[*P::TopRightBack],     verts[*P::BottomRightBack], verts[*P::BottomRightFront]
         ];
-        faces[SIDE_FRONT] = [
-            verts[P_TOP_RIGHT_FRONT], verts[P_BOTTOM_RIGHT_FRONT], verts[P_BOTTOM_LEFT_FRONT], verts[P_TOP_LEFT_FRONT]
+        faces[*Side::Front] = [
+            verts[*P::TopRightFront],    verts[*P::BottomRightFront], verts[*P::BottomLeftFront], verts[*P::TopLeftFront]
         ];
-        faces[SIDE_TOP] =  [
-            verts[P_TOP_RIGHT_FRONT], verts[P_TOP_LEFT_FRONT], verts[P_TOP_LEFT_BACK], verts[P_TOP_RIGHT_BACK]
+        faces[*Side::Top] =  [
+            verts[*P::TopRightFront],    verts[*P::TopLeftFront],     verts[*P::TopLeftBack],     verts[*P::TopRightBack]
         ];
-        faces[SIDE_LEFT] = [
-            verts[P_TOP_LEFT_FRONT], verts[P_BOTTOM_LEFT_FRONT], verts[P_BOTTOM_LEFT_BACK], verts[P_TOP_LEFT_BACK]
+        faces[*Side::Left] = [
+            verts[*P::TopLeftFront],     verts[*P::BottomLeftFront],  verts[*P::BottomLeftBack],  verts[*P::TopLeftBack]
         ];
-        faces[SIDE_BACK] = [
-            verts[P_TOP_RIGHT_BACK], verts[P_TOP_LEFT_BACK], verts[P_BOTTOM_LEFT_BACK], verts[P_BOTTOM_RIGHT_BACK], 
+        faces[*Side::Back] = [
+            verts[*P::TopRightBack],     verts[*P::TopLeftBack],      verts[*P::BottomLeftBack],  verts[*P::BottomRightBack], 
             ];
-        faces[SIDE_DOWN] = [
-            verts[P_BOTTOM_RIGHT_FRONT], verts[P_BOTTOM_RIGHT_BACK], verts[P_BOTTOM_LEFT_BACK], verts[P_BOTTOM_LEFT_FRONT]
+        faces[*Side::Down] = [
+            verts[*P::BottomRightFront], verts[*P::BottomRightBack],  verts[*P::BottomLeftBack],  verts[*P::BottomLeftFront]
         ];
 
         projected_faces[0].vertices = Matrix::<4, 2>([
@@ -315,7 +314,6 @@ impl DrawablePiece {
     fn project_points(vertices: [Vec3; 8], camera: Camera) -> Matrix<8, 2> {
         let mut intersections: [Vec3; 8] = [Vec3::ZERO; 8];
         for i in 0..8 {
-            let vec = vertices[i] - camera.pos;
             let intersection_option = Self::find_intersection(vertices[i], camera);
             intersections[i] = match intersection_option {
                 Some(x) => x,
@@ -362,16 +360,15 @@ impl Cube2 {
 
         for (piece_idx, original_piece) in self.pieces.iter().enumerate() {
             let rotation: PieceRotation = original_piece.rotation;
-            let center: Point = match piece_idx {
-                P_TOP_RIGHT_FRONT => Point::new(r, -r, r),
-                P_TOP_RIGHT_BACK => Point::new(r, r, r),
-                P_TOP_LEFT_BACK => Point::new(-r, r, r),
-                P_TOP_LEFT_FRONT => Point::new(-r, -r, r),
-                P_BOTTOM_RIGHT_FRONT => Point::new(r, -r, -r),
-                P_BOTTOM_RIGHT_BACK => Point::new(r, r, -r),
-                P_BOTTOM_LEFT_BACK => Point::new(-r, r, -r),
-                P_BOTTOM_LEFT_FRONT => Point::new(-r, -r, -r),
-                _ => unreachable!("Piece index no vàlid?"),
+            let center: Point = match piece_idx.try_into().unwrap() {
+                PiecePosition::TopRightFront    => Point::new(r, -r, r),
+                PiecePosition::TopRightBack     => Point::new(r, r, r),
+                PiecePosition::TopLeftBack      => Point::new(-r, r, r),
+                PiecePosition::TopLeftFront     => Point::new(-r, -r, r),
+                PiecePosition::BottomRightFront => Point::new(r, -r, -r),
+                PiecePosition::BottomRightBack  => Point::new(r, r, -r),
+                PiecePosition::BottomLeftBack   => Point::new(-r, r, -r),
+                PiecePosition::BottomLeftFront  => Point::new(-r, -r, -r),
             };
 
             drawable_pieces[piece_idx] = DrawablePiece {
@@ -429,7 +426,7 @@ pub fn get_polys(cube: &Cube2, part_mov: Option<PartialMove>, width: usize, heig
     };
 
     for i in pieces_to_cycle {
-        pieces[i].should_rotate = true;
+        pieces[*i].should_rotate = true;
     }
 
     let mut projected_cube: [Quadrilateral; 48] = [Quadrilateral::empty(); 48];
@@ -485,24 +482,16 @@ fn test_drawing_piece() {
     let light_pos = Vec3::new(12.0, 20.2, 30.7);
     let light_dir = Vec3::ZERO - light_pos;
 
-    let buffer = piece.draw(camera, light_dir, Move::R, 0.3);
-    //println!("{}", buffer);
+    let _buffer = piece.draw(camera, light_dir, Move::R, 0.3);
+    //println!("{}", _buffer);
 }
 
-#[test]
-fn test_drawing_cube() {
-    let cube = Cube2::default();
-    let m = Move::R;
-
-    let text = get_svg(cube, m, 0.3);
-    println!("{}", text);
-}
 
 #[test]
 
 fn test_video() {
-    let starting_cube = Cube2::default();
-    let moves = [
+    let _starting_cube = Cube2::default();
+    let _moves = [
         Move::R,
         Move::U,
         Move::RP,
@@ -519,5 +508,5 @@ fn test_video() {
         Move::RP,
         Move::FP,
     ];
-    //draw_sequence("r_move_test", &starting_cube, &moves, 10);
+    //draw_sequence("r_move_test", &_starting_cube, &_moves, 10);
 }

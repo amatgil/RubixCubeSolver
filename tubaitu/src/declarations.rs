@@ -70,7 +70,7 @@ const CUBE_PRINT_UPSDT_DIVIDER: char = '┻';
 fn print_add_face(
     buffer: &mut [u8; CUBE_PRINT_WIDTH*CUBE_PRINT_HEIGHT],
     p: [Piece; 8],
-    n: usize,
+    col_idx: usize,
     seq: [usize; 4],
     start_x: usize,
     start_y: usize,
@@ -79,7 +79,7 @@ fn print_add_face(
     for (i, v) in seq.into_iter().enumerate() {
 	let cols = p[v].to_color_sequence();
 	let buffer_idx = y*CUBE_PRINT_WIDTH + x;
-	buffer[buffer_idx] = cols[n].to_string().bytes().next().unwrap();
+	buffer[buffer_idx] = cols[col_idx].to_string().bytes().next().unwrap();
 
 	x += 1;
 	if i == 1 {
@@ -129,12 +129,12 @@ impl std::fmt::Display for Cube2 {
 	    for y in [3, 6] { buffer[xy_to_idx(x, y)] = CUBE_PRINT_CROSS_DIVIDER_TMP; }
 	}
 
-        print_add_face(&mut buffer, self.pieces, 2, FACE_UP_SEQ_PRINT,    4,  1);
-        print_add_face(&mut buffer, self.pieces, 3, FACE_LEFT_SEQ_PRINT,  1,  4);
-        print_add_face(&mut buffer, self.pieces, 1, FACE_FRONT_SEQ_PRINT, 4,  4);
-        print_add_face(&mut buffer, self.pieces, 0, FACE_RIGHT_SEQ_PRINT, 7,  4);
-        print_add_face(&mut buffer, self.pieces, 4, FACE_BACK_SEQ_PRINT,  10, 4);
-        print_add_face(&mut buffer, self.pieces, 5, FACE_DOWN_SEQ_PRINT,  4,  7);
+        print_add_face(&mut buffer, self.pieces, 2, FACE_UP_SEQ_PRINT   .map(|p| *p), 4,  1);
+        print_add_face(&mut buffer, self.pieces, 3, FACE_LEFT_SEQ_PRINT .map(|p| *p), 1,  4);
+        print_add_face(&mut buffer, self.pieces, 1, FACE_FRONT_SEQ_PRINT.map(|p| *p), 4,  4);
+        print_add_face(&mut buffer, self.pieces, 0, FACE_RIGHT_SEQ_PRINT.map(|p| *p), 7,  4);
+        print_add_face(&mut buffer, self.pieces, 4, FACE_BACK_SEQ_PRINT .map(|p| *p), 10, 4);
+        print_add_face(&mut buffer, self.pieces, 5, FACE_DOWN_SEQ_PRINT .map(|p| *p), 4,  7);
 
 	let s = std::str::from_utf8(&buffer).expect("invalid utf-8 sequence (should be impossible)");
 

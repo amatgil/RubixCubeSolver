@@ -1,5 +1,7 @@
 
 pub mod colors;
+use std::ops::Deref;
+
 pub use colors::*;
 
 mod solve;
@@ -11,20 +13,25 @@ pub use solve::Solvable;
 
 pub const FLOAT_EPSILON: f64 = 0.001;
 
-pub const SIDE_RIGHT: usize = 0;
-pub const SIDE_FRONT: usize = 1;
-pub const SIDE_TOP: usize = 2;
-pub const SIDE_LEFT: usize = 3;
-pub const SIDE_BACK: usize = 4;
-pub const SIDE_DOWN: usize = 5;
+#[derive(Debug, Clone, Copy)]
+pub enum Side {
+    Right,
+    Front,
+    Top,
+    Left,
+    Back,
+    Down,
+}
+type S = Side;
 
-pub const COLOR_RIGHT_SEQ: [usize; 4] = [SIDE_FRONT, SIDE_TOP, SIDE_BACK, SIDE_DOWN];
-pub const COLOR_LEFT_SEQ: [usize; 4] = [SIDE_DOWN, SIDE_BACK, SIDE_TOP, SIDE_FRONT];
-pub const COLOR_UP_SEQ: [usize; 4] = [SIDE_FRONT, SIDE_LEFT, SIDE_BACK, SIDE_RIGHT];
-pub const COLOR_DOWN_SEQ: [usize; 4] = [SIDE_RIGHT, SIDE_BACK, SIDE_LEFT, SIDE_FRONT];
-pub const COLOR_FRONT_SEQ: [usize; 4] = [SIDE_TOP, SIDE_RIGHT, SIDE_DOWN, SIDE_LEFT];
-pub const COLOR_BACK_SEQ: [usize; 4] = [SIDE_LEFT, SIDE_DOWN, SIDE_RIGHT, SIDE_TOP];
+pub const COLOR_RIGHT_SEQ: [S; 4] = [S::Front, S::Top,   S::Back,  S::Down];
+pub const COLOR_LEFT_SEQ: [S; 4]  = [S::Down,  S::Back,  S::Top,   S::Front];
+pub const COLOR_UP_SEQ: [S; 4]    = [S::Front, S::Left,  S::Back,  S::Right];
+pub const COLOR_DOWN_SEQ: [S; 4]  = [S::Right, S::Back,  S::Left,  S::Front];
+pub const COLOR_FRONT_SEQ: [S; 4] = [S::Top,   S::Right, S::Down,  S::Left];
+pub const COLOR_BACK_SEQ: [S; 4]  = [S::Left,  S::Down,  S::Right, S::Top];
 
+ 
 /// A move, internally represented by a single u8 using bit magic
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move(u8);
@@ -54,6 +61,13 @@ pub enum PieceRotation {
     #[default] YO,
 }
 
+impl Deref for Side {
+    type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { std::mem::transmute(self) }
+    }
+}
 
 impl Move {
     pub const R:  Move = Self(0);

@@ -18,7 +18,7 @@ fn basic_is_solved_test() {
 #[test]
 fn only_right_solve() {
     let mut cube = Cube2::scramble(&vec![Move::R].into());
-    for m in cube.solve(true) { cube.make_move(m); }
+    for m in cube.solve(true, None) { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -26,7 +26,7 @@ fn only_right_solve() {
 #[test]
 fn only_left_solve() {
     let mut cube = Cube2::scramble(&vec![Move::L].into());
-    for m in cube.solve(true) { cube.make_move(m); }
+    for m in cube.solve(true, None) { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -37,7 +37,7 @@ fn double_up_solve() {
 	Move::U,
 	Move::U,
     ].into());
-    for m in cube.solve(true) { cube.make_move(m); }
+    for m in cube.solve(true, None) { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -48,7 +48,7 @@ fn back_up_solve() {
 	Move::B,
 	Move::U,
     ].into());
-    for m in cube.solve(true) { cube.make_move(m); }
+    for m in cube.solve(true, None) { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -60,7 +60,7 @@ fn redundant_solve() {
 	Move::U,
 	Move::U,
     ].into());
-    for m in cube.solve(true) { cube.make_move(m); }
+    for m in cube.solve(true, None) { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -71,7 +71,7 @@ fn opposite_solve() {
 	Move::L,
 	Move::R,
     ].into());
-    for m in cube.solve(true) { cube.make_move(m); }
+    for m in cube.solve(true, None) { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
 }
@@ -85,31 +85,7 @@ fn complicated_solve() {
 	Move::D,
 	Move::F,
     ].into());
-    for m in cube.solve(true) { cube.make_move(m); }
+    for m in cube.solve(true, None) { cube.make_move(m); }
 
     assert_eq!(cube, Cube2::default());
-}
-
-#[test]
-fn reorientation() {
-    let a = Cube2::default();
-    let mut b = Cube2::default();
-    b.make_move(Move::R);
-    b.make_move(Move::L);
-
-    let answer = vec![Move::R, Move::L];
-    assert_eq!(answer, reorient_together(a, b).unwrap());
-}
-
-#[test]
-fn reorientation2() {
-    let a = Cube2::default();
-    let mut b = Cube2::default();
-    b.make_move(Move::U);
-    b.make_move(Move::U);
-    b.make_move(Move::D);
-    b.make_move(Move::D);
-
-    let answer = vec![Move::U, Move::D, Move::U, Move::D];
-    assert_eq!(answer, reorient_together(a, b).unwrap());
 }

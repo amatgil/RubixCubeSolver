@@ -54,14 +54,16 @@ fn find_adjacents<C: Solvable>(x: &C) -> Vec<(Move, C)> {
     t
 }
 
-pub fn cycle_items<T: Clone, const N: usize>(v: &mut [T; N], idxs: [usize; 4]) {
-    v.swap(idxs[0], idxs[1]);
-    v.swap(idxs[0], idxs[2]);
-    v.swap(idxs[0], idxs[3]);
+pub fn cycle_items<T: Clone, const N: usize, const PS: usize>(v: &mut [T; N], idxs: [usize; PS]) {
+    for i in 1..PS {
+        v.swap(idxs[0], idxs[i]);
+    }
 }
 
-pub fn reverse_seq([a, b, c, d]: [usize; 4]) -> [usize; 4] {
-    [d, c, b, a]
+pub fn reverse_seq<const PS: usize>(mut ps: [usize; PS]) -> [usize; PS] {
+    for i in 0..PS/2 { ps.swap(i, PS-1-i) }
+
+    ps
 }
 
 pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
@@ -134,9 +136,9 @@ pub trait Solvable: Display + Eq + Sized + Default + Clone + Hash {
         path_from_unsolved.into()
     }
 
-    fn cycle_elements<const N: usize>(
+    fn cycle_elements<const N: usize, const PS: usize>(
         pieces: &mut [Piece; N],
-        mut seq: [usize; 4],
+        mut seq: [usize; PS],
         mov: Move,
     ) {
         if mov.is_prime() { seq = reverse_seq(seq); }

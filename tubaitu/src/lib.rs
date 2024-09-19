@@ -1,4 +1,6 @@
 pub mod declarations;
+use std::ops::Deref;
+
 pub use declarations::*;
 
 pub mod bfsing;
@@ -16,41 +18,45 @@ pub use shared::*;
 mod tests;
 
 // Position constants
-const P_TOP_RIGHT_FRONT: usize    = 0;
-const P_TOP_RIGHT_BACK: usize     = 1;
-const P_TOP_LEFT_BACK: usize      = 2;
-const P_TOP_LEFT_FRONT: usize     = 3;
-const P_BOTTOM_RIGHT_FRONT: usize = 4;
-const P_BOTTOM_RIGHT_BACK: usize  = 5;
-const P_BOTTOM_LEFT_BACK: usize   = 6;
-const P_BOTTOM_LEFT_FRONT: usize  = 7;
- 
+#[repr(usize)]
+#[derive(Debug, Clone, Copy)]
+enum PiecePosition {
+    TopRightFront,
+    TopRightBack,
+    TopLeftBack,
+    TopLeftFront,
+    BottomRightFront,
+    BottomRightBack,
+    BottomLeftBack,
+    BottomLeftFront,
+}
 
-// Rotation constants (could've been an enum, but eh)
-const FACE_RIGHT_SEQ_CYCLE: [usize; 4] = [P_TOP_RIGHT_BACK, P_BOTTOM_RIGHT_BACK, P_BOTTOM_RIGHT_FRONT, P_TOP_RIGHT_FRONT];
-const FACE_LEFT_SEQ_CYCLE: [usize; 4]  = [P_TOP_LEFT_FRONT, P_BOTTOM_LEFT_FRONT, P_BOTTOM_LEFT_BACK, P_TOP_LEFT_BACK];
-const FACE_UP_SEQ_CYCLE: [usize; 4]    = [P_TOP_LEFT_FRONT, P_TOP_LEFT_BACK, P_TOP_RIGHT_BACK, P_TOP_RIGHT_FRONT];
-const FACE_DOWN_SEQ_CYCLE: [usize; 4]  = [P_BOTTOM_LEFT_BACK, P_BOTTOM_LEFT_FRONT, P_BOTTOM_RIGHT_FRONT, P_BOTTOM_RIGHT_BACK];
-const FACE_FRONT_SEQ_CYCLE: [usize; 4] = [P_BOTTOM_LEFT_FRONT, P_TOP_LEFT_FRONT, P_TOP_RIGHT_FRONT, P_BOTTOM_RIGHT_FRONT];
-const FACE_BACK_SEQ_CYCLE: [usize; 4]  = [P_BOTTOM_LEFT_BACK, P_BOTTOM_RIGHT_BACK, P_TOP_RIGHT_BACK, P_TOP_LEFT_BACK];
+type P = PiecePosition;
 
-const FACE_RIGHT_SEQ_PRINT: [usize; 4] = [P_TOP_RIGHT_FRONT, P_TOP_RIGHT_BACK, P_BOTTOM_RIGHT_FRONT, P_BOTTOM_RIGHT_BACK];
-const FACE_LEFT_SEQ_PRINT: [usize; 4]  = [P_TOP_LEFT_BACK, P_TOP_LEFT_FRONT, P_BOTTOM_LEFT_BACK, P_BOTTOM_LEFT_FRONT];
-const FACE_UP_SEQ_PRINT: [usize; 4]    = [P_TOP_LEFT_BACK, P_TOP_RIGHT_BACK, P_TOP_LEFT_FRONT, P_TOP_RIGHT_FRONT];
-const FACE_DOWN_SEQ_PRINT: [usize; 4]  = [P_BOTTOM_LEFT_FRONT, P_BOTTOM_RIGHT_FRONT, P_BOTTOM_LEFT_BACK, P_BOTTOM_RIGHT_BACK];
-const FACE_FRONT_SEQ_PRINT: [usize; 4] = [P_TOP_LEFT_FRONT, P_TOP_RIGHT_FRONT, P_BOTTOM_LEFT_FRONT, P_BOTTOM_RIGHT_FRONT];
-const FACE_BACK_SEQ_PRINT: [usize; 4]  = [P_TOP_RIGHT_BACK, P_TOP_LEFT_BACK, P_BOTTOM_RIGHT_BACK, P_BOTTOM_LEFT_BACK];
+// Rotation constants 
+const FACE_RIGHT_SEQ_CYCLE: [P; 4] = [P::TopRightBack,    P::BottomRightBack, P::BottomRightFront, P::TopRightFront];
+const FACE_LEFT_SEQ_CYCLE: [P; 4]  = [P::TopLeftFront,    P::BottomLeftFront, P::BottomLeftBack,   P::TopLeftBack];
+const FACE_UP_SEQ_CYCLE: [P; 4]    = [P::TopLeftFront,    P::TopLeftBack,     P::TopRightBack,     P::TopRightFront];
+const FACE_DOWN_SEQ_CYCLE: [P; 4]  = [P::BottomLeftBack,  P::BottomLeftFront, P::BottomRightFront, P::BottomRightBack];
+const FACE_FRONT_SEQ_CYCLE: [P; 4] = [P::BottomLeftFront, P::TopLeftFront,    P::TopRightFront,    P::BottomRightFront];
+const FACE_BACK_SEQ_CYCLE: [P; 4]  = [P::BottomLeftBack,  P::BottomRightBack, P::TopRightBack,     P::TopLeftBack];
 
+const FACE_RIGHT_SEQ_PRINT: [P; 4] = [P::TopRightFront,   P::TopRightBack,     P::BottomRightFront, P::BottomRightBack];
+const FACE_LEFT_SEQ_PRINT: [P; 4]  = [P::TopLeftBack,     P::TopLeftFront,     P::BottomLeftBack,   P::BottomLeftFront];
+const FACE_UP_SEQ_PRINT: [P; 4]    = [P::TopLeftBack,     P::TopRightBack,     P::TopLeftFront,     P::TopRightFront];
+const FACE_DOWN_SEQ_PRINT: [P; 4]  = [P::BottomLeftFront, P::BottomRightFront, P::BottomLeftBack,   P::BottomRightBack];
+const FACE_FRONT_SEQ_PRINT: [P; 4] = [P::TopLeftFront,    P::TopRightFront,    P::BottomLeftFront,  P::BottomRightFront];
+const FACE_BACK_SEQ_PRINT: [P; 4]  = [P::TopRightBack,    P::TopLeftBack,      P::BottomRightBack,  P::BottomLeftBack];
 
 impl Solvable for Cube2 {
     fn make_move(&mut self, m: Move) {
         match m.side() {
-            MoveSide::R => Self::cycle_elements::<8>(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE, m),
-            MoveSide::L => Self::cycle_elements::<8>(&mut self.pieces, FACE_LEFT_SEQ_CYCLE , m),
-            MoveSide::U => Self::cycle_elements::<8>(&mut self.pieces, FACE_UP_SEQ_CYCLE   , m),
-            MoveSide::B => Self::cycle_elements::<8>(&mut self.pieces, FACE_BACK_SEQ_CYCLE , m),
-            MoveSide::F => Self::cycle_elements::<8>(&mut self.pieces, FACE_FRONT_SEQ_CYCLE, m),
-            MoveSide::D => Self::cycle_elements::<8>(&mut self.pieces, FACE_DOWN_SEQ_CYCLE , m),
+            MoveSide::R => Self::cycle_elements::<8, 4>(&mut self.pieces, FACE_RIGHT_SEQ_CYCLE.map(|p| *p), m),
+            MoveSide::L => Self::cycle_elements::<8, 4>(&mut self.pieces, FACE_LEFT_SEQ_CYCLE .map(|p| *p) , m),
+            MoveSide::U => Self::cycle_elements::<8, 4>(&mut self.pieces, FACE_UP_SEQ_CYCLE   .map(|p| *p)   , m),
+            MoveSide::B => Self::cycle_elements::<8, 4>(&mut self.pieces, FACE_BACK_SEQ_CYCLE .map(|p| *p) , m),
+            MoveSide::F => Self::cycle_elements::<8, 4>(&mut self.pieces, FACE_FRONT_SEQ_CYCLE.map(|p| *p), m),
+            MoveSide::D => Self::cycle_elements::<8, 4>(&mut self.pieces, FACE_DOWN_SEQ_CYCLE .map(|p| *p) , m),
         };
     }
     fn moves_of_adjacency() -> Vec<Move> {
@@ -58,5 +64,21 @@ impl Solvable for Cube2 {
             Move::R, Move::F, Move::U,
             Move::L, Move::B, Move::D
         ])
+    }
+}
+
+impl TryFrom<usize> for PiecePosition {
+    type Error = ();
+    fn try_from(value: usize) -> Result<Self, ()> {
+        if value > 7 { return Err(()) }
+        else { Ok(unsafe { std::mem::transmute(value) })}
+    }
+
+}
+impl Deref for PiecePosition {
+    type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { std::mem::transmute(self) }
     }
 }
