@@ -7,7 +7,7 @@ edition = "2021"
 
 [workspace]
 members = [
-    "shared", "m_per_n", "tubaitu",  "tribaitri", "drawing"
+    "shared", "m_per_n", "tubaitu",  "tribaitri"
 ]
 
 [dependencies]
@@ -15,7 +15,6 @@ tubaitu = { path = "./tubaitu" }
 tribaitri = { path = "./tribaitri" }
 shared = { path = "./shared" }
 m_per_n = { path = "./m_per_n" }
-drawing = { path = "./drawing" }
 macroquad = "0.4.8"
 
 [profile.release]

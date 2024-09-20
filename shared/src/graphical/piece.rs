@@ -1,11 +1,14 @@
 use crate::*;
 use geo_booleanop::boolean::Float;
-use shared::PieceRotation;
+
 use geo::{BooleanOps, Centroid, ConvexHull, Coord, CoordsIter, LineString, Polygon, Area};
 use m_per_n::{Vec3, MatRow, Matrix};
 use std::collections::VecDeque;
 use std::cmp::Ordering;
 use std::f64::consts::PI;
+use crate::graphical::*;
+
+use super::VertexPosition;
 
 #[derive(Copy, Clone)]
 struct DepthNode {
@@ -17,7 +20,7 @@ struct DepthNode {
 pub struct DrawablePiece {
     center: Vec3,
     vertices: [Vertex; 8],
-    faces: [Stiker; 6],
+    faces: [Sticker; 6],
     depth_map: [DepthNode; 6],
 }
 
@@ -28,7 +31,7 @@ impl DrawablePiece {
         let r = radius;
 
         for i in 0..vertices.len() {
-            vertices[i]._3d = match i {
+            vertices[i] = Vertex::ThreeD(match i {
                 0 => center + Vec3::new( r, -r,  r),
                 1 => center + Vec3::new( r,  r,  r),
                 2 => center + Vec3::new(-r,  r,  r),
@@ -38,7 +41,7 @@ impl DrawablePiece {
                 6 => center + Vec3::new(-r,  r, -r),
                 7 => center + Vec3::new(-r, -r, -r),
                 _ => todo!(),
-            }
+            });
         }
 
         let mut faces: [[Vertex; 4]; 6] = [[Vertex::default(); 4]; 6];
@@ -46,14 +49,14 @@ impl DrawablePiece {
         for i in 0..faces.len() {
             let positions = get_vertices_in_face(i);
             for j in 0..positions.len() {
-                faces[i][j] = vertices[positions[j]];
+                faces[i][j] = vertices[*positions[j]];
             }
         }
 
-        let mut stikers: [Stiker; 6] = [Stiker::default(); 6];
+        let mut stickers: [Sticker; 6] = [Sticker::default(); 6];
 
-        for i in 0..stikers.len() {
-            stikers[i] = Stiker::new(faces[i], rotation.to_color_sequence()[i], center);
+        for i in 0..stickers.len() {
+            stickers[i] = Sticker::new(faces[i], rotation.to_color_sequence()[i], center);
         }
 
         let mut depths = [DepthNode{depth: 0, index: 0}; 6];
@@ -62,9 +65,9 @@ impl DrawablePiece {
         }
 
         DrawablePiece{
-            center: center,
-            vertices:vertices,
-            faces: stikers,
+            center,
+            vertices,
+            faces: stickers,
             depth_map: depths,
         }
     }
@@ -136,7 +139,7 @@ impl DrawablePiece {
             for j in 0..positions.len() {
                 self.faces[i].vertices[j] = self.vertices[positions[j]];
             }
-            self.faces[i].recalucate_normals(self.center);
+            self.faces[i].recalculate_normals(self.center);
         }
     }
 
@@ -282,14 +285,14 @@ impl DrawablePiece {
     }
 }
 
-fn get_vertices_in_face(face: usize) -> [usize; 4] {
+fn get_vertices_in_face(face: Side) -> [VertexPosition; 4] {
     match face {
-        SIDE_RIGHT  => FACE_RIGHT_SEQ_CYCLE,
-        SIDE_LEFT  => FACE_LEFT_SEQ_CYCLE,
-        SIDE_TOP    => FACE_UP_SEQ_CYCLE,
-        SIDE_DOWN   => FACE_DOWN_SEQ_CYCLE,
-        SIDE_FRONT   => FACE_FRONT_SEQ_CYCLE,
-        SIDE_BACK   => FACE_BACK_SEQ_CYCLE,
+        Side::Right  => FACE_RIGHT_SEQ_CYCLE,
+        Side::Left   => FACE_LEFT_SEQ_CYCLE,
+        Side::Top    => FACE_UP_SEQ_CYCLE,
+        Side::Down   => FACE_DOWN_SEQ_CYCLE,
+        Side::Front  => FACE_FRONT_SEQ_CYCLE,
+        Side::Back   => FACE_BACK_SEQ_CYCLE,
         _ => panic!(),
     }
 }

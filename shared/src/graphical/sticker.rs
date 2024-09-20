@@ -1,26 +1,25 @@
 use crate::*;
-use shared::Color;
 use geo::{Polygon, LineString, Coord, BooleanOps, CoordsIter, Centroid, Area, Contains, Intersects};
 use m_per_n::{Vec3, Matrix, MatRow};
 use std::cmp::{Ordering};
 
-use std::panic;
+use crate::graphical::*;
 
-#[derive(Copy, Clone, Default)]
-pub struct Vertex {
-    pub _3d: Vec3,
-    pub _2d: Coord::<f64>,
+#[derive(Copy, Clone)]
+pub enum Vertex {
+    ThreeD(Vec3),
+    TwoD(Coord::<f64>),
 }
 
 #[derive(Copy, Clone, Default)]
-pub struct Stiker {
+pub struct Sticker {
     pub vertices: [Vertex; 4],
     pub normal_vec: Vec3,
     pub color: Color,
     pub brightness: f64,
 }
 
-impl Stiker {
+impl Sticker {
     pub fn new(vertices: [Vertex; 4], color: Color, piece_center: Vec3) -> Self {
 
         let mut normal_vec = if let Some(thingy) = (vertices[1]._3d - vertices[0]._3d)
@@ -34,15 +33,15 @@ impl Stiker {
 
         normal_vec = normal_vec * if dot_product < 0.0 { -1.0 } else { 1.0 };
 
-        Stiker{
-            vertices: vertices,
-            normal_vec: normal_vec,
-            color: color,
+        Sticker {
+            vertices,
+            normal_vec,
+            color,
             brightness: 0.0,
         }
     }
 
-    pub fn recalucate_normals(&mut self, piece_center: Vec3) {
+    pub fn recalculate_normals(&mut self, piece_center: Vec3) {
         let mut normal_vec = if let Some(thingy) = (self.vertices[1]._3d - self.vertices[0]._3d)
         .cross_product(self.vertices[2]._3d - self.vertices[0]._3d)
         .normalize() {
@@ -68,14 +67,14 @@ impl Stiker {
         Polygon::<f64>::new(LineString::from(Vec::from(verts_2d)), vec![])
     }
 
-    pub fn get_overlap_centroid_2d(&self, other: &Stiker) -> Option<geo::Point> {
+    pub fn get_overlap_centroid_2d(&self, other: &Sticker) -> Option<geo::Point> {
         let poly1 = self.get_polygon();
         let poly2 = other.get_polygon();
 
         // Something panics occasionally when calculating intersections :(
         let mut intersections;
         
-        match panic::catch_unwind(|| {poly1.intersection(&poly2)}) {
+        match std::panic::catch_unwind(|| {poly1.intersection(&poly2)}) {
             Ok(result) => intersections = result,
             Err(_) => return None,
         };
@@ -96,7 +95,7 @@ impl Stiker {
         return poly.contains(&point);
     }
 
-    pub fn cmp_dist_to_cam(&self, other: Stiker, camera: &Camera) -> Option<Ordering>{
+    pub fn cmp_dist_to_cam(&self, other: Sticker, camera: &Camera) -> Option<Ordering>{
         if let Some(overlap_center) = self.get_overlap_centroid_2d(&other) {
 
             let mat = camera.get_from_xy_to_xyz_matrix();
@@ -141,5 +140,11 @@ impl Stiker {
         quad.color = self.color.to_rgb(self.brightness);
 
         quad
+    }
+}
+
+impl Default for Vertex {
+    fn default() -> Self {
+        Self::ThreeD(Vec3::default())
     }
 }

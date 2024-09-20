@@ -111,7 +111,7 @@ impl Piece {
 	    => [down, front, right, top, back, left],
 	};
 
-	self.rotation = PieceRotation::from_color_pair(new_colors[SIDE_TOP], new_colors[SIDE_FRONT]);
+	self.rotation = PieceRotation::from_color_pair(new_colors[*Side::Top], new_colors[*Side::Front]);
     }
 }
 

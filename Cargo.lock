@@ -99,22 +99,10 @@ dependencies = [
 name = "cubs"
 version = "1.2.0"
 dependencies = [
- "drawing",
  "m_per_n",
  "macroquad",
  "shared",
  "tribaitri",
- "tubaitu",
-]
-
-[[package]]
-name = "drawing"
-version = "1.0.0"
-dependencies = [
- "geo",
- "geo-booleanop",
- "m_per_n",
- "shared",
  "tubaitu",
 ]
 
@@ -347,9 +335,6 @@ checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 [[package]]
 name = "m_per_n"
 version = "0.1.0"
-dependencies = [
- "shared",
-]
 
 [[package]]
 name = "macroquad"
@@ -534,7 +519,10 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
+ "geo",
+ "geo-booleanop",
  "getrandom",
+ "m_per_n",
  "rand",
 ]
 
