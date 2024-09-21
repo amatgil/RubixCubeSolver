@@ -1,6 +1,7 @@
 {
   pkgs ? import <nixpkgs> { },
   lib,
+  overlays
 }:
 let
   packages = with pkgs; [
@@ -10,13 +11,15 @@ let
     mold
     cmake
 
-    cargo
     pkg-config
     xorg.libX11
     libGL
     alsa-lib
     xorg.libXi
 
+    (rust-bin.stable.latest.default.override {
+      targets = [ "wasm32-unknown-unknown" ];
+    })
   ];
 
 in
