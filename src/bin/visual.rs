@@ -30,10 +30,10 @@ enum Cube {
 }
 
 impl Cube {
-    fn solve(&self, prints_enabled: bool, outward_comms: Option<Sender<String>>) -> MoveSeq {
+    fn solve(&self, prints_enabled: bool) -> MoveSeq {
         match self {
-            Self::Tu(c2) => c2.solve(prints_enabled, outward_comms),
-            Self::Tri(c3) => c3.solve(prints_enabled, outward_comms),
+            Self::Tu(c2) => c2.solve(prints_enabled, None),
+            Self::Tri(c3) => c3.solve(prints_enabled, None),
         }
     }
     fn make_move(&mut self, moviment: Move) {
@@ -154,7 +154,7 @@ async fn main() {
                 t: 0.0,
             };
         } else if is_key_pressed(solve_bind) {
-            let seq = state.cube.solve(true, None).0.into_iter().peekable();
+            let seq = state.cube.solve(true).0.into_iter().peekable();
             state.kind = StateKind::Solving(SolvingState::Ready { seq, t: 0.0 });
         } else if is_key_pressed(reset_bind) {
             state.cube.reset_current();
