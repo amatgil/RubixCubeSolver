@@ -163,19 +163,9 @@ async fn main() {
                 t: 0.0,
             };
         } else if is_key_pressed(solve_bind) {
-            //let (tx, rx) = mpsc::channel();
-            //let coroutine = start_coroutine(async move {
-            //    state.cube.clone().solve(true, Some(tx))
-            //});
-            let solving_start = Instant::now();
             let seq = state.cube.solve(true, None).0.into_iter().peekable();
-            let time_taken = solving_start.elapsed();
-
-            println!("Found solution in: {}s", time_taken.as_secs_f32());
-
             state.kind = StateKind::Solving(SolvingState::Ready { seq, t: 0.0 });
         } else if is_key_pressed(reset_bind) {
-            println!("[INFO]: Resetting cube");
             state.cube.reset_current();
             state.set_back_to_manual();
         }
@@ -206,9 +196,8 @@ async fn main() {
                     (b_bind, Move::B),
                 ]
                 .into_iter()
-                .find(|(b, _)| is_key_pressed(*b))
-                .map(|(_, m)| Some(m))
-                .unwrap_or(*selected_move);
+                .find_map(|(b, m)| is_key_pressed(b).then(|| m))
+                .or(*selected_move);
 
                 draw_selected_move(*selected_move);
 
