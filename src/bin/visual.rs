@@ -1,12 +1,6 @@
-use std::{
-    default,
-    iter::Peekable,
-    sync::mpsc::{Receiver, Sender},
-    time::Instant,
-    vec,
-};
+use std::{iter::Peekable, sync::mpsc::Sender, vec};
 
-use macroquad::{experimental::coroutines::Coroutine, prelude::*};
+use macroquad::prelude::*;
 use shared::{Drawable, Move, MoveSeq, PartialMove, Polygon, Solvable};
 use std::fmt::Debug;
 use tribaitri::Cube3;
@@ -25,6 +19,7 @@ pub const TEXT_COL: Color = color_u8![128, 135, 162, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
+const DT: f64 = 0.05;
 const SCRAMBLING_DT: f64 = 0.05;
 const SOLVING_DT: f64 = 0.05;
 
@@ -77,6 +72,7 @@ struct State {
 enum StateKind {
     Manual {
         selected_move: Option<Move>,
+        /// Second field of tuple is [0..1) of how far along we are in said move
         mid_move: Option<(Move, f64)>,
     },
     Scrambling {
@@ -130,7 +126,6 @@ impl State {
 #[macroquad::main(window_conf)]
 async fn main() {
     // Constants / initting
-    let dt = 0.05;
     let mut state = State {
         cube: Cube::Tu(Cube2::default()),
         kind: StateKind::Manual {
@@ -173,7 +168,7 @@ async fn main() {
             } => {
                 draw_selected_move(*selected_move);
 
-                *t += dt;
+                *t += DT;
                 if *t >= 1.0 {
                     state.set_back_to_manual();
                     state.cube.make_move(mid_move);
