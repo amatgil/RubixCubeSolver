@@ -1,30 +1,24 @@
 {
   pkgs ? import <nixpkgs> { },
-  lib,
-  overlays
+  lib ? pkgs.lib,
 }:
 let
   packages = with pkgs; [
     rust-analyzer
     rustfmt
-    clippy
     mold
-    cmake
+    rust-bin.stable.latest.default
 
     pkg-config
     xorg.libX11
     libGL
     alsa-lib
     xorg.libXi
-
-    (rust-bin.stable.latest.default.override {
-      targets = [ "wasm32-unknown-unknown" ];
-    })
   ];
-
 in
 pkgs.mkShell {
   # Get dependencies from the main package
+  inputsFrom = [ (pkgs.callPackage ./default.nix { }) ];
   nativeBuildInputs = packages;
   buildInputs = packages;
   env = {
@@ -32,4 +26,3 @@ pkgs.mkShell {
     LD_LIBRARY_PATH = "${lib.makeLibraryPath packages}";
   };
 }
-
