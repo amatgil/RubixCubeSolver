@@ -103,10 +103,11 @@ impl State {
                 mid_move: Some((_, t)),
                 ..
             } => t,
-            StateKind::Manual { mid_move: None, .. } => 0.0,
-            StateKind::Solving(SolvingState::_Calculating { .. }) => 0.0,
-            StateKind::Solving(SolvingState::Ready { t, .. }) => t,
-            StateKind::Scrambling { t, .. } => t,
+            StateKind::Manual { mid_move: None, .. }
+            | StateKind::Solving(SolvingState::_Calculating { .. }) => 0.0,
+            StateKind::Solving(SolvingState::Ready { t, .. }) | StateKind::Scrambling { t, .. } => {
+                t
+            }
         }
     }
     fn curr_mov(&mut self) -> Option<Move> {
@@ -115,10 +116,10 @@ impl State {
                 mid_move: Some((m, _)),
                 ..
             } => Some(*m),
-            StateKind::Manual { mid_move: None, .. } => None,
-            StateKind::Solving(SolvingState::_Calculating { .. }) => None,
-            StateKind::Solving(SolvingState::Ready { seq, .. }) => seq.peek().copied(),
-            StateKind::Scrambling { seq, .. } => seq.peek().copied(),
+            StateKind::Manual { mid_move: None, .. }
+            | StateKind::Solving(SolvingState::_Calculating { .. }) => None,
+            StateKind::Solving(SolvingState::Ready { seq, .. })
+            | StateKind::Scrambling { seq, .. } => seq.peek().copied(),
         }
     }
 
@@ -184,7 +185,7 @@ async fn main() {
                 ref selected_move,
                 mid_move: Some((mid_move, ref mut t)),
             } => {
-                draw_selected_move(selected_move);
+                draw_selected_move(*selected_move);
 
                 *t += dt;
                 if *t >= 1.0 {
@@ -210,7 +211,7 @@ async fn main() {
                 .next()
                 .unwrap_or(*selected_move);
 
-                draw_selected_move(selected_move);
+                draw_selected_move(*selected_move);
 
                 if let &mut Some(m) = selected_move {
                     if is_key_pressed(KeyCode::Left) {
@@ -237,7 +238,7 @@ async fn main() {
                     // Advance and check while we're at it
                     *t += scrambling_dt;
                     if *t >= 1.0 {
-                        state.cube.make_move(scramble_move.clone());
+                        state.cube.make_move(**scramble_move);
                         seq.next();
                         state.kind = StateKind::Scrambling {
                             seq: seq.clone(),
@@ -299,11 +300,9 @@ async fn main() {
             }
         }
 
-        let curr_move = state.curr_mov().and_then(|m| {
-            Some(PartialMove {
-                mov: m,
-                lerp_t: state.curr_t(),
-            })
+        let curr_move = state.curr_mov().map(|m| PartialMove {
+            mov: m,
+            lerp_t: state.curr_t(),
         });
         let polys = state
             .cube
@@ -321,13 +320,13 @@ async fn main() {
             );
         }
 
-        next_frame().await
+        next_frame().await;
     }
 }
 
 fn draw_simple_text(text: &str) {
     let font_size = 40.0;
-    draw_text(&text, 10.0, font_size * 1.2, font_size, TEXT_COL);
+    draw_text(text, 10.0, font_size * 1.2, font_size, TEXT_COL);
 }
 
 fn draw_current_move_seq(pre: &str, seq: &Peekable<vec::IntoIter<Move>>) {
@@ -342,7 +341,7 @@ fn draw_current_move_seq(pre: &str, seq: &Peekable<vec::IntoIter<Move>>) {
     draw_text(&text, 10.0, font_size * 1.2, font_size, TEXT_COL);
 }
 
-fn draw_selected_move(m: &Option<Move>) {
+fn draw_selected_move(m: Option<Move>) {
     let val: String = m
         .and_then(|o| Some(o.to_string()))
         .or(Some("None".into()))
@@ -363,8 +362,8 @@ fn draw_quad(p0: Vec2, p1: Vec2, p2: Vec2, p3: Vec2, col: Color) {
 fn window_conf() -> Conf {
     Conf {
         window_title: "tubaitu".to_owned(),
-        window_width: SCREEN_WIDTH as i32,
-        window_height: SCREEN_HEIGHT as i32,
+        window_width: i32::try_from(SCREEN_WIDTH).unwrap(),
+        window_height: i32::try_from(SCREEN_HEIGHT).unwrap(),
         fullscreen: false,
         window_resizable: false,
         ..Default::default()
