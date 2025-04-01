@@ -206,9 +206,8 @@ async fn main() {
                     (b_bind, Move::B),
                 ]
                 .into_iter()
-                .filter(|(b, _m)| is_key_pressed(*b))
-                .map(|(_b, m)| Some(m))
-                .next()
+                .find(|(b, _)| is_key_pressed(*b))
+                .map(|(_, m)| Some(m))
                 .unwrap_or(*selected_move);
 
                 draw_selected_move(*selected_move);
