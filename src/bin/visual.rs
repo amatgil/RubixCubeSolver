@@ -196,21 +196,19 @@ async fn main() {
                 ref mut selected_move,
                 mid_move: None,
             } => {
-                *selected_move = if is_key_pressed(r_bind) {
-                    Some(Move::R)
-                } else if is_key_pressed(l_bind) {
-                    Some(Move::L)
-                } else if is_key_pressed(u_bind) {
-                    Some(Move::U)
-                } else if is_key_pressed(d_bind) {
-                    Some(Move::D)
-                } else if is_key_pressed(f_bind) {
-                    Some(Move::F)
-                } else if is_key_pressed(b_bind) {
-                    Some(Move::B)
-                } else {
-                    *selected_move
-                };
+                *selected_move = [
+                    (r_bind, Move::R),
+                    (l_bind, Move::L),
+                    (u_bind, Move::U),
+                    (d_bind, Move::D),
+                    (f_bind, Move::F),
+                    (b_bind, Move::B),
+                ]
+                .into_iter()
+                .filter(|(b, _m)| is_key_pressed(*b))
+                .map(|(_b, m)| Some(m))
+                .next()
+                .unwrap_or(*selected_move);
 
                 draw_selected_move(selected_move);
 
