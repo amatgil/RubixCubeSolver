@@ -85,11 +85,6 @@ enum StateKind {
 
 #[derive(Debug)]
 enum SolvingState {
-    /// Unused until wasm can deal with threads
-    _Calculating {
-        coroutine: Coroutine<MoveSeq>,
-        comms: (String, Receiver<String>),
-    },
     Ready {
         seq: Peekable<vec::IntoIter<Move>>,
         t: f64,
@@ -103,8 +98,7 @@ impl State {
                 mid_move: Some((_, t)),
                 ..
             } => t,
-            StateKind::Manual { mid_move: None, .. }
-            | StateKind::Solving(SolvingState::_Calculating { .. }) => 0.0,
+            StateKind::Manual { mid_move: None, .. } => 0.0,
             StateKind::Solving(SolvingState::Ready { t, .. }) | StateKind::Scrambling { t, .. } => {
                 t
             }
@@ -116,8 +110,7 @@ impl State {
                 mid_move: Some((m, _)),
                 ..
             } => Some(*m),
-            StateKind::Manual { mid_move: None, .. }
-            | StateKind::Solving(SolvingState::_Calculating { .. }) => None,
+            StateKind::Manual { mid_move: None, .. } => None,
             StateKind::Solving(SolvingState::Ready { seq, .. })
             | StateKind::Scrambling { seq, .. } => seq.peek().copied(),
         }
@@ -219,12 +212,12 @@ async fn main() {
                 ref mut seq,
                 ref mut t,
             } => {
-                let scrambling_dt = 0.05;
+                const SCRAMBLING_DT: f64 = 0.05;
 
-                draw_current_move_seq("Scrambling: ", seq);
+                draw_current_move_seq("Scrambling: ", &seq);
                 if let Some(scramble_move) = &mut seq.peek() {
                     // Advance and check while we're at it
-                    *t += scrambling_dt;
+                    *t += SCRAMBLING_DT;
                     if *t >= 1.0 {
                         state.cube.make_move(**scramble_move);
                         seq.next();
@@ -235,34 +228,6 @@ async fn main() {
                     }
                 } else {
                     state.set_back_to_manual();
-                }
-            }
-            StateKind::Solving(SolvingState::_Calculating {
-                coroutine,
-                comms: (mut acc_comms, rx_comms),
-            }) => {
-                let mut text = "Finding solution: ".to_string();
-                text.push_str(&acc_comms);
-                draw_simple_text(&text);
-
-                if coroutine.is_done() {
-                    state.kind = StateKind::Solving(SolvingState::Ready {
-                        seq: coroutine
-                            .retrieve()
-                            .expect("We just checked that it's done")
-                            .0
-                            .into_iter()
-                            .peekable(),
-                        t: 0.0,
-                    });
-                } else {
-                    while let Ok(new_acc_str) = rx_comms.try_recv() {
-                        acc_comms = new_acc_str;
-                    }
-                    state.kind = StateKind::Solving(SolvingState::_Calculating {
-                        coroutine,
-                        comms: (acc_comms, rx_comms),
-                    });
                 }
             }
             StateKind::Solving(SolvingState::Ready {
