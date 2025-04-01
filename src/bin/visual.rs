@@ -25,6 +25,9 @@ pub const TEXT_COL: Color = color_u8![128, 135, 162, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
+const SCRAMBLING_DT: f64 = 0.05;
+const SOLVING_DT: f64 = 0.05;
+
 #[derive(Debug)]
 enum Cube {
     Tu(Cube2),
@@ -212,8 +215,6 @@ async fn main() {
                 ref mut seq,
                 ref mut t,
             } => {
-                const SCRAMBLING_DT: f64 = 0.05;
-
                 draw_current_move_seq("Scrambling: ", &seq);
                 if let Some(scramble_move) = &mut seq.peek() {
                     // Advance and check while we're at it
@@ -234,11 +235,9 @@ async fn main() {
                 ref mut seq,
                 ref mut t,
             }) => {
-                let solving_dt = 0.05;
-
                 draw_current_move_seq("Solve: ", seq);
                 if let Some(solve_move) = &mut seq.peek() {
-                    *t += solving_dt;
+                    *t += SOLVING_DT;
                     if *t >= 1.0 {
                         state.cube.make_move(solve_move.clone());
                         seq.next();
