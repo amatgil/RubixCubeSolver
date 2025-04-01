@@ -19,39 +19,35 @@ pub const TEXT_COL: Color = color_u8![128, 135, 162, 255];
 const SCREEN_WIDTH: usize = 700;
 const SCREEN_HEIGHT: usize = 700;
 
-#[derive(Debug, Default)]
-struct Cube {
-    tu: Cube2,
-    tri: Cube3,
-    curr: Curr, 
+#[derive(Debug)]
+enum Cube {
+    Tu(Cube2),
+    Tri(Cube3),
 }
-
-#[derive(Debug, Default)]
-enum Curr { #[default] Tu, Tri }
 
 impl Cube {
     fn solve(&self, prints_enabled: bool, outward_comms: Option<Sender<String>>) -> MoveSeq {
-        match self.curr {
-            Curr::Tu  => self.tu.solve(prints_enabled, outward_comms),
-            Curr::Tri => self.tri.solve(prints_enabled, outward_comms),
+        match self {
+            Self::Tu(c2)  => c2.solve(prints_enabled, outward_comms),
+            Self::Tri(c3) => c3.solve(prints_enabled, outward_comms),
         }
     }
     fn make_move(&mut self, moviment: Move) {
-        match self.curr {
-            Curr::Tu  => self.tu.make_move(moviment),
-            Curr::Tri => self.tri.make_move(moviment),
+        match self {
+            Self::Tu(c2)  => c2.make_move(moviment),
+            Self::Tri(c3) => c3.make_move(moviment),
         }
     }
     fn reset_current(&mut self) {
-        match self.curr {
-            Curr::Tu  => self.tu = Cube2::default(),
-            Curr::Tri => self.tri = Cube3::default(),
+        match self {
+            Self::Tu(_)  => *self = Self::Tu(Cube2::default()),
+            Self::Tri(_) => *self = Self::Tri(Cube3::default()),
         }
     }
     fn get_polys(&self, part_mov: Option<PartialMove>, width: usize, height: usize, scale: f64) -> Vec<Polygon> {
-        match self.curr {
-            Curr::Tu  => self.tu.get_polys(part_mov, width, height, scale),
-            Curr::Tri => self.tri.get_polys(part_mov, width, height, scale),
+        match self {
+            Self::Tu(c2)  => c2.get_polys(part_mov, width, height, scale),
+            Self::Tri(c3) => c3.get_polys(part_mov, width, height, scale),
         }
     }
 }
@@ -117,7 +113,7 @@ async fn main() {
     // Constants / initting
     let dt = 0.05;
     let mut state = State {
-        cube: Cube::default(),
+        cube: Cube::Tu(Cube2::default()),
         kind: StateKind::Manual {
             selected_move: None,
             mid_move: None
@@ -170,7 +166,6 @@ async fn main() {
                     state.set_back_to_manual();
                     state.cube.make_move(mid_move);
                 }
-
             },
             StateKind::Manual { ref mut selected_move, mid_move: None } => {
                 *selected_move = 
